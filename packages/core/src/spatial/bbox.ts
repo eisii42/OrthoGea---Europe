@@ -1,14 +1,25 @@
 import { getAxisOrder, type WmsVersion } from "../crs/normalize.js";
-import {
-  GeoBoundingBoxSchema,
-  WORLD_BBOX,
-  type GeoBoundingBox,
-  type ProjectedBoundingBox
-} from "../schemas/bbox.js";
+import { WORLD_BBOX } from "../constants.js";
+import type { GeoBoundingBox, ProjectedBoundingBox } from "../schemas/bbox.js";
 
-/** Runtime guard for a well-formed geographic bounding box. */
+/**
+ * Runtime guard for a well-formed geographic bounding box.
+ *
+ * Written by hand rather than through `GeoBoundingBoxSchema`: this runs on the
+ * drawing path, and pulling a validator into it would put Zod in the bundle of
+ * every application that only wants to render a map. The schema states the same
+ * rule for catalogue documents, and a test holds the two in step.
+ */
 export function isValidBBox(value: unknown): value is GeoBoundingBox {
-  return GeoBoundingBoxSchema.safeParse(value).success;
+  if (!Array.isArray(value) || value.length !== 4) return false;
+  const [minLng, minLat, maxLng, maxLat] = value as number[];
+  if (![minLng, minLat, maxLng, maxLat].every((n) => typeof n === "number" && Number.isFinite(n))) {
+    return false;
+  }
+  if (minLng! < -180 || maxLng! > 180 || minLat! < -90 || maxLat! > 90) return false;
+  if (minLat! > maxLat!) return false;
+  // minLng > maxLng is only tolerated for boxes crossing the antimeridian.
+  return minLng! <= maxLng! || minLng! > 0;
 }
 
 /** Sorts the corners and clamps them to the valid WGS84 domain. */

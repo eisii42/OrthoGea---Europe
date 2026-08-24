@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { CountryCodeSchema } from "../schemas/nuts.js";
 import {
-  CountryCodeSchema,
   NUTS_COUNTRIES,
   isNutsWithin,
   isValidNutsCode,

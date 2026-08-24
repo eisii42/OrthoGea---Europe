@@ -4,6 +4,46 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the packages share one version
 number.
 
+## [0.5.0] - 2026-08-24
+
+### Added
+
+- **The zoom stops where the imagery does.** Half of Europe publishes no open orthophoto, and
+  there the map sits on the 2 m European base: zooming to 20 over Sofia or Hamburg only enlarges
+  pixels. `Mosaic.detailZoomAt(lng, lat)` answers with the deepest zoom the imagery under a point
+  actually supports - from its resolution and the latitude, because Mercator stretches - and
+  `bindDetailZoomLimit(map, mosaics)` holds the map there, lifting the ceiling again over
+  better-surveyed ground. It learns as it draws: a service whose rectangle covers ground it has
+  no imagery for stops raising the limit once it has answered blank.
+- `metersPerPixelAt()` and `zoomForResolutionAt()` in `@orthogea/core`: ground resolution and its
+  inverse, corrected for latitude.
+- `pnpm size`: the integration weight, measured rather than asserted.
+
+### Changed
+
+- **The runtime is now free of third-party code.** Drawing a map used to pull in Zod (54 kB) and
+  an XML parser (32 kB) - 77 % of the bundle - for validation and feature queries it never ran.
+  Both now live behind their own entry points, and the bundled catalogue is validated and
+  normalised at **build** time instead of on every page load:
+
+  | import | before | after |
+  | --- | --- | --- |
+  | `@orthogea/core` | 18.4 kB gz | **2.4 kB gz** |
+  | `toRasterSource` | 31.4 kB gz | **4.4 kB gz** |
+  | the mosaic | 34.9 kB gz | **8.4 kB gz** |
+  | the whole basemap | 46.5 kB gz | **19.5 kB gz** |
+
+### Breaking
+
+- The Zod schemas moved from `@orthogea/core` to **`@orthogea/core/schemas`**. The types they
+  produce - `OrthoGeaLayer`, `Service`, `LayerCollection` and the rest - stay on the root entry,
+  because types are erased and cost nothing.
+- `getFeatureInfo` and the response parsers moved to **`@orthogea/client/featureinfo`**.
+- `safeBuildCatalog`, `buildCatalog` and `registerCollection` moved to
+  **`@orthogea/catalog/validate`**. Reading the bundled catalogue needs none of them.
+- `CountryCodeSchema` and `NutsCodeSchema` moved to `@orthogea/core/schemas`; `isValidNutsCode()`
+  is unchanged and no longer needs Zod.
+
 ## [0.4.0] - 2026-08-24
 
 ### Fixed

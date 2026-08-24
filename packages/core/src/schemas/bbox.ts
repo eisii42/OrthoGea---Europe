@@ -37,11 +37,3 @@ export const CrsBoundingBoxSchema = z.object({
 });
 
 export type CrsBoundingBox = z.infer<typeof CrsBoundingBoxSchema>;
-
-/** Whole-world extent in WGS84 degrees. */
-export const WORLD_BBOX: GeoBoundingBox = [-180, -90, 180, 90];
-
-/** Extent covered by EPSG:3857, in WGS84 degrees. */
-export const WEB_MERCATOR_BBOX: GeoBoundingBox = [
-  -180, -85.0511287798066, 180, 85.0511287798066
-];

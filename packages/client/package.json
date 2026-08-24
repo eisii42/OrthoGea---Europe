@@ -14,6 +14,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./featureinfo": {
+      "types": "./dist/featureinfo/index.d.ts",
+      "import": "./dist/featureinfo/index.js",
+      "require": "./dist/featureinfo/index.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [

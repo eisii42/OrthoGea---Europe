@@ -1,5 +1,5 @@
+import { OrthoGeaLayerSchema } from "@orthogea/core/schemas";
 import {
-  OrthoGeaLayerSchema,
   WEB_MERCATOR_BBOX,
   isSameCrs,
   type LayerCategory,

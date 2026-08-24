@@ -25,35 +25,12 @@ export type WmtsVersion = z.infer<typeof WmtsVersionSchema>;
 export const WfsVersionSchema = z.enum(["1.0.0", "1.1.0", "2.0.0"]);
 export type WfsVersion = z.infer<typeof WfsVersionSchema>;
 
-/** Raster MIME types frequently advertised by European services. */
-export const IMAGE_FORMATS = [
-  "image/png",
-  "image/png8",
-  "image/png; mode=8bit",
-  "image/jpeg",
-  "image/webp",
-  "image/gif",
-  "image/tiff",
-  "image/vnd.jpeg-png"
-] as const;
-
 export const ImageFormatSchema = z
   .string()
   .regex(/^image\/[a-z0-9+.\-]+(;\s*[a-z0-9\-]+=[a-z0-9\-]+)?$/i, {
     message: "must be an image MIME type such as image/png or image/jpeg"
   });
 export type ImageFormat = z.infer<typeof ImageFormatSchema>;
-
-/** MIME types accepted by GetFeatureInfo responses. */
-export const INFO_FORMATS = [
-  "application/json",
-  "application/geo+json",
-  "application/vnd.ogc.gml",
-  "application/vnd.ogc.gml/3.1.1",
-  "text/xml",
-  "text/html",
-  "text/plain"
-] as const;
 
 export const InfoFormatSchema = z.string().min(3);
 export type InfoFormat = z.infer<typeof InfoFormatSchema>;

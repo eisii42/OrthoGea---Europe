@@ -18,6 +18,7 @@ import {
   toMosaicRasterLayer,
   toMosaicRasterSource
 } from "./mosaic.js";
+import { bindDetailZoomLimit } from "./maplibre/zoom.js";
 
 /** Pan-European satellite fallback, the role Sentinel-2 plays in the catalogue. */
 const satellite: OrthoGeaLayer = {
@@ -665,5 +666,116 @@ describe("across a border", () => {
 
     // Blank from both orthophotos, so the chain runs all the way through.
     expect((await bordering.fetchTile(fx, fy, 14)).layer.id).toBe("it.national.ortofoto");
+  });
+});
+
+describe("detail zoom", () => {
+  /** The 2 m European base, as the catalogue publishes it. */
+  const base: OrthoGeaLayer = { ...satellite, resolutionMeters: 2, maxZoom: 19 };
+
+  it("stops where the data stops", () => {
+    // A 2 m satellite base is readable to about zoom 16.5 over Europe; past
+    // that a reader is only looking at bigger pixels.
+    const baseOnly = createMosaic({ layers: [base], fallback: base, orthophotoFromZoom: 0 });
+    expect(baseOnly.detailZoomAt(9.99, 53.55)).toBeCloseTo(16.5, 1); // Hamburg
+    expect(baseOnly.detailZoomAt(23.32, 42.7)).toBeCloseTo(16.8, 1); // Sofia
+  });
+
+  it("lifts the ceiling where an orthophoto covers the ground", () => {
+    const full = createMosaic({
+      layers: [regional, base],
+      fallback: base,
+      orthophotoFromZoom: 0
+    });
+    // 20 cm over Florence: a full three levels deeper than the base allows.
+    expect(full.detailZoomAt(11.2558, 43.7696)).toBeGreaterThan(19.5);
+    // Just outside the Tuscan rectangle, the base decides again.
+    expect(full.detailZoomAt(23.32, 42.7)).toBeCloseTo(16.8, 1);
+  });
+
+  it("follows the latitude, because Mercator does", () => {
+    const baseOnly = createMosaic({ layers: [base], fallback: base, orthophotoFromZoom: 0 });
+    // A Mercator pixel covers less ground the further north it is, so the same
+    // imagery runs out of detail sooner: Reykjavik caps lower than Athens.
+    expect(baseOnly.detailZoomAt(0, 65)).toBeLessThan(baseOnly.detailZoomAt(0, 40));
+  });
+
+  it("stops trusting a rectangle a service has answered blank in", async () => {
+    // Schleswig-Holstein's rectangle covers Hamburg and holds nothing there.
+    // Until the first tile comes back, the cap has only the record to go on.
+    const lying: OrthoGeaLayer = { ...regional, id: "de.sh.dop", resolutionMeters: 0.2 };
+    const tiled = createMosaic({
+      layers: [lying, base],
+      fallback: base,
+      orthophotoFromZoom: 0,
+      cacheName: false,
+      fetchImpl: async (url: string) =>
+        new Response(url.includes("rt_ofc") ? new Uint8Array(300) : new Uint8Array(32_768), {
+          status: 200,
+          headers: { "content-type": "image/jpeg" }
+        })
+    });
+
+    expect(tiled.detailZoomAt(11.2558, 43.7696)).toBeGreaterThan(19.5);
+    await tiled.fetchTile(fx, fy, 14);
+    expect(tiled.detailZoomAt(11.2558, 43.7696)).toBeCloseTo(16.8, 1);
+  });
+});
+
+describe("bindDetailZoomLimit", () => {
+  const base: OrthoGeaLayer = { ...satellite, resolutionMeters: 2, maxZoom: 19 };
+
+  /** The slice of a MapLibre map the helper touches. */
+  const fakeMap = (lng: number, lat: number) => {
+    const listeners = new Map<string, () => void>();
+    return {
+      maxZoom: undefined as number | null | undefined,
+      center: { lng, lat },
+      getCenter() {
+        return this.center;
+      },
+      getZoom: () => 18,
+      setMaxZoom(zoom?: number | null) {
+        this.maxZoom = zoom;
+      },
+      on: (type: string, listener: () => void) => listeners.set(type, listener),
+      off: (type: string) => listeners.delete(type),
+      fire: (type: string) => listeners.get(type)?.(),
+      listeners
+    };
+  };
+
+  it("caps the map on the coarsest thing under it and follows the reader", () => {
+    const orthophotos = createMosaic({ layers: [regional], orthophotoFromZoom: 0 });
+    const european = createMosaic({ layers: [base], fallback: base, orthophotoFromZoom: 0 });
+
+    const map = fakeMap(23.32, 42.7); // Sofia: base only
+    const changes: number[] = [];
+    const release = bindDetailZoomLimit(map, [orthophotos, european], {
+      onChange: (limit) => changes.push(limit)
+    });
+
+    expect(map.maxZoom).toBeCloseTo(16.8, 1);
+
+    // Move to Florence, where an orthophoto covers the ground.
+    map.center = { lng: 11.2558, lat: 43.7696 };
+    map.fire("moveend");
+    expect(map.maxZoom as number).toBeGreaterThan(19.5);
+    expect(changes).toHaveLength(2);
+
+    release();
+    expect(map.maxZoom).toBeNull();
+    expect(map.listeners.size).toBe(0);
+  });
+
+  it("does not re-apply an unchanged limit", () => {
+    const european = createMosaic({ layers: [base], fallback: base, orthophotoFromZoom: 0 });
+    const map = fakeMap(23.32, 42.7);
+    const changes: number[] = [];
+    bindDetailZoomLimit(map, european, { onChange: (limit) => changes.push(limit) });
+
+    map.fire("moveend");
+    map.fire("moveend");
+    expect(changes).toHaveLength(1);
   });
 });

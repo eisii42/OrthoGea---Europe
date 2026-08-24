@@ -16,7 +16,9 @@ harvest (GetCapabilities)  ->  catalogue (validated JSON)  ->  render (MapLibre,
 | **Better than a global mosaic** | 8-30 cm official orthophotos where they exist, Sentinel-2 elsewhere |
 | **MIT code, open data** | no API key, no tile quota, no terms-of-service trap; licence and attribution carried per layer |
 | **Seamless mosaic** | one virtual layer picks the best source per tile, Copernicus imagery when zoomed out |
-| **Built for slow links** | JPEG tiles, 512 px requests, browser tile cache, empty areas remembered |
+| **19.5 kB gzipped** | the whole basemap, catalogue included, with no third-party runtime dependency |
+| **Built for slow links** | JPEG tiles, 512 px requests, Cache Storage, idle prefetch, empty areas remembered |
+| **Never pixelated** | the zoom stops where the imagery does, and lifts again where a sharper flight exists |
 | **Any map library** | MapLibre GL, Leaflet and OpenLayers adapters, plus a plain `(x, y, z) => url` builder |
 | **Protocol-correct** | WMS 1.1.1 and 1.3.0 axis order, CRS normalisation, WMTS KVP/REST, GetFeatureInfo, WFS |
 | **Handles awkward services** | renders WMS endpoints that do not publish EPSG:3857, such as Lombardia or Basilicata |
@@ -25,6 +27,30 @@ harvest (GetCapabilities)  ->  catalogue (validated JSON)  ->  render (MapLibre,
 - [Integration recipes](docs/INTEGRATION.md) - MapLibre, Leaflet, OpenLayers, React, Node, QGIS
 - [Concepts](docs/CONCEPTS.md) - axis order, CRS, reprojection, CORS, licensing
 - [Contributing a layer](CONTRIBUTING.md)
+
+## What it costs to integrate
+
+A basemap that adds a hundred kilobytes to someone's bundle is a hard sell however good its
+imagery is, so the weight is measured rather than asserted - run `pnpm size` to reproduce this:
+
+| import | minified | gzipped | what it buys |
+| --- | --- | --- | --- |
+| `@orthogea/core` | 8.6 kB | **2.4 kB** | tile maths, CRS normalisation, bbox helpers |
+| `toRasterSource` | 13.4 kB | **4.4 kB** | one catalogue record as a MapLibre source |
+| the mosaic | 23.5 kB | **8.4 kB** | the seamless imagery layer, without the catalogue |
+| the whole basemap | 79.3 kB | **19.5 kB** | mosaic plus all 55 catalogued services |
+
+Nothing on that path imports a third-party package. The two dependencies the project does have
+live behind their own entry points, so you only pay for them if you use them:
+
+| entry | carries | for |
+| --- | --- | --- |
+| `@orthogea/core/schemas` | Zod | authoring or validating catalogue documents |
+| `@orthogea/catalog/validate` | Zod | loading collections you did not author |
+| `@orthogea/client/featureinfo` | fast-xml-parser | click-to-query on WMS layers |
+
+The bundled catalogue is validated against the schema when the package is **built**, so the
+browser gets plain data and never runs a validator.
 
 ## Replace a proprietary basemap in four lines
 
@@ -86,7 +112,7 @@ map.addSource("imagery", toRasterSource(layer));      // attribution included
 
 | Package | What it does |
 | --- | --- |
-| [`@orthogea/core`](packages/core) | Zod schemas and types (`OrthoGeaLayer`, `WMSOptions`, ...), CRS normalisation and axis-order rules, bounding-box maths, Web Mercator projection, NUTS helpers. No I/O. |
+| [`@orthogea/core`](packages/core) | Types (`OrthoGeaLayer`, `WMSOptions`, ...), CRS normalisation and axis-order rules, bounding-box maths, Web Mercator projection, NUTS helpers. No I/O, no dependencies; the Zod schemas live in `@orthogea/core/schemas`. |
 | [`@orthogea/harvester`](packages/harvester) | `GetCapabilities` parsers for WMS 1.1.0/1.1.1/1.3.0 and WMTS 1.0.0, layer-inheritance resolution, endpoint health checks, conversion of harvested layers into catalogue records. |
 | [`@orthogea/client`](packages/client) | MapLibre GL, Leaflet and OpenLayers adapters, the framework-agnostic tile URL builder, tiled WMS/WMTS/XYZ templates, the reprojecting tile protocol, the GetFeatureInfo engine, attribution formatting. |
 | [`@orthogea/catalog`](packages/catalog) | Hierarchical registry (NUTS-0 to NUTS-3) of verified endpoints, query API, NUTS tree, imagery selection helpers, live verification script. |

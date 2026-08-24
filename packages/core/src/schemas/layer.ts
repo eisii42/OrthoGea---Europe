@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { CountryCodeSchema, EU_WIDE_CODE, NutsCodeSchema, nutsCountry } from "../nuts/index.js";
+import { EU_WIDE_CODE } from "../constants.js";
+import { nutsCountry } from "../nuts/index.js";
+import { CountryCodeSchema, NutsCodeSchema } from "./nuts.js";
 import { GeoBoundingBoxSchema } from "./bbox.js";
 import {
   LayerCategorySchema,

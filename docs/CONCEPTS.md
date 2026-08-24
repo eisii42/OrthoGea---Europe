@@ -87,6 +87,24 @@ through:
 map.addLayer(toMosaicRasterLayer(orthophotos, { fadeFromZoom: 13.5, fadeToZoom: 15.5 }));
 ```
 
+**The map stops where the data stops.** Half of Europe publishes no open orthophoto, and there
+the map sits on the 2 m European base. Letting a reader zoom to 20 over Sofia or Hamburg reveals
+nothing - it enlarges pixels, and an upscaled satellite image is the one thing that makes an open
+basemap look cheap next to a commercial one. `detailZoomAt()` answers with the deepest zoom the
+imagery under a point actually supports, from its resolution and the latitude, and
+`bindDetailZoomLimit()` holds the map there:
+
+```ts
+mosaic.detailZoomAt(11.58, 48.14);   // 19.0 over Munich, 40 cm imagery
+mosaic.detailZoomAt(9.99, 53.55);    // 16.5 over Hamburg, 2 m base only
+
+bindDetailZoomLimit(map, [orthophotos, base]);
+```
+
+The limit follows the reader, so it lifts again over better-surveyed ground, and it learns: a
+service whose rectangle covers Hamburg but whose tiles are empty there stops counting as soon as
+it has answered once.
+
 **Once covered, always covered.** A service that has drawn a tile is remembered as covering that
 area, at a zoom-independent key. Deeper tiles from it are then trusted even when they are tiny: a
 uniform roof or a ploughed field compresses to almost nothing at zoom 19, and falling back to the
@@ -124,6 +142,25 @@ basemap.at because it has nothing over Munich would take Austria with it.
 Emilia-Romagna flights - would fight for the same tile. The catalogue tags the secondary one
 `alternative` and the mosaic skips those tags, while the records stay available for explicit use
 and for GetFeatureInfo.
+
+## Weight
+
+A framework meant to sit inside someone else's web-GIS is judged first on what it adds to their
+bundle. The runtime path - catalogue, mosaic, adapters - imports **no third-party package at
+all**, and the two the project does depend on live behind their own entry points:
+
+| entry | carries | needed for |
+| --- | --- | --- |
+| `@orthogea/core/schemas` | Zod | authoring or validating catalogue documents |
+| `@orthogea/catalog/validate` | Zod | loading collections you did not author |
+| `@orthogea/client/featureinfo` | fast-xml-parser | click-to-query on WMS layers |
+
+Two decisions make that possible. The bundled catalogue is validated and normalised by
+`scripts/build-data.mjs` when the package is **built**, so the browser receives complete data and
+never runs a schema; and the runtime guards that used to call into Zod - `isValidBBox` and
+`isValidNutsCode` - are written out by hand, with tests holding them in step with the schema.
+
+The whole basemap, catalogue included, is 19.5 kB gzipped. `pnpm size` reproduces the figure.
 
 ## Performance
 

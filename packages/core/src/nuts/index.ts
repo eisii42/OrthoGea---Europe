@@ -1,4 +1,3 @@
-import { z } from "zod";
 
 export interface NutsCountry {
   /** NUTS-0 code (differs from ISO 3166-1 for Greece and the UK). */
@@ -53,34 +52,33 @@ export const NUTS_COUNTRIES: readonly NutsCountry[] = [
   { code: "XK", iso2: "XK", name: "Kosovo", eu: false }
 ];
 
-/** Pseudo-code used by pan-European datasets (Copernicus, EEA, Eurostat). */
-export const EU_WIDE_CODE = "EU";
+import { EU_WIDE_CODE } from "../constants.js";
+
+export { EU_WIDE_CODE };
 
 const byNuts = new Map(NUTS_COUNTRIES.map((country) => [country.code, country]));
 const byIso = new Map(NUTS_COUNTRIES.map((country) => [country.iso2, country]));
 
-const NUTS_RE = /^[A-Z]{2}[A-Z0-9]{0,3}$/;
+/** Shape of a NUTS code: two country letters plus up to three level digits. */
+export const NUTS_CODE_PATTERN = /^[A-Z]{2}[A-Z0-9]{0,3}$/;
 
 /** NUTS-0 country code, or `EU` for pan-European datasets. */
-export const CountryCodeSchema = z
-  .string()
-  .refine((code) => code === EU_WIDE_CODE || byNuts.has(code), {
-    message: "must be a NUTS-0 country code (e.g. IT, ES, FR, EL, UK) or EU"
-  });
-export type CountryCode = z.infer<typeof CountryCodeSchema>;
+export type CountryCode = string;
 
 /** NUTS code of any level, e.g. `IT`, `ITI`, `ITI1`, `ITI14`. */
-export const NutsCodeSchema = z
-  .string()
-  .regex(NUTS_RE, { message: "must be a NUTS code such as IT, ITI, ITI1 or ITI14" })
-  .refine((code) => code === EU_WIDE_CODE || byNuts.has(code.slice(0, 2)), {
-    message: "unknown NUTS country prefix"
-  });
-export type NutsCode = z.infer<typeof NutsCodeSchema>;
+export type NutsCode = string;
+
+/** True when the code is `EU` or a NUTS-0 code the framework knows. */
+export function isKnownCountryCode(code: string): boolean {
+  return code === EU_WIDE_CODE || byNuts.has(code);
+}
 
 /** True when the string is a syntactically valid NUTS code of a known country. */
 export function isValidNutsCode(code: string): boolean {
-  return NutsCodeSchema.safeParse(code).success;
+  return (
+    NUTS_CODE_PATTERN.test(code) &&
+    (code === EU_WIDE_CODE || byNuts.has(code.slice(0, 2)))
+  );
 }
 
 /** NUTS level: 0 (country) to 3 (province/department). */

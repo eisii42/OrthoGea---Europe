@@ -3,7 +3,9 @@ import {
   UnsupportedServiceError,
   bboxAreaSqKm,
   bboxContainsPoint,
+  lngLatToTile,
   tileToBBox,
+  zoomForResolutionAt,
   type GeoBoundingBox,
   type OrthoGeaLayer
 } from "@orthogea/core";
@@ -72,10 +74,12 @@ export interface MosaicOptions extends TileUrlBuilderOptions {
    * Tiles smaller than this are treated as empty and the next source is tried.
    *
    * A WMS asked for a tile outside its real footprint answers with a blank
-   * image rather than an error - a few hundred bytes of uniform colour. The
-   * last source in the chain is always accepted, so a genuinely uniform tile
-   * (open sea, snow) still renders. Defaults to 9000 bytes for 512 px tiles and
-   * 2500 for 256 px ones; set 0 to disable.
+   * image rather than an error - a few hundred bytes of uniform colour. When
+   * the mosaic has a fallback, its last source is accepted as it comes, so a
+   * genuinely uniform tile (open sea, snow) still renders; when it can draw a
+   * hole instead, it always prefers the hole to a neighbour's no-data fill.
+   * Defaults to 9000 bytes for 512 px tiles and 2500 for 256 px ones; set 0 to
+   * disable.
    */
   minTileBytes?: number;
   /**
@@ -118,6 +122,20 @@ interface InFlightTile {
   controller: AbortController;
   /** Callers still waiting; the request is dropped when this reaches zero. */
   refs: number;
+}
+
+export interface DetailZoomOptions {
+  /**
+   * Zoom levels of magnification accepted past the native resolution of the
+   * imagery. Defaults to 1, so a 2 m base is readable to about zoom 16.5 and a
+   * 20 cm orthophoto to about 20 - roughly where a commercial basemap stops
+   * too. Set 0 to be strict, 2 to let readers push further.
+   */
+  upscale?: number;
+  /** Never cap below this, so a coarse dataset cannot lock the reader out. */
+  min?: number;
+  /** Never allow past this. Defaults to 22, MapLibre's own ceiling. */
+  max?: number;
 }
 
 /** A tile served by the mosaic, with the source it came from. */
@@ -205,6 +223,15 @@ export class Mosaic {
    */
   private readonly confirmed = new Map<string, Set<string>>();
   /**
+   * The same knowledge as {@link Mosaic.blankBlocks}, at a zoom-independent
+   * key. It is advisory only - it never stops a tile being requested, because
+   * a 10 km square straddling a border would suppress the good side too - but
+   * it is what lets {@link Mosaic.detailZoomAt} tell a rectangle that lies from
+   * one that does not: Schleswig-Holstein's covers Hamburg on paper and holds
+   * nothing there.
+   */
+  private readonly emptyAreas = new Map<string, Set<string>>();
+  /**
    * Tiles being loaded right now, keyed by `z/x/y`.
    *
    * A tile is often wanted twice at once - the renderer asks for it while the
@@ -282,6 +309,57 @@ export class Mosaic {
   /** The layer that would actually be drawn, ignoring transient failures. */
   bestFor(x: number, y: number, z: number): OrthoGeaLayer | undefined {
     return this.select(x, y, z).layers[0];
+  }
+
+  /**
+   * Deepest zoom worth showing over a point, from the resolution of the
+   * imagery that actually covers it.
+   *
+   * Half of Europe has no open orthophoto, and there the map sits on the 2 m
+   * European base. Letting a reader zoom to 20 over Sofia or Hamburg does not
+   * reveal anything - it just enlarges pixels, and an upscaled satellite image
+   * is the one thing that makes an open basemap look worse than a commercial
+   * one. Capping the zoom instead is honest: the map stops where the data
+   * stops.
+   *
+   * ```ts
+   * mosaic.detailZoomAt(11.58, 48.14);   // 19.0 over Munich, 40 cm imagery
+   * mosaic.detailZoomAt(9.99, 53.55);    // 16.6 over Hamburg, 2 m base only
+   * ```
+   */
+  detailZoomAt(lng: number, lat: number, options: DetailZoomOptions = {}): number {
+    const upscale = options.upscale ?? 1;
+    const min = options.min ?? 12;
+    const max = options.max ?? 22;
+
+    // Ask at a deep level, where every candidate is in play: the answer is
+    // about what covers the ground, not about the zoom the map happens to be
+    // at. `orthophotoFromZoom` still applies, which is what makes a mosaic
+    // that only draws the base report the base's own limit.
+    const probeZoom = Math.max(0, Math.round(max) - (this.tileSize === 512 ? 1 : 0));
+    const [x, y] = lngLatToTile(lng, lat, probeZoom);
+    const area = Mosaic.areaKey(x, y, probeZoom);
+
+    // A candidate that has already answered blank here does not set the limit:
+    // its rectangle says it covers the ground, its tiles say otherwise, and the
+    // tiles are right. Confirmed coverage always wins over one blank answer.
+    const best =
+      this.select(x, y, probeZoom).layers.find(
+        (layer) =>
+          !this.emptyAreas.get(layer.id)?.has(area) || (this.confirmed.get(layer.id)?.has(area) ?? false)
+      ) ?? this.fallback;
+    // Nothing here at all: this mosaic supports no detail over that ground.
+    // Stacked mosaics are combined with `Math.max`, so the base layer's own
+    // limit is what comes through.
+    if (!best) return min;
+
+    // Map zoom is always the 256 px scale, whatever size the tiles are served
+    // at, so the comparison is made there.
+    const resolution = best.resolutionMeters;
+    const native =
+      resolution && resolution > 0 ? zoomForResolutionAt(resolution, lat) : best.maxZoom;
+
+    return Math.min(max, best.maxZoom, Math.max(min, native + upscale));
   }
 
   /**
@@ -461,6 +539,10 @@ export class Mosaic {
     const blocks = this.blankBlocks.get(layerId) ?? new Set<string>();
     blocks.add(Mosaic.blockKey(x, y, z));
     this.blankBlocks.set(layerId, blocks);
+
+    const areas = this.emptyAreas.get(layerId) ?? new Set<string>();
+    areas.add(Mosaic.areaKey(x, y, z));
+    this.emptyAreas.set(layerId, areas);
   }
 
   /** Cache Storage handle, resolved once and reused. */

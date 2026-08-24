@@ -285,6 +285,10 @@
                             ],
                             "default": 256
                           },
+                          "tileMatrixTemplate": {
+                            "type": "string",
+                            "minLength": 1
+                          },
                           "dimensions": {
                             "type": "object",
                             "additionalProperties": {

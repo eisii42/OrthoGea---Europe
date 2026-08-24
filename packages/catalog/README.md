@@ -58,7 +58,7 @@ catalogStats();                    // { layers, countries, byCategory, byService
 ## Extending
 
 ```ts
-import { registerCollection, safeBuildCatalog } from "@orthogea/catalog";
+import { registerCollection, safeBuildCatalog } from "@orthogea/catalog/validate";
 
 registerCollection(myDocument, "my-layers.json");   // validated, then appended
 safeBuildCatalog({ "my-layers.json": myDocument }); // validate without registering

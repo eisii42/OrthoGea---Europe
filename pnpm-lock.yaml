@@ -11,6 +11,9 @@ importers:
       '@types/node':
         specifier: ^22.10.5
         version: 22.20.1
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.12
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3

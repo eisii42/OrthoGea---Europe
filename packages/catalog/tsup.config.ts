@@ -1,7 +1,10 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: ["src/index.ts", "src/validate.ts"],
+  // The schema is a separate entry, so a map that only reads the catalogue
+  // never bundles a validator it does not run.
+  splitting: true,
   format: ["esm", "cjs"],
   dts: true,
   sourcemap: true,

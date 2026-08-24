@@ -99,7 +99,27 @@ await mosaic.fetchTile(x, y, z);// server side or for tests
 
 mosaic.prefetch(x, y, z);       // warm one tile, silently
 mosaic.prefetchAround(x, y, z); // warm the ring around it
+mosaic.detailZoomAt(lng, lat);  // deepest zoom the imagery here supports
 ```
+
+**Stop the zoom before the imagery blurs.** Where no orthophoto is published the map sits on the
+2 m European base, and zooming past about 16.5 only enlarges pixels. One call holds the map at
+the resolution of whatever is beneath it, and lifts the ceiling again over better-surveyed
+ground:
+
+```ts
+import { bindDetailZoomLimit } from "@orthogea/client";
+
+const release = bindDetailZoomLimit(map, [orthophotos, base], {
+  upscale: 1,                       // levels of magnification tolerated; 0 is strict
+  onChange: (max) => console.log(`sharp to z${max}`)
+});
+```
+
+Pass every mosaic the map draws from: the deepest of them wins, which is what a reader sees. The
+limit is applied on `moveend`, so it never snaps the view mid-gesture, and it learns from the
+tiles that come back - a service whose rectangle covers ground it has no imagery for stops
+raising the ceiling once it has answered blank there.
 
 **Prefetching.** Warming the tiles just outside the viewport is the cheapest way to make panning
 feel instant: the next tiles come from Cache Storage instead of a national WMS. Do it when the
@@ -306,7 +326,7 @@ the most local source comes first.
 ## Clicking a layer (GetFeatureInfo)
 
 ```ts
-import { getFeatureInfo, getFeatureInfoForLayers } from "@orthogea/client";
+import { getFeatureInfo, getFeatureInfoForLayers } from "@orthogea/client/featureinfo";
 
 const answer = await getFeatureInfo(layer, {
   lngLat: [11.2554, 43.7712],
@@ -415,7 +435,7 @@ value of the record is the layer to tick.
 Nothing forces you to use the bundled data.
 
 ```ts
-import { registerCollection, safeBuildCatalog } from "@orthogea/catalog";
+import { registerCollection, safeBuildCatalog } from "@orthogea/catalog/validate";
 
 // Add a collection at runtime, without losing the bundled one.
 const { layers, issues } = registerCollection(await (await fetch("/my-layers.json")).json());

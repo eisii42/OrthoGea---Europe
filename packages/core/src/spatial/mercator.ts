@@ -54,6 +54,26 @@ export function zoomFromMetersPerPixel(resolution: number, tileSize = 256): numb
   return Math.log2((2 * MERCATOR_HALF_WORLD) / (tileSize * resolution));
 }
 
+/**
+ * Ground resolution at a latitude.
+ *
+ * Web Mercator stretches away from the equator, so a pixel covers less ground
+ * the further north it is: at zoom 16 it is 2.4 m at the equator and 1.5 m over
+ * Hamburg. Anything that compares a zoom against the resolution of a dataset -
+ * deciding when an image starts to look upscaled - has to use this rather than
+ * the equatorial figure, or it will be a full zoom level out over Europe.
+ */
+export function metersPerPixelAt(zoom: number, lat: number, tileSize = 256): number {
+  const clamped = clamp(lat, -MAX_MERCATOR_LATITUDE, MAX_MERCATOR_LATITUDE);
+  return metersPerPixel(zoom, tileSize) * Math.cos(clamped * DEG_TO_RAD);
+}
+
+/** Zoom at which a dataset of this resolution is drawn pixel for pixel. */
+export function zoomForResolutionAt(resolution: number, lat: number, tileSize = 256): number {
+  const clamped = clamp(lat, -MAX_MERCATOR_LATITUDE, MAX_MERCATOR_LATITUDE);
+  return zoomFromMetersPerPixel(resolution, tileSize) + Math.log2(Math.cos(clamped * DEG_TO_RAD));
+}
+
 /** EPSG:3857 extent of an XYZ/WMTS tile in the Google/OSM tile scheme. */
 export function tileToMercatorBBox(x: number, y: number, z: number): ProjectedBoundingBox {
   const size = (2 * MERCATOR_HALF_WORLD) / Math.pow(2, z);

@@ -94,7 +94,7 @@ protocol URL.
 ## GetFeatureInfo
 
 ```ts
-import { getFeatureInfo, getFeatureInfoForLayers } from "@orthogea/client";
+import { getFeatureInfo, getFeatureInfoForLayers } from "@orthogea/client/featureinfo";
 
 const answer = await getFeatureInfo(layer, {
   lngLat: [11.2554, 43.7712],
@@ -185,6 +185,20 @@ map.on("idle", () => mosaic.prefetchAround(x, y, z));
 
 Prefetched tiles fill the cache without being credited, so `activeSources()` still describes what
 is on screen.
+
+**Stop the zoom before the imagery blurs.** Half of Europe publishes no open orthophoto, and
+there the map sits on the 2 m European base: zooming past about 16.5 only enlarges pixels. One
+call holds the map at the resolution of whatever is beneath it, and lifts the ceiling again over
+better-surveyed ground:
+
+```ts
+import { bindDetailZoomLimit } from "@orthogea/client";
+
+bindDetailZoomLimit(map, [orthophotos, base]);
+
+mosaic.detailZoomAt(11.58, 48.14);   // 19.0 over Munich, 40 cm imagery
+mosaic.detailZoomAt(9.99, 53.55);    // 16.5 over Hamburg, 2 m base only
+```
 
 Inspect the decisions without drawing anything:
 

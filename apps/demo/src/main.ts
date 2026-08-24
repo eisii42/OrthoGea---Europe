@@ -15,9 +15,9 @@ import {
   type OrthoGeaLayer
 } from "@orthogea/core";
 import {
+  bindDetailZoomLimit,
   createMosaic,
   formatAttribution,
-  getFeatureInfo,
   registerMosaicProtocol,
   toMosaicRasterLayer,
   toMosaicRasterSource,
@@ -27,9 +27,11 @@ import {
   registerOrthoGeaProtocol,
   sourceIdFor,
   toRasterLayer,
-  toRasterSource,
-  type FeatureInfoResponse
+  toRasterSource
 } from "@orthogea/client";
+// The GetFeatureInfo engine is a separate entry point: it carries an XML
+// parser, and a map that only draws imagery should not have to ship one.
+import { getFeatureInfo, type FeatureInfoResponse } from "@orthogea/client/featureinfo";
 import "./style.css";
 
 /** Dev-only proxy exposed by vite.config.ts, see the CORS note in the README. */
@@ -106,6 +108,10 @@ let mosaic: Mosaic;
 let baseMosaic: Mosaic;
 let lastMosaicLayer: OrthoGeaLayer | undefined;
 let mosaicLabelTimer: number | undefined;
+/** Removes the zoom limit, when the reader turns the seamless layer off. */
+let releaseZoomLimit: (() => void) | undefined;
+/** Deepest zoom the imagery under the map supports, shown in the sidebar. */
+let detailLimit: number | undefined;
 
 function registerProtocol(): void {
   // Services without EPSG:3857 (the Italian cadastre, Croatia, Umbria, Marche)
@@ -145,6 +151,27 @@ function registerProtocol(): void {
   });
 
   registerMosaicProtocol(maplibregl, [mosaic, baseMosaic]);
+}
+
+/**
+ * Stops the map at the resolution of the imagery beneath it.
+ *
+ * Half of Europe has no open orthophoto, and there the map sits on the 2 m
+ * European base: zooming to 20 over Sofia or Hamburg only enlarges pixels. The
+ * ceiling lifts again the moment the reader moves somewhere better surveyed.
+ */
+function applyZoomLimit(): void {
+  releaseZoomLimit?.();
+  releaseZoomLimit = undefined;
+  detailLimit = undefined;
+
+  if (state.baseId !== MOSAIC_ID) return;
+  releaseZoomLimit = bindDetailZoomLimit(map, [mosaic, baseMosaic], {
+    onChange: (limit) => {
+      detailLimit = limit;
+      updateMosaicLabel();
+    }
+  });
 }
 
 /** True while the reader is on a metered or very slow connection. */
@@ -199,8 +226,9 @@ function updateMosaicLabel(): void {
   const label = document.getElementById("mosaic-source");
   if (label) {
     const drawn = mosaic.activeSources(20_000)[0] ?? getLayer(BASE_LAYER_ID);
+    const limit = detailLimit === undefined ? "" : ` · sharp to z${detailLimit.toFixed(1)}`;
     label.textContent =
-      state.baseId === MOSAIC_ID && drawn ? `drawing: ${drawn.title}` : "";
+      state.baseId === MOSAIC_ID && drawn ? `drawing: ${drawn.title}${limit}` : "";
   }
   if (state.baseId !== MOSAIC_ID) return;
 
@@ -408,6 +436,7 @@ function layerRow(layer: OrthoGeaLayer, kind: "base" | "overlay"): HTMLElement {
       state.overlayIds.delete(layer.id);
     }
     syncMap();
+    applyZoomLimit();
   });
 
   const text = document.createElement("span");
@@ -438,6 +467,7 @@ function mosaicRow(): HTMLElement {
   input.addEventListener("change", () => {
     state.baseId = MOSAIC_ID;
     syncMap();
+    applyZoomLimit();
     renderLayerLists();
   });
 
@@ -515,6 +545,7 @@ function renderRegionSelect(): void {
       state.baseId = orthophoto.id;
       renderLayerLists();
       syncMap();
+      applyZoomLimit();
     }
     map.fitBounds(
       [
@@ -688,6 +719,7 @@ map.on("load", () => {
   renderRegionSelect();
   renderLayerLists();
   syncMap();
+  applyZoomLimit();
 });
 
 map.on("error", (event) => {

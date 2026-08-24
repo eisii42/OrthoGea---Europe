@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  GeoBoundingBoxSchema,
-  LayerCollectionSchema,
-  isQueryableLayer,
-  isSameCrs,
-  nutsCountry
-} from "@orthogea/core";
+import { GeoBoundingBoxSchema, LayerCollectionSchema } from "@orthogea/core/schemas";
+import { isQueryableLayer, isSameCrs, nutsCountry } from "@orthogea/core";
 import { RAW_COLLECTIONS } from "./data.js";
 import {
   DEFAULT_SATELLITE_FALLBACK_ID,
@@ -20,10 +15,9 @@ import {
   groupByCountry,
   hasLayer,
   imageryStackFor,
-  layersForPoint,
-  registerCollection,
-  safeBuildCatalog
+  layersForPoint
 } from "./registry.js";
+import { registerCollection, safeBuildCatalog } from "./validate.js";
 import { buildNutsTree, flattenTree } from "./tree.js";
 
 describe("schema validation", () => {

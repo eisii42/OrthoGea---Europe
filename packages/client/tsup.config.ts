@@ -1,7 +1,10 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: ["src/index.ts", "src/featureinfo/index.ts"],
+  // The GetFeatureInfo engine is a separate entry so its XML parser stays out
+  // of the bundle of an application that only renders imagery.
+  splitting: true,
   format: ["esm", "cjs"],
   dts: true,
   sourcemap: true,

@@ -1,8 +1,9 @@
 # @orthogea/core
 
-Shared vocabulary of [OrthoGea - Europe](../../README.md): Zod schemas, TypeScript types, CRS
-normalisation, bounding-box maths and NUTS helpers. **No I/O happens here**, which makes the
-package safe to import from a browser, a worker, Node or an edge runtime.
+Shared vocabulary of [OrthoGea - Europe](../../README.md): TypeScript types, CRS normalisation,
+bounding-box maths and NUTS helpers. **No I/O happens here**, and **no third-party code either**
+- 2.4 kB gzipped - which makes the package safe to import from a browser, a worker, Node or an
+edge runtime. The Zod schemas the types come from live behind `@orthogea/core/schemas`.
 
 ```bash
 pnpm add @orthogea/core
@@ -11,7 +12,8 @@ pnpm add @orthogea/core
 ## Schemas and types
 
 ```ts
-import { OrthoGeaLayerSchema, type OrthoGeaLayer } from "@orthogea/core";
+import { OrthoGeaLayerSchema } from "@orthogea/core/schemas";
+import type { OrthoGeaLayer } from "@orthogea/core";
 
 const layer: OrthoGeaLayer = OrthoGeaLayerSchema.parse(json);
 ```
@@ -21,7 +23,12 @@ are normalised, the NUTS code must belong to the declared country and the zoom r
 ordered. `service` is a discriminated union (`WMS`, `WMTS`, `XYZ`, `WFS`, `COG`), so narrowing
 on `layer.service.type` gives the right options object.
 
-Also exported: `LayerCollectionSchema`, `WMSOptionsSchema`, `WMTSOptionsSchema`,
+The schemas live behind `@orthogea/core/schemas` because they carry Zod, and validating a
+catalogue is something a build step or a catalogue author does - not something a map does on
+every frame. The root entry exports the **types** they produce, which are erased at build time,
+so importing `@orthogea/core` pulls in no third-party code at all.
+
+Also exported from `@orthogea/core/schemas`: `LayerCollectionSchema`, `WMSOptionsSchema`, `WMTSOptionsSchema`,
 `XYZOptionsSchema`, `WFSOptionsSchema`, `COGOptionsSchema`, `LicenseSchema`, `ProviderSchema`,
 `GeoBoundingBoxSchema`, plus the matching types and the `isWmsLayer` / `isQueryableLayer` type
 guards.

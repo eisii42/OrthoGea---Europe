@@ -1,10 +1,15 @@
 /**
  * @orthogea/client - turns catalogue records into map sources.
  *
- * MapLibre GL and OpenLayers adapters, tiled WMS/WMTS/XYZ URL builders, a
- * universal GetFeatureInfo engine and attribution formatting. The package has
- * no runtime dependency on a map library: it produces plain specifications the
- * host application feeds to MapLibre or OpenLayers.
+ * MapLibre GL, Leaflet and OpenLayers adapters, tiled WMS/WMTS/XYZ URL
+ * builders, the seamless imagery mosaic and attribution formatting. The
+ * package has no runtime dependency on a map library: it produces plain
+ * specifications the host feeds to MapLibre, Leaflet or OpenLayers, and this
+ * entry pulls in no third-party code at all.
+ *
+ * The GetFeatureInfo engine lives behind `@orthogea/client/featureinfo`: it
+ * needs an XML parser, and a map that only draws imagery should not have to
+ * ship one.
  */
 
 export type {
@@ -28,7 +33,9 @@ export {
   type MosaicOptions,
   type MosaicProtocolResponse,
   type MosaicSelection,
-  type MosaicSourceOptions
+  type DetailZoomOptions,
+  type MosaicSourceOptions,
+  type MosaicTile
 } from "./mosaic.js";
 
 export {
@@ -68,6 +75,12 @@ export {
   type ToRasterLayerOptions,
   type ToRasterSourceOptions
 } from "./maplibre/adapter.js";
+
+export {
+  bindDetailZoomLimit,
+  type ZoomLimitOptions,
+  type ZoomLimitTarget
+} from "./maplibre/zoom.js";
 
 export {
   ORTHOGEA_PROTOCOL,
@@ -116,27 +129,3 @@ export {
   type OpenLayersWmtsSource,
   type OpenLayersXyzSource
 } from "./openlayers/adapter.js";
-
-export {
-  assertQueryableWms,
-  buildGetFeatureInfoUrl,
-  getFeatureInfo,
-  getFeatureInfoForLayers,
-  parseFeatureInfoResponse,
-  parseGmlFeatureInfo,
-  parseHtmlFeatureInfo,
-  parseTextFeatureInfo,
-  pickInfoFormat,
-  resolveFeatureInfoWindow,
-  resolveGeographicWindow,
-  resolveQueryCrs,
-  type BuildFeatureInfoUrlOptions,
-  type FeatureInfoFeature,
-  type FeatureInfoFormat,
-  type FeatureInfoQuery,
-  type FeatureInfoResponse,
-  type FeatureInfoResult,
-  type FeatureInfoWindow,
-  type FetchLike,
-  type GetFeatureInfoOptions
-} from "./featureinfo/index.js";

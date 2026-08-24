@@ -14,6 +14,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./validate": {
+      "types": "./dist/validate.d.ts",
+      "import": "./dist/validate.js",
+      "require": "./dist/validate.cjs"
+    },
     "./data/*": "./data/*",
     "./package.json": "./package.json"
   },
@@ -25,15 +30,16 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "node scripts/build-data.mjs && tsup",
     "dev": "tsup --watch",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "test": "node scripts/build-data.mjs && vitest run",
+    "typecheck": "node scripts/build-data.mjs && tsc --noEmit",
     "schema": "node scripts/generate-schema.mjs",
     "verify": "node scripts/verify-endpoints.mjs",
     "clean": "rimraf dist .turbo",
     "docs": "node scripts/generate-catalog-docs.mjs",
-    "verify:mosaic": "node scripts/verify-mosaic.mjs"
+    "verify:mosaic": "node scripts/verify-mosaic.mjs",
+    "data": "node scripts/build-data.mjs"
   },
   "dependencies": {
     "@orthogea/core": "workspace:*",

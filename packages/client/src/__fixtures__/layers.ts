@@ -1,4 +1,5 @@
-import { OrthoGeaLayerSchema, type OrthoGeaLayer } from "@orthogea/core";
+import { OrthoGeaLayerSchema } from "@orthogea/core/schemas";
+import type { OrthoGeaLayer } from "@orthogea/core";
 
 /** WMS 1.3.0 cadastre layer behind an INSPIRE proxy endpoint ending with `?`. */
 export const cadastreLayer: OrthoGeaLayer = OrthoGeaLayerSchema.parse({

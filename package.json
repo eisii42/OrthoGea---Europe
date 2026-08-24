@@ -19,10 +19,12 @@
     "verify": "pnpm --filter @orthogea/catalog verify",
     "schema": "pnpm --filter @orthogea/catalog schema",
     "docs": "pnpm --filter @orthogea/catalog docs",
-    "clean": "turbo run clean && rimraf node_modules"
+    "clean": "turbo run clean && rimraf node_modules",
+    "size": "node scripts/bundle-size.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "esbuild": "^0.25.0",
     "rimraf": "^6.0.1",
     "tsup": "^8.3.5",
     "turbo": "^2.3.3",
