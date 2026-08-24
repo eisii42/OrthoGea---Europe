@@ -48,6 +48,14 @@ const BASE_LAYER_ID = "eu.copernicus.vhr-2021";
 const FADE_FROM_ZOOM = 13.5;
 const FADE_TO_ZOOM = 15.5;
 
+/**
+ * Deepest pyramid level the 2 m base is requested at, which the 512 px source
+ * shows at zoom 17. Past its own resolution the service only returns a
+ * server-side upscale, so MapLibre may as well upscale the tiles it already
+ * holds: zooming stays instant and a whole class of requests disappears.
+ */
+const BASE_MAX_TILE_ZOOM = 16;
+
 const state = {
   baseId: MOSAIC_ID,
   overlayIds: new Set<string>(),
@@ -94,6 +102,8 @@ function adapterOptions() {
 
 /** Layer currently drawn by the mosaic, shown in the sidebar. */
 let mosaic: Mosaic;
+/** The European base, served through the same machinery as the orthophotos. */
+let baseMosaic: Mosaic;
 let lastMosaicLayer: OrthoGeaLayer | undefined;
 let mosaicLabelTimer: number | undefined;
 
@@ -119,7 +129,70 @@ function registerProtocol(): void {
       mosaicLabelTimer = window.setTimeout(updateMosaicLabel, 200);
     }
   });
-  registerMosaicProtocol(maplibregl, mosaic);
+  // The base goes through the mosaic too. It draws a single layer, so the
+  // selection costs nothing, but it inherits everything around it: tiles kept
+  // in Cache Storage between sessions, one download shared by every caller,
+  // a request timeout, and idle prefetching of the ground ahead.
+  const base = getLayer(BASE_LAYER_ID);
+  baseMosaic = createMosaic({
+    id: "base",
+    layers: base ? [base] : [],
+    fallback: base,
+    // Never a threshold: this layer is the background at every zoom.
+    orthophotoFromZoom: Number.POSITIVE_INFINITY,
+    cacheName: "orthogea-base",
+    ...adapterOptions()
+  });
+
+  registerMosaicProtocol(maplibregl, [mosaic, baseMosaic]);
+}
+
+/** True while the reader is on a metered or very slow connection. */
+function frugal(): boolean {
+  const connection = (
+    navigator as Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string };
+    }
+  ).connection;
+  if (!connection) return false;
+  return (
+    connection.saveData === true ||
+    connection.effectiveType === "slow-2g" ||
+    connection.effectiveType === "2g"
+  );
+}
+
+/**
+ * Warms the ring of tiles just outside the viewport while the map is still.
+ *
+ * A pan then starts from tiles that are already in Cache Storage instead of a
+ * round trip to a national WMS, which is the difference between a map that
+ * follows the mouse and one that catches up with it. Skipped on a metered
+ * connection, and never while the map is moving.
+ */
+function prefetchNeighbours(): void {
+  if (state.baseId !== MOSAIC_ID || frugal() || navigator.onLine === false) return;
+
+  const zoom = map.getZoom();
+  // 512 px sources are asked for the level below the one on screen.
+  const z = Math.max(0, Math.round(zoom) - 1);
+  const bounds = map.getBounds();
+  const [west, south] = lngLatToTile(bounds.getWest(), bounds.getSouth(), z);
+  const [east, north] = lngLatToTile(bounds.getEast(), bounds.getNorth(), z);
+
+  // A wide viewport already holds dozens of tiles; a ring around it would cost
+  // more than the pan it saves.
+  if ((east - west + 3) * (south - north + 3) > 48) return;
+
+  const wantsOrthophotos = zoom >= FADE_FROM_ZOOM;
+  for (let x = west - 1; x <= east + 1; x += 1) {
+    for (let y = north - 1; y <= south + 1; y += 1) {
+      if (x >= west && x <= east && y >= north && y <= south) continue;
+      if (y < 0 || y >= 2 ** z) continue;
+      if (z <= BASE_MAX_TILE_ZOOM) baseMosaic.prefetch(x, y, z);
+      if (wantsOrthophotos) mosaic.prefetch(x, y, z);
+    }
+  }
 }
 
 function updateMosaicLabel(): void {
@@ -164,12 +237,14 @@ let currentEntries: MapEntry[] = [];
 
 /** The Copernicus base: one fast service, drawn at every zoom. */
 function baseEntry(): MapEntry | undefined {
-  const base = getLayer(BASE_LAYER_ID);
-  if (!base) return undefined;
+  if (!getLayer(BASE_LAYER_ID)) return undefined;
   return {
     styleLayerId: "orthogea-base-raster",
     sourceId: "orthogea-base",
-    source: toRasterSource(base, { ...adapterOptions(), tileSize: 512 }),
+    source: toMosaicRasterSource(baseMosaic, {
+      attributionMode: "all",
+      maxzoom: BASE_MAX_TILE_ZOOM
+    }),
     styleLayer: {
       id: "orthogea-base-raster",
       type: "raster",
@@ -601,9 +676,12 @@ map.on("moveend", () => {
   if (state.baseId === MOSAIC_ID) updateMosaicLabel();
 });
 
-// Once the map settles, the label and the credits match what is on screen.
+// Once the map settles, the label and the credits match what is on screen, and
+// the ground just outside it is warmed for the next pan.
 map.on("idle", () => {
-  if (state.baseId === MOSAIC_ID) updateMosaicLabel();
+  if (state.baseId !== MOSAIC_ID) return;
+  updateMosaicLabel();
+  prefetchNeighbours();
 });
 
 map.on("load", () => {

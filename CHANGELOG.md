@@ -4,6 +4,48 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the packages share one version
 number.
 
+## [0.4.0] - 2026-08-24
+
+### Fixed
+
+- **Germany no longer washes out at detail zoom.** Coverage is modelled as a rectangle, and
+  rectangles cross borders: Austria's reaches Munich, France's reaches Frankfurt. Asked for
+  ground they do not hold, both services answer with a uniform white image rather than an error,
+  and the mosaic painted it because a single candidate was accepted unconditionally. A mosaic
+  that can draw a transparent hole now always prefers the hole, so the European base shows
+  through instead.
+- **Tile caches are no longer drawn at half resolution.** A pre-rendered cache has a fixed 256 px
+  grid; asked for the level a 512 px mosaic wants, it answered with an image the renderer then
+  stretched, leaving basemap.at, IGN, Veneto and Estonia a full zoom level behind. Their four
+  children are now fetched in parallel and stitched into one tile.
+- **A 404 is read as a gap in coverage, not as a broken service.** basemap.at answers 404 over
+  Munich, which used to blacklist it - and with it the whole of Austria - for the next minute.
+- **A neighbour's rectangle no longer hides a country's own imagery.** Foreign candidates are
+  moved to the back of the chain instead of being dropped from it, so where the closer authority
+  answers blank the map falls through to the right service rather than to a hole. North
+  Rhine-Westphalia's rectangle reaches Venlo, Bavaria's reaches Salzburg.
+
+### Added
+
+- **Germany, at last.** There is no open national orthophoto - the BKG service needs registration
+  and the survey is a state responsibility - so the catalogue now carries the **13 state services
+  that publish theirs as open data**: Bavaria, North Rhine-Westphalia, Lower Saxony,
+  Baden-Wuerttemberg, Hesse, Rhineland-Palatinate, Brandenburg (with Berlin), Saxony,
+  Saxony-Anhalt, Thuringia, Schleswig-Holstein, Mecklenburg-Vorpommern and Saarland. Fourteen of
+  the sixteen Laender are covered at 10-40 cm; Hamburg and Bremen publish nothing open, and the
+  European base keeps showing there.
+- **Luxembourg**: the ACT national orthophoto, summer 2025 flight, 10 cm.
+- `Mosaic.prefetch()` and `Mosaic.prefetchAround()`: warm the tiles just outside the viewport
+  while the map is still, so a pan starts from cache instead of a round trip. The demo calls them
+  on `idle`, and skips them on a metered or 2G connection.
+- Concurrent requests for the same tile now share one download, and the request is dropped only
+  once every caller has walked away.
+- `cacheLimit` (default 1500 tiles): Cache Storage never evicts on its own, so the oldest entries
+  are trimmed in batches instead of letting the browser drop the whole origin at once.
+- The demo serves the Copernicus base through the mosaic as well, so it inherits Cache Storage,
+  shared downloads and prefetching, and stops requesting tiles past the resolution of its own 2 m
+  data.
+
 ## [0.3.2] - 2026-08-24
 
 ### Fixed

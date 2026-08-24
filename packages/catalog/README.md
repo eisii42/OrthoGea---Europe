@@ -1,7 +1,7 @@
 # @orthogea/catalog
 
 A validated registry of European open geodata services for
-[OrthoGea - Europe](../../README.md): 41 layers from 19 scopes, indexed from NUTS-0 down to
+[OrthoGea - Europe](../../README.md): 55 layers from 20 scopes, indexed from NUTS-0 down to
 NUTS-2/3, every endpoint probed live. Italy is covered region by region: 16 of the 21 regions
 and autonomous provinces publish an orthophoto service, all of them the most recent flight the
 provider exposes.

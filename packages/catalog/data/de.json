@@ -57,6 +57,712 @@
         "topographic",
         "germany"
       ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.bayern.dop",
+      "title": "Digitales Orthophoto 40 cm - Bayern",
+      "description": "Official digital orthophoto of Bayern, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Landesamt fuer Digitalisierung, Breitband und Vermessung Bayern",
+        "shortName": "LDBV",
+        "url": "https://geodatenonline.bayern.de/"
+      },
+      "country": "DE",
+      "regionName": "Bayern",
+      "bbox": [
+        8.96,
+        47.12,
+        14.04,
+        50.63
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://geoservices.bayern.de/od/wms/dop/v1/dop40",
+        "options": {
+          "layers": [
+            "by_dop40c"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© LDBV Bayern",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.4,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "bayern"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.nrw.dop",
+      "title": "Digitales Orthophoto 10 cm - North Rhine-Westphalia",
+      "description": "Official digital orthophoto of Nordrhein-Westfalen, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Geobasis NRW",
+        "shortName": "Geobasis NRW",
+        "url": "https://www.bezreg-koeln.nrw.de/geobasis-nrw"
+      },
+      "country": "DE",
+      "regionName": "Nordrhein-Westfalen",
+      "bbox": [
+        5.59,
+        50.06,
+        9.74,
+        52.8
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://www.wms.nrw.de/geobasis/wms_nw_dop",
+        "options": {
+          "layers": [
+            "nw_dop_rgb"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© Geobasis NRW",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.1,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "nrw"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.niedersachsen.dop",
+      "title": "Digitales Orthophoto 20 cm - Lower Saxony",
+      "description": "Official digital orthophoto of Niedersachsen, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Landesamt fuer Geoinformation und Landesvermessung Niedersachsen",
+        "shortName": "LGLN",
+        "url": "https://www.lgln.niedersachsen.de/"
+      },
+      "country": "DE",
+      "regionName": "Niedersachsen",
+      "bbox": [
+        6.51,
+        51.15,
+        11.75,
+        54.15
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://opendata.lgln.niedersachsen.de/doorman/noauth/dop_wms",
+        "options": {
+          "layers": [
+            "ni_dop20"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© LGLN",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "niedersachsen"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.bw.dop",
+      "title": "Digitales Orthophoto 20 cm - Baden-Wuerttemberg",
+      "description": "Official digital orthophoto of Baden-Wuerttemberg, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Landesamt fuer Geoinformation und Landentwicklung Baden-Wuerttemberg",
+        "shortName": "LGL BW",
+        "url": "https://www.lgl-bw.de/"
+      },
+      "country": "DE",
+      "regionName": "Baden-Wuerttemberg",
+      "bbox": [
+        7.2,
+        47.4,
+        10.7,
+        50
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://owsproxy.lgl-bw.de/owsproxy/ows/WMS_LGL-BW_ATKIS_DOP_20_C",
+        "options": {
+          "layers": [
+            "IMAGES_DOP_20_RGB"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© LGL Baden-Wuerttemberg",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "bw"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.hessen.dop",
+      "title": "Digitales Orthophoto 20 cm - Hesse",
+      "description": "Official digital orthophoto of Hessen, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Hessische Verwaltung fuer Bodenmanagement und Geoinformation",
+        "shortName": "HVBG",
+        "url": "https://hvbg.hessen.de/"
+      },
+      "country": "DE",
+      "regionName": "Hessen",
+      "bbox": [
+        7.7,
+        49.38,
+        10.27,
+        51.67
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://www.gds-srv.hessen.de/cgi-bin/lika-services/ogc-free-images.ows",
+        "options": {
+          "layers": [
+            "he_dop20_rgb"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© HVBG Hessen",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "hessen"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.rlp.dop",
+      "title": "Digitales Orthophoto 20 cm - Rhineland-Palatinate",
+      "description": "Official digital orthophoto of Rheinland-Pfalz, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Landesamt fuer Vermessung und Geobasisinformation Rheinland-Pfalz",
+        "shortName": "LVermGeo RP",
+        "url": "https://lvermgeo.rlp.de/"
+      },
+      "country": "DE",
+      "regionName": "Rheinland-Pfalz",
+      "bbox": [
+        6.04,
+        48.9,
+        8.62,
+        51
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://geo4.service24.rlp.de/wms/rp_dop20.fcgi",
+        "options": {
+          "layers": [
+            "rp_dop20"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© LVermGeo Rheinland-Pfalz",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "rlp"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.brandenburg.dop",
+      "title": "Digitales Orthophoto 20 cm - Brandenburg and Berlin",
+      "description": "Official digital orthophoto of Brandenburg und Berlin, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Landesvermessung und Geobasisinformation Brandenburg",
+        "shortName": "LGB",
+        "url": "https://geobasis-bb.de/"
+      },
+      "country": "DE",
+      "regionName": "Brandenburg und Berlin",
+      "bbox": [
+        11.23,
+        51.31,
+        14.77,
+        53.57
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://isk.geobasis-bb.de/mapproxy/dop20c/service/wms",
+        "options": {
+          "layers": [
+            "bebb_dop20c"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© GeoBasis-DE/LGB",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "brandenburg"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.sachsen.dop",
+      "title": "Digitales Orthophoto 20 cm - Saxony",
+      "description": "Official digital orthophoto of Sachsen, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Staatsbetrieb Geobasisinformation und Vermessung Sachsen",
+        "shortName": "GeoSN",
+        "url": "https://www.landesvermessung.sachsen.de/"
+      },
+      "country": "DE",
+      "regionName": "Sachsen",
+      "bbox": [
+        11.79,
+        50.15,
+        15.09,
+        51.72
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://geodienste.sachsen.de/wms_geosn_dop-rgb/guest",
+        "options": {
+          "layers": [
+            "sn_dop_020"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© GeoSN",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "sachsen"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.sachsen-anhalt.dop",
+      "title": "Digitales Orthophoto 20 cm - Saxony-Anhalt",
+      "description": "Official digital orthophoto of Sachsen-Anhalt, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Landesamt fuer Vermessung und Geoinformation Sachsen-Anhalt",
+        "shortName": "LVermGeo ST",
+        "url": "https://www.lvermgeo.sachsen-anhalt.de/"
+      },
+      "country": "DE",
+      "regionName": "Sachsen-Anhalt",
+      "bbox": [
+        10.51,
+        50.89,
+        13.32,
+        53.08
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://www.geodatenportal.sachsen-anhalt.de/wss/service/ST_LVermGeo_DOP_WMS_OpenData/guest",
+        "options": {
+          "layers": [
+            "lsa_lvermgeo_dop20_2"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© LVermGeo Sachsen-Anhalt",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "sachsen-anhalt"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.thueringen.dop",
+      "title": "Digitales Orthophoto 20 cm - Thuringia",
+      "description": "Official digital orthophoto of Thueringen, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Landesamt fuer Bodenmanagement und Geoinformation Thueringen",
+        "shortName": "TLBG",
+        "url": "https://tlbg.thueringen.de/"
+      },
+      "country": "DE",
+      "regionName": "Thueringen",
+      "bbox": [
+        9.85,
+        50.15,
+        12.71,
+        51.66
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://www.geoproxy.geoportal-th.de/geoproxy/services/DOP20",
+        "options": {
+          "layers": [
+            "th_dop"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© GDI-Th",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "thueringen"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.schleswig-holstein.dop",
+      "title": "Digitales Orthophoto 20 cm - Schleswig-Holstein",
+      "description": "Official digital orthophoto of Schleswig-Holstein, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Landesamt fuer Vermessung und Geoinformation Schleswig-Holstein",
+        "shortName": "LVermGeo SH",
+        "url": "https://www.schleswig-holstein.de/DE/landesregierung/ministerien-behoerden/LVERMGEOSH"
+      },
+      "country": "DE",
+      "regionName": "Schleswig-Holstein",
+      "bbox": [
+        7.82,
+        53.3,
+        11.42,
+        55.15
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://dienste.gdi-sh.de/WMS_SH_DOP20col_OpenGBD",
+        "options": {
+          "layers": [
+            "sh_dop20_rgb"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© GeoBasis-DE/LVermGeo SH",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "schleswig-holstein"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.mv.dop",
+      "title": "Digitales Orthophoto 20 cm - Mecklenburg-Vorpommern",
+      "description": "Official digital orthophoto of Mecklenburg-Vorpommern, published as open data by the state survey authority.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Landesamt fuer innere Verwaltung Mecklenburg-Vorpommern",
+        "shortName": "LAiV MV",
+        "url": "https://www.laiv-mv.de/"
+      },
+      "country": "DE",
+      "regionName": "Mecklenburg-Vorpommern",
+      "bbox": [
+        10.34,
+        53.04,
+        14.48,
+        54.82
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://www.geodaten-mv.de/dienste/adv_dop",
+        "options": {
+          "layers": [
+            "mv_dop"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© GeoBasis-DE/M-V",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "mv"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-24",
+      "id": "de.saarland.dop",
+      "title": "Digitales Orthophoto 20 cm - Saarland",
+      "description": "Official digital orthophoto of Saarland, 2016 flight, published as open data by the state survey authority. It is the most recent open flight the state serves.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Landesamt fuer Vermessung, Geoinformation und Landentwicklung Saarland",
+        "shortName": "LVGL Saarland",
+        "url": "https://www.saarland.de/lvgl/"
+      },
+      "country": "DE",
+      "regionName": "Saarland",
+      "bbox": [
+        6.35,
+        49.11,
+        7.41,
+        49.64
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://geoportal.saarland.de/freewms/dop2016",
+        "options": {
+          "layers": [
+            "sl_dop2016"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© LVGL Saarland",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.2,
+      "temporal": {
+        "start": "2016-01",
+        "end": "2016-12"
+      },
+      "tags": [
+        "orthophoto",
+        "dop",
+        "germany",
+        "saarland"
+      ]
     }
   ]
 }

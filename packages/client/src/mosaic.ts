@@ -85,6 +85,16 @@ export interface MosaicOptions extends TileUrlBuilderOptions {
    */
   cacheName?: string | false;
   /**
+   * Maximum number of tiles kept in Cache Storage.
+   *
+   * Cache Storage is persistent and has no eviction of its own, so a long
+   * session over a large area would grow it without bound until the browser
+   * evicts the whole origin at once. The oldest entries are trimmed instead,
+   * which keeps the working set - the area actually being read - resident.
+   * Defaults to 1500 tiles, roughly 60 MB of 512 px JPEG. Set 0 to disable.
+   */
+  cacheLimit?: number;
+  /**
    * Answer with a transparent tile instead of failing when nothing covers the
    * area. Lets a mosaic without a fallback sit on top of a base layer: the base
    * shows through the holes and the console stays quiet. Defaults to `true`
@@ -100,6 +110,22 @@ export interface MosaicSelection {
   layers: OrthoGeaLayer[];
   /** True when only the global fallback applies, because of the zoom. */
   satelliteOnly: boolean;
+}
+
+/** One tile currently being loaded, shared between everyone who wants it. */
+interface InFlightTile {
+  promise: Promise<MosaicTile>;
+  controller: AbortController;
+  /** Callers still waiting; the request is dropped when this reaches zero. */
+  refs: number;
+}
+
+/** A tile served by the mosaic, with the source it came from. */
+export interface MosaicTile {
+  layer: OrthoGeaLayer;
+  data: ArrayBuffer;
+  contentType: string;
+  url: string;
 }
 
 /**
@@ -178,7 +204,18 @@ export class Mosaic {
    * to the European base at that point is exactly what a reader notices.
    */
   private readonly confirmed = new Map<string, Set<string>>();
+  /**
+   * Tiles being loaded right now, keyed by `z/x/y`.
+   *
+   * A tile is often wanted twice at once - the renderer asks for it while the
+   * idle prefetcher is already downloading it, or a pan brings back a tile
+   * whose request is still open. Sharing the work halves the traffic on a slow
+   * link; the request is only aborted once every caller has walked away.
+   */
+  private readonly inFlight = new Map<string, InFlightTile>();
   private tileCache?: Promise<Cache | undefined>;
+  private cacheWrites = 0;
+  private trimming?: Promise<void>;
   private readonly options: MosaicOptions;
 
   constructor(options: MosaicOptions) {
@@ -222,11 +259,18 @@ export class Mosaic {
         bboxContainsPoint(layer.bbox, lng, lat)
     );
 
-    // National rectangles overlap across borders: once the most local source is
-    // known, imagery from another country is dropped rather than shown over it.
+    // Rectangles overlap across borders: North Rhine-Westphalia's reaches
+    // Venlo, Bavaria's reaches Salzburg. Once the most local source is known,
+    // imagery from another country goes to the back of the chain rather than in
+    // front of the authority that actually surveys the ground. It stays in the
+    // chain, though: dropping it outright would leave a hole wherever the
+    // country's own service happens to answer blank.
     const local = covering.find((layer) => layer.country !== "EU");
     const filtered = local
-      ? covering.filter((layer) => layer.country === local.country || layer.country === "EU")
+      ? [
+          ...covering.filter((layer) => layer.country === local.country || layer.country === "EU"),
+          ...covering.filter((layer) => layer.country !== local.country && layer.country !== "EU")
+        ]
       : covering;
 
     // The fallback is always last, and is never filtered out by its own zoom
@@ -238,6 +282,79 @@ export class Mosaic {
   /** The layer that would actually be drawn, ignoring transient failures. */
   bestFor(x: number, y: number, z: number): OrthoGeaLayer | undefined {
     return this.select(x, y, z).layers[0];
+  }
+
+  /**
+   * True when a service publishes a tile grid finer than the one the mosaic
+   * draws on, so its tiles have to be stitched rather than stretched.
+   */
+  private canStitch(layer: OrthoGeaLayer): boolean {
+    if (!isTiled(layer)) return false;
+    const native = (layer.service as { options: { tileSize: number } }).options.tileSize;
+    return native > 0 && this.tileSize / native === 2;
+  }
+
+  /**
+   * Fetches one mosaic tile as the four native tiles below it.
+   *
+   * A pre-rendered cache has a fixed grid. Asked for the level a 512 px pyramid
+   * wants, it answers with a 256 px image that the renderer then stretches, and
+   * the imagery ends up a full zoom level behind the map - the reason
+   * basemap.at, IGN and Veneto looked soft next to the WMS services. Their four
+   * children cost four CDN hits, which is still faster than one WMS render, and
+   * they stitch into a tile at the resolution the reader is actually at.
+   */
+  private async fetchStitched(
+    layer: OrthoGeaLayer,
+    x: number,
+    y: number,
+    z: number,
+    signal: AbortSignal
+  ): Promise<{ data: ArrayBuffer; contentType: string; bytes: number } | undefined> {
+    const canvasCtor = (globalThis as { OffscreenCanvas?: typeof OffscreenCanvas }).OffscreenCanvas;
+    if (!canvasCtor || typeof createImageBitmap !== "function") return undefined;
+
+    const fetchImpl = this.options.fetchImpl ?? globalThis.fetch;
+    const quadrants: readonly [number, number][] = [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1]
+    ];
+
+    const parts = await Promise.all(
+      quadrants.map(async ([dx, dy]) => {
+        const response = await fetchImpl(this.tileUrl(layer, x * 2 + dx, y * 2 + dy, z + 1), {
+          signal
+        });
+        const contentType = response.headers.get("content-type") ?? "";
+        if (!response.ok || !contentType.startsWith("image/")) return undefined;
+        return response.arrayBuffer();
+      })
+    );
+    // One missing child and the tile would have a hole: fall back to the
+    // stretched single tile, which at least covers the whole ground.
+    if (parts.some((part) => part === undefined)) return undefined;
+
+    const canvas = new canvasCtor(this.tileSize, this.tileSize);
+    const context = canvas.getContext("2d");
+    if (!context) return undefined;
+
+    const half = this.tileSize / 2;
+    for (const [index, [dx, dy]] of quadrants.entries()) {
+      const bitmap = await createImageBitmap(new Blob([parts[index] as ArrayBuffer]));
+      context.drawImage(bitmap, dx * half, dy * half, half, half);
+      bitmap.close();
+    }
+
+    const blob = await canvas.convertToBlob({ type: "image/jpeg", quality: 0.9 });
+    return {
+      data: await blob.arrayBuffer(),
+      contentType: "image/jpeg",
+      // The blank test reads the originals: re-encoding changes the size, and
+      // four empty children are what actually says "no coverage here".
+      bytes: parts.reduce((total, part) => total + (part as ArrayBuffer).byteLength, 0)
+    };
   }
 
   /** Request URL of a tile for one specific layer. */
@@ -362,16 +479,136 @@ export class Mosaic {
   }
 
   /**
+   * Keeps Cache Storage bounded, oldest first.
+   *
+   * Cache Storage never evicts on its own: left alone it grows until the
+   * browser drops the whole origin, losing the tiles being read right now
+   * along with the rest. Trimming in batches, well away from the tile that
+   * triggered it, keeps the working set resident and the cost off the hot path.
+   */
+  private trimCache(cache: Cache): void {
+    const limit = this.options.cacheLimit ?? 1500;
+    if (limit <= 0) return;
+    this.cacheWrites += 1;
+    if (this.cacheWrites < 100 || this.trimming) return;
+    this.cacheWrites = 0;
+
+    this.trimming = (async () => {
+      try {
+        const keys = await cache.keys();
+        // `keys()` answers in insertion order, so the head is the oldest.
+        for (const request of keys.slice(0, keys.length - limit)) {
+          await cache.delete(request);
+        }
+      } catch {
+        // A full or unavailable cache is not worth failing a tile over.
+      } finally {
+        this.trimming = undefined;
+      }
+    })();
+  }
+
+  /**
    * Fetches a tile, walking down the candidate list until one answers with an
    * image. A layer that fails is skipped for a while, so one broken national
    * service cannot slow the whole map down.
+   *
+   * Concurrent requests for the same tile share one download.
    */
-  async fetchTile(
+  async fetchTile(x: number, y: number, z: number, signal?: AbortSignal): Promise<MosaicTile> {
+    const tile = await this.share(x, y, z, signal);
+    if (tile.layer !== EMPTY_LAYER) {
+      this.used.set(tile.layer.id, Date.now());
+      this.options.onTile?.({ layer: tile.layer, x, y, z });
+    }
+    return tile;
+  }
+
+  /**
+   * Downloads a tile into the cache without drawing it and without crediting
+   * its provider, so a viewport can be warmed ahead of a pan. Failures are
+   * deliberately silent: a prefetch that does not arrive costs nothing.
+   */
+  prefetch(x: number, y: number, z: number): void {
+    if (this.inFlight.has(`${z}/${x}/${y}`)) return;
+    void this.share(x, y, z).catch(() => undefined);
+  }
+
+  /**
+   * Warms the ring of tiles around one tile - the ground a reader is about to
+   * pan into. Call it when the map goes idle, never while it is moving.
+   */
+  prefetchAround(x: number, y: number, z: number, radius = 1): void {
+    const span = 2 ** z;
+    for (let dx = -radius; dx <= radius; dx += 1) {
+      for (let dy = -radius; dy <= radius; dy += 1) {
+        if (dx === 0 && dy === 0) continue;
+        const ty = y + dy;
+        if (ty < 0 || ty >= span) continue;
+        this.prefetch(((x + dx) % span + span) % span, ty, z);
+      }
+    }
+  }
+
+  /** Joins the download of a tile, starting it if nobody else has. */
+  private share(x: number, y: number, z: number, signal?: AbortSignal): Promise<MosaicTile> {
+    const key = `${z}/${x}/${y}`;
+    let entry = this.inFlight.get(key);
+    if (!entry) {
+      const controller = new AbortController();
+      const created: InFlightTile = {
+        controller,
+        refs: 0,
+        promise: undefined as unknown as Promise<MosaicTile>
+      };
+      created.promise = this.loadTile(x, y, z, controller.signal);
+      void created.promise.catch(() => undefined).then(() => {
+        if (this.inFlight.get(key) === created) this.inFlight.delete(key);
+      });
+      this.inFlight.set(key, created);
+      entry = created;
+    }
+
+    const joined = entry;
+    joined.refs += 1;
+    let released = false;
+    const release = (): void => {
+      if (released) return;
+      released = true;
+      joined.refs -= 1;
+      // Nobody is waiting any more: dropping the request frees the connection
+      // for the tiles that are still on screen.
+      if (joined.refs <= 0) joined.controller.abort();
+    };
+
+    return new Promise<MosaicTile>((resolve, reject) => {
+      const onAbort = (): void => {
+        release();
+        reject(new DOMException(`Tile ${key} aborted`, "AbortError"));
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+      joined.promise.then(
+        (tile) => {
+          signal?.removeEventListener("abort", onAbort);
+          release();
+          resolve(tile);
+        },
+        (error: Error) => {
+          signal?.removeEventListener("abort", onAbort);
+          release();
+          reject(error);
+        }
+      );
+      if (signal?.aborted) onAbort();
+    });
+  }
+
+  private async loadTile(
     x: number,
     y: number,
     z: number,
     signal?: AbortSignal
-  ): Promise<{ layer: OrthoGeaLayer; data: ArrayBuffer; contentType: string; url: string }> {
+  ): Promise<MosaicTile> {
     const { layers } = this.select(x, y, z);
     if (layers.length === 0) {
       if (this.transparentWhenUncovered) return this.emptyTile();
@@ -386,8 +623,17 @@ export class Mosaic {
 
     const cache = await this.cache();
 
+    // The last candidate is normally taken as it comes, so that a genuinely
+    // uniform tile - open sea, a snowfield - still renders instead of leaving a
+    // hole. That only makes sense when a hole is not an option: a mosaic that
+    // can draw one must never paint a neighbour's no-data fill over the map.
+    // Coverage is a rectangle, and rectangles cross borders: Austria's reaches
+    // Munich, France's reaches Frankfurt, and both services answer there with a
+    // blank image rather than an error.
+    const lenient = !this.transparentWhenUncovered;
+
     for (const layer of layers) {
-      const isLast = layer === layers[layers.length - 1];
+      const isLast = lenient && layer === layers[layers.length - 1];
       if (!isLast && this.isFailing(layer.id)) continue;
       // Coverage gaps are contiguous: if this service was empty next door, do
       // not spend a round trip finding out again.
@@ -398,8 +644,6 @@ export class Mosaic {
       const cached = await cache?.match(url).catch(() => undefined);
       if (cached) {
         const data = await cached.arrayBuffer();
-        this.used.set(layer.id, Date.now());
-        this.options.onTile?.({ layer, x, y, z });
         return {
           layer,
           data,
@@ -408,27 +652,51 @@ export class Mosaic {
         };
       }
 
+      if (signal?.aborted) throw new DOMException(`Tile ${z}/${x}/${y} aborted`, "AbortError");
+
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       const abort = () => controller.abort();
       signal?.addEventListener("abort", abort);
 
       try {
-        const response = await fetchImpl(url, { signal: controller.signal });
-        const contentType = response.headers.get("content-type") ?? "";
-        if (!response.ok || !contentType.startsWith("image/")) {
-          throw new EndpointUnavailableError(
-            `${response.status} ${contentType || "no content type"} for ${layer.id}`,
-            response.status
-          );
+        const stitched = this.canStitch(layer)
+          ? await this.fetchStitched(layer, x, y, z, controller.signal)
+          : undefined;
+
+        let data: ArrayBuffer;
+        let contentType: string;
+        let weight: number;
+
+        if (stitched) {
+          ({ data, contentType } = stitched);
+          weight = stitched.bytes;
+        } else {
+          const response = await fetchImpl(url, { signal: controller.signal });
+          contentType = response.headers.get("content-type") ?? "";
+          // A tile cache answers 404 outside its own footprint. That is a
+          // coverage gap, not a broken service: blacklisting basemap.at
+          // because it has nothing over Munich would take Austria with it.
+          if (response.status === 404 || response.status === 204) {
+            this.markBlank(layer.id, x, y, z);
+            continue;
+          }
+          if (!response.ok || !contentType.startsWith("image/")) {
+            throw new EndpointUnavailableError(
+              `${response.status} ${contentType || "no content type"} for ${layer.id}`,
+              response.status
+            );
+          }
+          data = await response.arrayBuffer();
+          weight = data.byteLength;
         }
-        const data = await response.arrayBuffer();
+
         // The threshold scales with the tile area: an empty 256 px JPEG is
         // about 1.6 kB, an empty 512 px one about 4.7 kB, while real imagery
         // starts around 20 kB at that size.
         const minBytes = this.options.minTileBytes ?? (this.tileSize === 512 ? 9000 : 2500);
         const trusted = this.isConfirmedHere(layer.id, x, y, z);
-        if (!isLast && !trusted && minBytes > 0 && data.byteLength < minBytes) {
+        if (!isLast && !trusted && minBytes > 0 && weight < minBytes) {
           // Blank tile: the service covers the rectangle but not the ground
           // here. It stays healthy for other tiles, so it is not blacklisted,
           // but the whole block is remembered as empty.
@@ -436,16 +704,20 @@ export class Mosaic {
           continue;
         }
 
-        void cache
-          ?.put(url, new Response(data.slice(0), { headers: { "content-type": contentType } }))
-          .catch(() => undefined);
+        if (cache) {
+          void cache
+            .put(url, new Response(data.slice(0), { headers: { "content-type": contentType } }))
+            .then(() => this.trimCache(cache))
+            .catch(() => undefined);
+        }
 
-        this.used.set(layer.id, Date.now());
         this.confirm(layer.id, x, y, z);
-        this.options.onTile?.({ layer, x, y, z });
         return { layer, data, contentType, url };
       } catch (error) {
         lastError = error as Error;
+        // A tile the caller walked away from says nothing about the health of
+        // the service; a timeout, which aborts the inner controller only, does.
+        if (signal?.aborted) throw error;
         this.markFailure(layer.id);
       } finally {
         clearTimeout(timer);
@@ -467,12 +739,7 @@ export class Mosaic {
   }
 
   /** 1x1 transparent PNG, so the layer underneath shows through a hole. */
-  private emptyTile(): {
-    layer: OrthoGeaLayer;
-    data: ArrayBuffer;
-    contentType: string;
-    url: string;
-  } {
+  private emptyTile(): MosaicTile {
     const bytes = Uint8Array.from(atob(TRANSPARENT_PNG), (char) => char.charCodeAt(0));
     return {
       layer: EMPTY_LAYER,

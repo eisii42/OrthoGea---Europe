@@ -61,7 +61,8 @@ How it behaves:
 | zoom above, orthophoto available | the most local official orthophoto covering the tile |
 | several candidates | smallest extent, then cached tile services, then finest resolution, then most recent |
 | across a border | the source of the country the tile is in; foreign rectangles are dropped |
-| a source fails or answers blank | the next candidate, and the failing one is skipped for a minute |
+| a source fails | the next candidate, and the failing one is skipped for a minute |
+| a source answers blank, or 404 | the next candidate; the gap is remembered for that block only |
 | nothing else covers the tile | the fallback, or a transparent tile when the mosaic has none |
 
 Options worth knowing:
@@ -71,7 +72,8 @@ Options worth knowing:
 | `orthophotoFromZoom` | 15 | below it, only the European base is drawn |
 | `fallback` | - | the layer that closes every chain; pass `DEFAULT_SATELLITE_FALLBACK_ID` |
 | `cacheName` | `"orthogea-tiles"` | Cache Storage bucket; `false` disables caching |
-| `minTileBytes` | 2500 | tiles smaller than this count as empty and the next source is tried |
+| `minTileBytes` | 9000 / 2500 | tiles smaller than this count as empty and the next source is tried (512 / 256 px) |
+| `cacheLimit` | 1500 | tiles kept in Cache Storage; the oldest are trimmed past it |
 | `failureTtlMs` | 60000 | how long a failing service is skipped |
 | `timeoutMs` | 12000 | per-tile timeout |
 | `excludeTags` | `["alternative"]` | catalogue tags to skip |
@@ -94,7 +96,25 @@ mosaic.activeSources();         // what has actually been drawn recently
 mosaic.activeAttribution();     // credit for exactly those sources
 mosaic.tileUrl(layer, x, y, z); // the request behind a tile, for debugging
 await mosaic.fetchTile(x, y, z);// server side or for tests
+
+mosaic.prefetch(x, y, z);       // warm one tile, silently
+mosaic.prefetchAround(x, y, z); // warm the ring around it
 ```
+
+**Prefetching.** Warming the tiles just outside the viewport is the cheapest way to make panning
+feel instant: the next tiles come from Cache Storage instead of a national WMS. Do it when the
+map has settled, never while it is moving, and leave it alone on a metered connection:
+
+```ts
+map.on("idle", () => {
+  const z = Math.round(map.getZoom()) - 1;        // 512 px sources sit one level down
+  const [x, y] = lngLatToTile(map.getCenter().lng, map.getCenter().lat, z);
+  if (!navigator.connection?.saveData) mosaic.prefetchAround(x, y, z);
+});
+```
+
+Prefetched tiles are not credited: they fill the cache without touching `activeSources()`, so the
+attribution line keeps describing what is actually on screen.
 
 For a gradual hand-over, draw the base as its own layer and put an orthophoto-only mosaic on
 top with `toMosaicRasterLayer(mosaic, { fadeFromZoom: 13.5, fadeToZoom: 15.5 })`: the imagery

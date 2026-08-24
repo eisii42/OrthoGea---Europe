@@ -12,7 +12,7 @@ harvest (GetCapabilities)  ->  catalogue (validated JSON)  ->  render (MapLibre,
 
 | | |
 | --- | --- |
-| **41 layers, 18 countries + EU** | every endpoint probed live, `lastVerified` stored per record |
+| **55 layers, 19 countries + EU** | every endpoint probed live, `lastVerified` stored per record |
 | **Better than a global mosaic** | 8-30 cm official orthophotos where they exist, Sentinel-2 elsewhere |
 | **MIT code, open data** | no API key, no tile quota, no terms-of-service trap; licence and attribution carried per layer |
 | **Seamless mosaic** | one virtual layer picks the best source per tile, Copernicus imagery when zoomed out |
@@ -184,7 +184,7 @@ Everything below is on by default:
 | --- | --- |
 | Pan-European | **Copernicus VHR 2021 (about 2 m)** as the single base, CORINE Land Cover 2018, EU-DEM |
 | Italy - regional | 16 of 21 regions and autonomous provinces: Piemonte 2024, Lombardia 2024, Bolzano 2023, Trento 2015, Veneto 2024 (WMS + WMTS), Friuli-Venezia Giulia 2020, Emilia-Romagna 2023-24, Toscana 2024/2025, Umbria 2020, Marche 2022, Lazio 2023, Abruzzo 2022, Puglia 2023, Basilicata 2013, Sicilia 2022, Sardegna 2022 |
-| Rest of Europe | Spain (PNOA, MTN raster), France (BD ORTHO WMS and WMTS), Germany (basemap.de), Netherlands, Belgium (Flanders, Wallonia), Portugal, Switzerland, Austria, Poland, Czechia, Slovakia, Slovenia, Croatia, Greece, Estonia, Denmark, Sweden |
+| Rest of Europe | Spain (PNOA, MTN raster), France (BD ORTHO WMS and WMTS), Germany (13 state orthophoto services, basemap.de), Netherlands, Belgium (Flanders, Wallonia), Luxembourg, Portugal, Switzerland, Austria, Poland, Czechia, Slovakia, Slovenia, Croatia, Greece, Estonia, Denmark, Sweden |
 
 The full table lives in [docs/CATALOG.md](docs/CATALOG.md). Every record is checked end to end -
 capabilities **and** one real tile per layer - with:

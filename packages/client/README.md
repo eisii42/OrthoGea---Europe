@@ -173,6 +173,19 @@ skips a source that fails, times out or returns a blank image, and always ends o
 base, so no tile is ever empty. `mosaic.activeSources()` and `mosaic.activeAttribution()` report what is actually on
 screen, which keeps the attribution line short and correct.
 
+Tiles are kept in Cache Storage (trimmed at `cacheLimit`, 1500 by default), concurrent requests
+for the same tile share one download, and a 256 px tile cache is stitched from its four children
+rather than stretched, so a cached service is drawn at the resolution the reader is at.
+
+Warm the ground ahead of a pan while the map is still:
+
+```ts
+map.on("idle", () => mosaic.prefetchAround(x, y, z));
+```
+
+Prefetched tiles fill the cache without being credited, so `activeSources()` still describes what
+is on screen.
+
 Inspect the decisions without drawing anything:
 
 ```ts

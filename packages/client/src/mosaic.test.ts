@@ -417,3 +417,253 @@ describe("fading over a base layer", () => {
     expect(toMosaicRasterLayer(mosaic, { opacity: 0.8 }).paint?.["raster-opacity"]).toBe(0.8);
   });
 });
+
+describe("borders", () => {
+  /** A layer whose rectangle spills over the border, as every real one does. */
+  const neighbour: OrthoGeaLayer = {
+    ...regional,
+    id: "at.basemap.orthofoto",
+    country: "AT",
+    bbox: [8.8, 46.4, 17.5, 49.0]
+  };
+
+  /** Munich: inside the Austrian rectangle, outside Austria. */
+  const [mx, my] = lngLatToTile(11.575, 48.137, 14);
+
+  const blankTile = () =>
+    new Response(new Uint8Array(2400), {
+      status: 200,
+      headers: { "content-type": "image/jpeg" }
+    });
+
+  it("draws a hole rather than a neighbour's no-data fill", async () => {
+    // basemap.at answers over Munich, and IGN over Frankfurt, with a uniform
+    // grey or white image. Painting it - the only candidate, so once accepted
+    // unconditionally - washed out every German city at detail zoom.
+    const tiled = createMosaic({
+      layers: [neighbour],
+      orthophotoFromZoom: 0,
+      cacheName: false,
+      fetchImpl: async () => blankTile()
+    });
+
+    const tile = await tiled.fetchTile(mx, my, 14);
+    expect(tile.layer.id).toBe("orthogea:empty");
+  });
+
+  it("still accepts a uniform tile from the guaranteed fallback", async () => {
+    // Open sea and snowfields are genuinely uniform: the layer that guarantees
+    // coverage is the one place where a small tile must not become a hole.
+    const tiled = createMosaic({
+      layers: [neighbour, satellite],
+      fallback: satellite,
+      orthophotoFromZoom: 0,
+      cacheName: false,
+      fetchImpl: async () => blankTile()
+    });
+
+    expect((await tiled.fetchTile(mx, my, 14)).layer.id).toBe("eu.satellite.fallback");
+  });
+});
+
+describe("network efficiency", () => {
+  const image = () =>
+    new Response(new Uint8Array(32768), {
+      status: 200,
+      headers: { "content-type": "image/jpeg" }
+    });
+
+  it("shares one download between concurrent requests for the same tile", async () => {
+    const fetchImpl = vi.fn<(input: string, init?: RequestInit) => Promise<Response>>(
+      async () => image()
+    );
+    const tiled = createMosaic({ layers, fallback: satellite, fetchImpl, cacheName: false });
+
+    const [a, b] = await Promise.all([tiled.fetchTile(dx, dy, 14), tiled.fetchTile(dx, dy, 14)]);
+    expect(a.layer.id).toBe("it.toscana.ortofoto");
+    expect(b.data).toBe(a.data);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the download alive while another caller still wants the tile", async () => {
+    const fetchImpl = async () => image();
+    const tiled = createMosaic({ layers, fallback: satellite, fetchImpl, cacheName: false });
+
+    const abandoned = new AbortController();
+    const dropped = tiled.fetchTile(dx, dy, 14, abandoned.signal);
+    const kept = tiled.fetchTile(dx, dy, 14);
+    abandoned.abort();
+
+    await expect(dropped).rejects.toThrow(/aborted/i);
+    expect((await kept).layer.id).toBe("it.toscana.ortofoto");
+  });
+
+  it("warms neighbouring tiles without crediting their providers", async () => {
+    const onTile = vi.fn();
+    const fetchImpl = vi.fn<(input: string, init?: RequestInit) => Promise<Response>>(
+      async () => image()
+    );
+    const tiled = createMosaic({ layers, fallback: satellite, fetchImpl, onTile, cacheName: false });
+
+    tiled.prefetchAround(dx, dy, 14);
+    await vi.waitFor(() => expect(fetchImpl).toHaveBeenCalledTimes(8));
+    expect(onTile).not.toHaveBeenCalled();
+    expect(tiled.activeSources()).toEqual([]);
+  });
+});
+
+describe("tile caches", () => {
+  /** A regional orthophoto served from a 256 px tile cache, as basemap.at is. */
+  const cached: OrthoGeaLayer = {
+    ...wmtsLayer,
+    id: "at.basemap.orthofoto",
+    category: "orthophoto",
+    country: "AT",
+    bbox: regional.bbox,
+    resolutionMeters: 0.3
+  };
+
+  /** Minimal OffscreenCanvas, enough to record what would be drawn where. */
+  const stubCanvas = (drawn: string[]) =>
+    class {
+      constructor(
+        readonly width: number,
+        readonly height: number
+      ) {}
+      getContext(): unknown {
+        return {
+          drawImage: (_image: unknown, dx: number, dy: number, w: number, h: number) =>
+            drawn.push(`${dx},${dy} ${w}x${h}`)
+        };
+      }
+      async convertToBlob(): Promise<Blob> {
+        return new Blob([new Uint8Array(40_000)], { type: "image/jpeg" });
+      }
+    };
+
+  it("stitches the four native tiles instead of stretching one", async () => {
+    const drawn: string[] = [];
+    const asked: string[] = [];
+    vi.stubGlobal("OffscreenCanvas", stubCanvas(drawn));
+    vi.stubGlobal("createImageBitmap", async () => ({ close: () => undefined }));
+
+    const fetchImpl = async (url: string) => {
+      asked.push(url);
+      return new Response(new Uint8Array(24_000), {
+        status: 200,
+        headers: { "content-type": "image/jpeg" }
+      });
+    };
+    const tiled = createMosaic({
+      layers: [cached],
+      orthophotoFromZoom: 0,
+      cacheName: false,
+      fetchImpl
+    });
+
+    const tile = await tiled.fetchTile(dx, dy, 14);
+    expect(tile.layer.id).toBe("at.basemap.orthofoto");
+    // Four children of the tile, one level down, and nothing at its own level.
+    expect(asked).toHaveLength(4);
+    expect(asked.every((url) => url.includes("TILEMATRIX=15"))).toBe(true);
+    expect(drawn).toEqual([
+      "0,0 256x256",
+      "256,0 256x256",
+      "0,256 256x256",
+      "256,256 256x256"
+    ]);
+
+    vi.unstubAllGlobals();
+  });
+
+  it("falls back to the single tile when a child is missing", async () => {
+    vi.stubGlobal("OffscreenCanvas", stubCanvas([]));
+    vi.stubGlobal("createImageBitmap", async () => ({ close: () => undefined }));
+
+    const asked: string[] = [];
+    const fetchImpl = async (url: string) => {
+      asked.push(url);
+      return url.includes("TILEMATRIX=15")
+        ? new Response("gone", { status: 404 })
+        : new Response(new Uint8Array(24_000), {
+            status: 200,
+            headers: { "content-type": "image/jpeg" }
+          });
+    };
+    const tiled = createMosaic({
+      layers: [cached],
+      orthophotoFromZoom: 0,
+      cacheName: false,
+      fetchImpl
+    });
+
+    expect((await tiled.fetchTile(dx, dy, 14)).layer.id).toBe("at.basemap.orthofoto");
+    expect(asked.some((url) => url.includes("TILEMATRIX=14"))).toBe(true);
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("coverage gaps", () => {
+  it("treats a 404 as a gap in coverage, not as a broken service", async () => {
+    // basemap.at answers 404 over Munich, which is inside its bounding
+    // rectangle but outside Austria. Blacklisting it there used to blank
+    // Vienna as well for the next minute.
+    const asked: string[] = [];
+    const fetchImpl = async (url: string) => {
+      asked.push(url);
+      return url.includes("rt_ofc")
+        ? new Response("not found", { status: 404 })
+        : new Response(new Uint8Array(32_768), {
+            status: 200,
+            headers: { "content-type": "image/jpeg" }
+          });
+    };
+    const tiled = createMosaic({ layers, fallback: satellite, fetchImpl, cacheName: false });
+
+    // The regional layer has nothing here, so the national one draws.
+    expect((await tiled.fetchTile(dx, dy, 14)).layer.id).toBe("it.national.ortofoto");
+
+    // Far away it is still tried: a gap is remembered by place, not globally.
+    asked.length = 0;
+    const [ex, ey] = lngLatToTile(10.9, 43.2, 14);
+    await tiled.fetchTile(ex, ey, 14);
+    expect(asked.some((url) => url.includes("rt_ofc"))).toBe(true);
+  });
+});
+
+describe("across a border", () => {
+  /** A neighbour whose rectangle is smaller, so it ranks ahead on extent. */
+  const neighbour: OrthoGeaLayer = {
+    ...regional,
+    id: "de.nw.dop",
+    country: "DE",
+    bbox: [10.0, 43.0, 12.0, 44.5],
+    resolutionMeters: 0.1
+  };
+
+  it("keeps the foreign source last instead of dropping it", async () => {
+    // The German rectangle covers Florence and is the tighter one, so it leads.
+    // Dropping the Tuscan layer behind it would leave a hole wherever the
+    // German service answers blank - which, over Italy, is everywhere.
+    const bordering = createMosaic({
+      layers: [neighbour, regional, national, satellite],
+      fallback: satellite,
+      orthophotoFromZoom: 0,
+      cacheName: false,
+      fetchImpl: async (url: string) =>
+        new Response(url.includes("de.nw") || url.includes("rt_ofc") ? new Uint8Array(300) : new Uint8Array(32_768), {
+          status: 200,
+          headers: { "content-type": "image/jpeg" }
+        })
+    });
+
+    const ids = bordering.select(fx, fy, 14).layers.map((layer) => layer.id);
+    expect(ids[0]).toBe("de.nw.dop");
+    expect(ids).toContain("it.toscana.ortofoto");
+    expect(ids[ids.length - 1]).toBe("eu.satellite.fallback");
+
+    // Blank from both orthophotos, so the chain runs all the way through.
+    expect((await bordering.fetchTile(fx, fy, 14)).layer.id).toBe("it.national.ortofoto");
+  });
+});

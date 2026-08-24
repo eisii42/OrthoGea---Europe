@@ -1,0 +1,65 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "LU",
+  "title": "Luxembourg",
+  "updated": "2026-08-24",
+  "layers": [
+    {
+      "lastVerified": "2026-08-24",
+      "id": "lu.act.orthophoto-2025",
+      "title": "Orthophoto 2025 - Luxembourg",
+      "description": "National true-colour orthophoto of Luxembourg, summer 2025 flight, published as the INSPIRE Orthoimagery coverage by the Administration du cadastre et de la topographie.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Administration du cadastre et de la topographie",
+        "shortName": "ACT",
+        "url": "https://act.public.lu/"
+      },
+      "country": "LU",
+      "bbox": [
+        5.72,
+        49.438,
+        6.547,
+        50.185
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://wms.inspire.geoportail.lu/geoserver/ows",
+        "options": {
+          "layers": [
+            "oi:OI_OrthoimageCoverage_RGB_2025_summer"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:2169"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC0-1.0",
+        "url": "https://data.public.lu/en/datasets/orthophotos-officielles-du-grand-duche-de-luxembourg/"
+      },
+      "attribution": "© Administration du cadastre et de la topographie",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.1,
+      "temporal": {
+        "start": "2025-06",
+        "end": "2025-09"
+      },
+      "tags": [
+        "orthophoto",
+        "luxembourg",
+        "inspire"
+      ],
+      "documentationUrl": "https://data.public.lu/en/datasets/orthophotos-officielles-du-grand-duche-de-luxembourg/"
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import fr from "../data/fr.json";
 import hr from "../data/hr.json";
 import itRegions from "../data/it-regions.json";
 import it from "../data/it.json";
+import lu from "../data/lu.json";
 import nl from "../data/nl.json";
 import pl from "../data/pl.json";
 import pt from "../data/pt.json";
@@ -35,6 +36,7 @@ export const RAW_COLLECTIONS: Record<string, unknown> = {
   "fr.json": fr,
   "de.json": de,
   "nl.json": nl,
+  "lu.json": lu,
   "be.json": be,
   "pt.json": pt,
   "ch.json": ch,

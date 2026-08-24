@@ -3,11 +3,11 @@
 Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 `pnpm --filter @orthogea/catalog docs` after changing the data.
 
-**41 layers · 19 scopes · 18 queryable · last verified 2026-08-24**
+**55 layers · 20 scopes · 18 queryable · last verified 2026-08-24**
 
 | Category | Layers |
 | --- | --- |
-| orthophoto | 36 |
+| orthophoto | 50 |
 | custom | 2 |
 | satellite | 1 |
 | land_use | 1 |
@@ -15,7 +15,7 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 
 | Service | Layers |
 | --- | --- |
-| WMS | 37 |
+| WMS | 51 |
 | WMTS | 3 |
 | XYZ | 1 |
 
@@ -56,7 +56,20 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 
 | Id | Title | Scope | Category | Service | Licence | Provider |
 | --- | --- | --- | --- | --- | --- | --- |
+| `de.bayern.dop` | Digitales Orthophoto 40 cm - Bayern | Germany - Bayern | orthophoto | WMS | dl-de-by-2.0 | LDBV |
 | `de.bkg.basemapde-grau` | basemap.de Web Raster grau - Germany | Germany | custom | WMS | dl-de-by-2.0 | BKG |
+| `de.brandenburg.dop` | Digitales Orthophoto 20 cm - Brandenburg and Berlin | Germany - Brandenburg und Berlin | orthophoto | WMS | dl-de-by-2.0 | LGB |
+| `de.bw.dop` | Digitales Orthophoto 20 cm - Baden-Wuerttemberg | Germany - Baden-Wuerttemberg | orthophoto | WMS | dl-de-by-2.0 | LGL BW |
+| `de.hessen.dop` | Digitales Orthophoto 20 cm - Hesse | Germany - Hessen | orthophoto | WMS | dl-de-by-2.0 | HVBG |
+| `de.mv.dop` | Digitales Orthophoto 20 cm - Mecklenburg-Vorpommern | Germany - Mecklenburg-Vorpommern | orthophoto | WMS | dl-de-by-2.0 | LAiV MV |
+| `de.niedersachsen.dop` | Digitales Orthophoto 20 cm - Lower Saxony | Germany - Niedersachsen | orthophoto | WMS | dl-de-by-2.0 | LGLN |
+| `de.nrw.dop` | Digitales Orthophoto 10 cm - North Rhine-Westphalia | Germany - Nordrhein-Westfalen | orthophoto | WMS | dl-de-by-2.0 | Geobasis NRW |
+| `de.rlp.dop` | Digitales Orthophoto 20 cm - Rhineland-Palatinate | Germany - Rheinland-Pfalz | orthophoto | WMS | dl-de-by-2.0 | LVermGeo RP |
+| `de.saarland.dop` | Digitales Orthophoto 20 cm - Saarland | Germany - Saarland | orthophoto | WMS | dl-de-by-2.0 | LVGL Saarland |
+| `de.sachsen-anhalt.dop` | Digitales Orthophoto 20 cm - Saxony-Anhalt | Germany - Sachsen-Anhalt | orthophoto | WMS | dl-de-by-2.0 | LVermGeo ST |
+| `de.sachsen.dop` | Digitales Orthophoto 20 cm - Saxony | Germany - Sachsen | orthophoto | WMS | dl-de-by-2.0 | GeoSN |
+| `de.schleswig-holstein.dop` | Digitales Orthophoto 20 cm - Schleswig-Holstein | Germany - Schleswig-Holstein | orthophoto | WMS | dl-de-by-2.0 | LVermGeo SH |
+| `de.thueringen.dop` | Digitales Orthophoto 20 cm - Thuringia | Germany - Thueringen | orthophoto | WMS | dl-de-by-2.0 | TLBG |
 
 ## Denmark (DK)
 
@@ -119,6 +132,12 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | `it.veneto.agea-2024` | Ortofoto AGEA 2024 - Veneto | Italy - Veneto | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Veneto |
 | `it.veneto.agea-2024-wmts` | Ortofoto AGEA 2024 - Veneto (WMTS) | Italy - Veneto | orthophoto | WMTS | CC-BY-4.0 | Regione Veneto |
 
+## Luxembourg (LU)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `lu.act.orthophoto-2025` | Orthophoto 2025 - Luxembourg | Luxembourg | orthophoto | WMS | CC0-1.0 | ACT |
+
 ## Netherlands (NL)
 
 | Id | Title | Scope | Category | Service | Licence | Provider |
@@ -158,14 +177,14 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 ## NUTS tree
 
 ```
-EU     Europe (41)
+EU     Europe (55)
   AT     Austria (1)
   BE     Belgium (2)
     BE2    Vlaanderen (1)
     BE3    Wallonie (1)
   CH     Switzerland (1)
   CZ     Czechia (1)
-  DE     Germany (1)
+  DE     Germany (14)
   DK     Denmark (1)
   EE     Estonia (1)
   EL     Greece (1)
@@ -194,6 +213,7 @@ EU     Europe (41)
       ITI2   Umbria (1)
       ITI3   Marche (1)
       ITI4   Lazio (1)
+  LU     Luxembourg (1)
   NL     Netherlands (1)
   PL     Poland (1)
   PT     Portugal (1)

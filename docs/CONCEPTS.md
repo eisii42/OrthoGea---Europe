@@ -55,7 +55,7 @@ string is normalised while parsing. `service` is a discriminated union, so narro
 
 ## The seamless mosaic
 
-A catalogue of 52 layers is a list; a basemap is one image. The mosaic turns the first into the
+A catalogue of 42 layers is a list; a basemap is one image. The mosaic turns the first into the
 second by choosing, per tile, which source to ask.
 
 **Two tiers, on purpose.** The architecture is deliberately shallow:
@@ -71,7 +71,11 @@ waiting for a dozen regional servers. Orthophotos are asked for only where they 
 past zoom 15 where 2 m starts to show, and where none is published the base simply stays on.
 
 **Speed before sharpness at equal ground.** Among candidates covering the same extent, a service
-that serves pre-rendered tiles (WMTS, XYZ) wins over a WMS that renders every request.
+that serves pre-rendered tiles (WMTS, XYZ) wins over a WMS that renders every request. A cache has
+a fixed grid, though, and it is usually 256 px: asked for the level a 512 px mosaic wants, it
+answers with an image the renderer would stretch, leaving the imagery a full zoom level behind.
+The four children are fetched in parallel and stitched instead, which keeps the speed of a tile
+cache at the resolution the reader is actually at.
 
 **A gradual hand-over.** Drawn as a single layer, the switch from base to orthophoto is a flip.
 Drawn as two - the Copernicus base underneath, an orthophoto-only mosaic above with an opacity
@@ -100,13 +104,21 @@ Then imagery from another country is dropped: once the most local candidate is k
 country and pan-European layers stay in the chain.
 
 **Blank tiles.** A WMS asked outside its real footprint does not fail: it returns a blank image
-of a few hundred bytes. Tiles below `minTileBytes` (2500 by default) are treated as empty and
-the next candidate is tried - except for the last source, so genuinely uniform tiles (open sea,
-snow) still render.
+of a few hundred bytes. Tiles below `minTileBytes` (9000 for 512 px tiles, 2500 for 256 px ones)
+are treated as empty and the next candidate is tried.
+
+A mosaic with a **fallback** makes one exception: its last candidate is accepted as it comes, so
+a genuinely uniform tile - open sea, a snowfield - still renders. A mosaic **without** one never
+does. Rectangles cross borders, and a neighbour's no-data fill is not imagery: basemap.at answers
+white over Munich, IGN answers white over Frankfurt, and painting either of them washed out every
+German city at detail zoom. Where a hole is possible, the hole wins and the layer below shows
+through.
 
 **Failures.** A source that errors, times out or answers with a `ServiceException` is skipped
 for `failureTtlMs` (a minute by default), so one broken national service cannot stall the map.
-A blank answer is not counted as a failure: the same service is fine a few kilometres away.
+Two answers are read as geography rather than health, and stay local to the block they came from:
+a blank image, and a **404** - which is how a tile cache says it holds nothing here. Blacklisting
+basemap.at because it has nothing over Munich would take Austria with it.
 
 **Duplicates.** Two records for the same ground - Veneto's WMS and its cached WMTS, the two
 Emilia-Romagna flights - would fight for the same tile. The catalogue tags the secondary one
@@ -126,7 +138,18 @@ A basemap is judged on how fast it draws, especially on a thin connection.
   upscales the tiles it holds instead of firing a fresh request at every deeper zoom. Note this
   belongs on the *source*: a `maxzoom` on a style layer **hides** it instead.
 - **Cache Storage.** Tiles are stored under `orthogea-tiles`, so panning back is instant and the
-  map keeps working when the connection drops. Pass `cacheName: false` to opt out.
+  map keeps working when the connection drops. Pass `cacheName: false` to opt out. Cache Storage
+  never evicts on its own, so `cacheLimit` (1500 tiles, roughly 60 MB) trims the oldest entries in
+  batches rather than letting the browser drop the whole origin at once.
+- **One download per tile.** Callers that want the same tile at the same moment - the renderer and
+  the prefetcher, or a pan that returns to a tile still in flight - share one request, and it is
+  dropped only when the last of them walks away.
+- **Prefetching.** `prefetchAround()` warms the ring of tiles just outside the viewport while the
+  map is still, so a pan starts from cache instead of a round trip. Call it on `idle`, never
+  while the map is moving, and skip it when `navigator.connection` reports save-data or 2G.
+- **A base that stops at its own resolution.** The 2 m European base is only asked for tiles down
+  to the level that matches its ground sampling; past that the service returns its own upscale, so
+  MapLibre may as well upscale the tiles it already holds.
 - **Empty areas are remembered.** Coverage gaps are contiguous: when a service answers blank, the
   whole 4x4 tile block is marked, and it is not asked again there.
 - **Failures back off** for a minute, so one broken national service cannot slow the map down.

@@ -26,6 +26,13 @@ const places = [
   { name: "Paris", lng: 2.3522, lat: 48.8566, zooms: [14] },
   { name: "Madrid", lng: -3.7038, lat: 40.4168, zooms: [14] },
   { name: "Zurich", lng: 8.5417, lat: 47.3769, zooms: [14] },
+  // Germany has no national service: fifteen of its sixteen states publish
+  // their own, so a sample from each corner is the only way to see it working.
+  { name: "Muenchen", lng: 11.5761, lat: 48.1372, zooms: [16] },
+  { name: "Koeln", lng: 6.9603, lat: 50.9375, zooms: [16] },
+  { name: "Berlin", lng: 13.405, lat: 52.52, zooms: [16] },
+  { name: "Hamburg", lng: 9.9937, lat: 53.5511, zooms: [16] },
+  { name: "Luxembourg", lng: 6.13, lat: 49.61, zooms: [16] },
   { name: "Atlantic", lng: -25, lat: 45, zooms: [14] }
 ];
 
