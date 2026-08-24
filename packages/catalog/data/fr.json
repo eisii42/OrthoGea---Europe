@@ -2,7 +2,7 @@
   "$schema": "../schema/layer-collection.schema.json",
   "scope": "FR",
   "title": "France",
-  "updated": "2026-08-23",
+  "updated": "2026-08-24",
   "layers": [
     {
       "lastVerified": "2026-08-23",
@@ -108,64 +108,6 @@
         "wmts",
         "france",
         "geoplateforme"
-      ]
-    },
-    {
-      "lastVerified": "2026-08-23",
-      "id": "fr.ign.parcellaire-express",
-      "title": "Parcellaire Express (PCI) - France",
-      "description": "French cadastral parcels from the Parcellaire Express dataset.",
-      "category": "cadastre",
-      "provider": {
-        "name": "Institut national de l'information geographique et forestiere",
-        "shortName": "IGN",
-        "url": "https://www.ign.fr/"
-      },
-      "country": "FR",
-      "bbox": [
-        -5.3,
-        41.2,
-        9.8,
-        51.3
-      ],
-      "service": {
-        "type": "WMS",
-        "url": "https://data.geopf.fr/wms-r/wms",
-        "options": {
-          "layers": [
-            "CADASTRALPARCELS.PARCELLAIRE_EXPRESS"
-          ],
-          "styles": [
-            "normal"
-          ],
-          "format": "image/png",
-          "crs": [
-            "EPSG:3857",
-            "EPSG:4326",
-            "CRS:84",
-            "EPSG:2154"
-          ],
-          "version": "1.3.0",
-          "queryable": true,
-          "transparent": true,
-          "infoFormats": [
-            "text/html",
-            "text/plain",
-            "text/xml"
-          ]
-        }
-      },
-      "license": {
-        "id": "etalab-2.0",
-        "url": "https://www.etalab.gouv.fr/licence-ouverte-open-licence"
-      },
-      "attribution": "IGN - Parcellaire Express",
-      "minZoom": 12,
-      "maxZoom": 22,
-      "tags": [
-        "cadastre",
-        "parcellaire",
-        "france"
       ]
     }
   ]

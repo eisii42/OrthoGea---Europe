@@ -15,6 +15,7 @@ import {
   createMosaicProtocol,
   mosaicTileTemplate,
   registerMosaicProtocol,
+  toMosaicRasterLayer,
   toMosaicRasterSource
 } from "./mosaic.js";
 
@@ -205,13 +206,57 @@ describe("tile fetching", () => {
     expect((await tiled.fetchTile(dx, dy, 14)).layer.id).toBe("it.national.ortofoto");
   });
 
-  it("reports a clear error when every source fails", async () => {
+  it("draws a hole as transparent when there is no fallback", async () => {
+    // A mosaic meant to sit over a base layer reports holes as empty tiles, so
+    // the layer underneath shows through and the console stays quiet.
     const tiled = createMosaic({
       layers: [regional],
-      minTileBytes: 0, cacheName: false,
+      minTileBytes: 0,
+      cacheName: false,
+      fetchImpl: async () => new Response("nope", { status: 503 })
+    });
+    const tile = await tiled.fetchTile(dx, dy, 14);
+    expect(tile.contentType).toBe("image/png");
+    expect(tile.layer.id).toBe("orthogea:empty");
+    expect(tile.data.byteLength).toBeLessThan(200);
+  });
+
+  it("reports a clear error when asked to", async () => {
+    const tiled = createMosaic({
+      layers: [regional],
+      minTileBytes: 0,
+      cacheName: false,
+      transparentWhenUncovered: false,
       fetchImpl: async () => new Response("nope", { status: 503 })
     });
     await expect(tiled.fetchTile(dx, dy, 14)).rejects.toThrow(/No source could serve tile/);
+  });
+
+  it("keeps a confirmed source at deep zoom, even when its tiles get small", async () => {
+    // A uniform roof at zoom 19 compresses to almost nothing; once the service
+    // is known to cover the area, that must not send the map back to the base.
+    let big = true;
+    const fetchImpl = async (url: string) =>
+      url.includes("rt_ofc")
+        ? new Response(big ? new Uint8Array(32768) : new Uint8Array(900), {
+            status: 200,
+            headers: { "content-type": "image/jpeg" }
+          })
+        : new Response(new Uint8Array(32768), {
+            status: 200,
+            headers: { "content-type": "image/jpeg" }
+          });
+
+    const tiled = createMosaic({ layers, fallback: satellite, fetchImpl, cacheName: false });
+
+    // First tile confirms the regional layer covers this area.
+    expect((await tiled.fetchTile(dx, dy, 14)).layer.id).toBe("it.toscana.ortofoto");
+
+    // Zoom in: the same area, now answering with a tiny uniform tile.
+    big = false;
+    const deep = await tiled.fetchTile(dx * 32, dy * 32, 19);
+    expect(deep.layer.id).toBe("it.toscana.ortofoto");
+    expect(deep.data.byteLength).toBe(900);
   });
 
   it("skips a blank tile, which is how a WMS answers outside its real footprint", async () => {
@@ -348,5 +393,27 @@ describe("MapLibre integration", () => {
     const addProtocol = vi.fn();
     registerMosaicProtocol({ addProtocol }, mosaic);
     expect(addProtocol).toHaveBeenCalledWith(MOSAIC_PROTOCOL, expect.any(Function));
+  });
+});
+
+describe("fading over a base layer", () => {
+  it("interpolates the opacity across the hand-over zooms", () => {
+    const layer = toMosaicRasterLayer(mosaic, { fadeFromZoom: 13.5, fadeToZoom: 15.5 });
+    expect(layer.type).toBe("raster");
+    expect(layer.source).toBe("orthogea-mosaic-default");
+    expect(layer.minzoom).toBe(13);
+    expect(layer.paint?.["raster-opacity"]).toEqual([
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      13.5,
+      0,
+      15.5,
+      1
+    ]);
+  });
+
+  it("falls back to a plain opacity without a fade range", () => {
+    expect(toMosaicRasterLayer(mosaic, { opacity: 0.8 }).paint?.["raster-opacity"]).toBe(0.8);
   });
 });

@@ -73,6 +73,21 @@ past zoom 15 where 2 m starts to show, and where none is published the base simp
 **Speed before sharpness at equal ground.** Among candidates covering the same extent, a service
 that serves pre-rendered tiles (WMTS, XYZ) wins over a WMS that renders every request.
 
+**A gradual hand-over.** Drawn as a single layer, the switch from base to orthophoto is a flip.
+Drawn as two - the Copernicus base underneath, an orthophoto-only mosaic above with an opacity
+ramp across a couple of zoom levels - the detail arrives instead. The upper mosaic carries no
+fallback, so where no orthophoto exists its tiles are transparent and the base simply shows
+through:
+
+```ts
+map.addLayer(toMosaicRasterLayer(orthophotos, { fadeFromZoom: 13.5, fadeToZoom: 15.5 }));
+```
+
+**Once covered, always covered.** A service that has drawn a tile is remembered as covering that
+area, at a zoom-independent key. Deeper tiles from it are then trusted even when they are tiny: a
+uniform roof or a ploughed field compresses to almost nothing at zoom 19, and falling back to the
+2 m base at that point is exactly what a reader notices.
+
 **Ranking.** Coverage is a rectangle, and rectangles overlap: the French national extent reaches
 into Liguria, the Veneto one into Trentino. Candidates are therefore ordered by
 
@@ -167,7 +182,6 @@ the CRS of the map. Several official services never publish `EPSG:3857`:
 
 | Service | Published CRS |
 | --- | --- |
-| Agenzia delle Entrate cadastre (IT) | `EPSG:6706`, `EPSG:4258`, `EPSG:3044/3045/3046`, `EPSG:25832/33/34` |
 | Regione Marche orthophoto (IT) | `CRS:84`, `EPSG:4326`, `EPSG:3004` |
 | Regione Umbria orthophoto (IT) | `CRS:84`, `EPSG:4326`, `EPSG:32633` |
 | DGU orthophoto 2019 (HR) | `EPSG:4326`, `CRS:84`, `EPSG:3765` |
@@ -179,8 +193,8 @@ geographic extent of that tile and issues the `GetMap` in a CRS the service does
 
 ```ts
 needsTileReprojection(layer);          // true
-pickReprojectionCrs(layer.service);    // "EPSG:6706"
-toRasterSource(layer).tiles;           // ["orthogea://it.ade.catasto-particelle/{z}/{x}/{y}"]
+pickReprojectionCrs(layer.service);    // "CRS:84"
+toRasterSource(layer).tiles;           // ["orthogea://it.lombardia.ortofoto-2024/{z}/{x}/{y}"]
 ```
 
 Drawing an equirectangular request into a Mercator tile leaves a residual distortion of

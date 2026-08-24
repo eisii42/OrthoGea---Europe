@@ -9,7 +9,7 @@ import {
 } from "@orthogea/core";
 import { formatAttributions, type AttributionOptions } from "./attribution.js";
 import { createTileUrlBuilder, type TileUrlBuilder, type TileUrlBuilderOptions } from "./tiles.js";
-import type { RasterSourceSpecification } from "./types.js";
+import type { RasterLayerSpecification, RasterSourceSpecification } from "./types.js";
 
 /** URL scheme of the seamless imagery mosaic. */
 export const MOSAIC_PROTOCOL = "orthogea-mosaic";
@@ -32,6 +32,18 @@ export const DEFAULT_ORTHOPHOTO_FROM_ZOOM = 15;
  * instant and the network stays quiet.
  */
 export const DEFAULT_MOSAIC_MAX_ZOOM = 19;
+
+/** 1x1 fully transparent PNG, base64. */
+const TRANSPARENT_PNG =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
+/** Placeholder reported when a tile is a hole rather than imagery. */
+const EMPTY_LAYER = {
+  id: "orthogea:empty",
+  title: "No coverage",
+  attribution: "",
+  tags: [] as string[]
+} as unknown as OrthoGeaLayer;
 
 /** Categories the mosaic can draw from. */
 const IMAGERY_CATEGORIES = new Set(["orthophoto", "satellite"]);
@@ -72,6 +84,13 @@ export interface MosaicOptions extends TileUrlBuilderOptions {
    * unavailable (Node, insecure origins). Defaults to `true` in the browser.
    */
   cacheName?: string | false;
+  /**
+   * Answer with a transparent tile instead of failing when nothing covers the
+   * area. Lets a mosaic without a fallback sit on top of a base layer: the base
+   * shows through the holes and the console stays quiet. Defaults to `true`
+   * when the mosaic has no fallback.
+   */
+  transparentWhenUncovered?: boolean;
   /** Called whenever a tile is served, so a UI can show the live source. */
   onTile?: (info: { layer: OrthoGeaLayer; x: number; y: number; z: number }) => void;
 }
@@ -151,6 +170,14 @@ export class Mosaic {
    * on a slow connection.
    */
   private readonly blankBlocks = new Map<string, Set<string>>();
+  /**
+   * Areas a layer has actually drawn, keyed at a fixed reference level so the
+   * knowledge survives zooming. Once a service is known to cover the ground
+   * here, its tiles are trusted even when they are small: a uniform roof or a
+   * ploughed field at zoom 19 compresses to almost nothing, and dropping back
+   * to the European base at that point is exactly what a reader notices.
+   */
+  private readonly confirmed = new Map<string, Set<string>>();
   private tileCache?: Promise<Cache | undefined>;
   private readonly options: MosaicOptions;
 
@@ -291,6 +318,24 @@ export class Mosaic {
     return `${z}/${x >> 2}/${y >> 2}`;
   }
 
+  /** Zoom-independent area key, so coverage learnt at one zoom holds at another. */
+  private static areaKey(x: number, y: number, z: number): string {
+    const reference = 12;
+    if (z <= reference) return `${x << (reference - z)}/${y << (reference - z)}`;
+    const shift = z - reference;
+    return `${x >> shift}/${y >> shift}`;
+  }
+
+  private isConfirmedHere(layerId: string, x: number, y: number, z: number): boolean {
+    return this.confirmed.get(layerId)?.has(Mosaic.areaKey(x, y, z)) ?? false;
+  }
+
+  private confirm(layerId: string, x: number, y: number, z: number): void {
+    const areas = this.confirmed.get(layerId) ?? new Set<string>();
+    areas.add(Mosaic.areaKey(x, y, z));
+    this.confirmed.set(layerId, areas);
+  }
+
   private isBlankHere(layerId: string, x: number, y: number, z: number): boolean {
     return this.blankBlocks.get(layerId)?.has(Mosaic.blockKey(x, y, z)) ?? false;
   }
@@ -329,6 +374,7 @@ export class Mosaic {
   ): Promise<{ layer: OrthoGeaLayer; data: ArrayBuffer; contentType: string; url: string }> {
     const { layers } = this.select(x, y, z);
     if (layers.length === 0) {
+      if (this.transparentWhenUncovered) return this.emptyTile();
       throw new UnsupportedServiceError(
         `No imagery covers tile ${z}/${x}/${y} and the mosaic has no fallback layer`
       );
@@ -381,7 +427,8 @@ export class Mosaic {
         // about 1.6 kB, an empty 512 px one about 4.7 kB, while real imagery
         // starts around 20 kB at that size.
         const minBytes = this.options.minTileBytes ?? (this.tileSize === 512 ? 9000 : 2500);
-        if (!isLast && minBytes > 0 && data.byteLength < minBytes) {
+        const trusted = this.isConfirmedHere(layer.id, x, y, z);
+        if (!isLast && !trusted && minBytes > 0 && data.byteLength < minBytes) {
           // Blank tile: the service covers the rectangle but not the ground
           // here. It stays healthy for other tiles, so it is not blacklisted,
           // but the whole block is remembered as empty.
@@ -394,6 +441,7 @@ export class Mosaic {
           .catch(() => undefined);
 
         this.used.set(layer.id, Date.now());
+        this.confirm(layer.id, x, y, z);
         this.options.onTile?.({ layer, x, y, z });
         return { layer, data, contentType, url };
       } catch (error) {
@@ -405,11 +453,33 @@ export class Mosaic {
       }
     }
 
+    if (this.transparentWhenUncovered) return this.emptyTile();
     throw new EndpointUnavailableError(
       `No source could serve tile ${z}/${x}/${y}: ${lastError?.message ?? "unknown error"}`,
       undefined,
       lastError
     );
+  }
+
+  /** True when a hole should be drawn as transparent rather than raised. */
+  private get transparentWhenUncovered(): boolean {
+    return this.options.transparentWhenUncovered ?? this.fallback === undefined;
+  }
+
+  /** 1x1 transparent PNG, so the layer underneath shows through a hole. */
+  private emptyTile(): {
+    layer: OrthoGeaLayer;
+    data: ArrayBuffer;
+    contentType: string;
+    url: string;
+  } {
+    const bytes = Uint8Array.from(atob(TRANSPARENT_PNG), (char) => char.charCodeAt(0));
+    return {
+      layer: EMPTY_LAYER,
+      data: bytes.buffer as ArrayBuffer,
+      contentType: "image/png",
+      url: "orthogea:empty"
+    };
   }
 }
 
@@ -520,5 +590,57 @@ export function toMosaicRasterSource(
         : options.attributionMode === "all"
           ? mosaic.attribution(options.attribution ?? {})
           : mosaic.activeAttribution(options.attribution ?? {})
+  };
+}
+
+export interface MosaicLayerOptions {
+  id?: string;
+  sourceId?: string;
+  /** Zoom at which the imagery starts to appear over the layer below. */
+  fadeFromZoom?: number;
+  /** Zoom at which it is fully opaque. */
+  fadeToZoom?: number;
+  /** Below this zoom no tile is requested at all. Defaults to `fadeFromZoom`. */
+  minzoom?: number;
+  /** Opacity once fully faded in. Defaults to 1. */
+  opacity?: number;
+}
+
+/**
+ * Style layer for a mosaic, with an optional fade over zoom.
+ *
+ * Put an orthophoto mosaic over a base layer and let it fade in across a couple
+ * of zoom levels: the reader sees the detail arrive rather than the map flip,
+ * and wherever an orthophoto is missing the base keeps showing through.
+ *
+ * ```ts
+ * map.addLayer(toMosaicRasterLayer(orthophotos, { fadeFromZoom: 13.5, fadeToZoom: 15.5 }));
+ * ```
+ */
+export function toMosaicRasterLayer(
+  mosaic: Mosaic,
+  options: MosaicLayerOptions = {}
+): RasterLayerSpecification {
+  const sourceId = options.sourceId ?? `orthogea-mosaic-${mosaic.id}`;
+  const opacity = options.opacity ?? 1;
+  const from = options.fadeFromZoom;
+  const to = options.fadeToZoom;
+
+  const rasterOpacity =
+    from !== undefined && to !== undefined && to > from
+      ? ["interpolate", ["linear"], ["zoom"], from, 0, to, opacity]
+      : opacity;
+
+  return {
+    id: options.id ?? `${sourceId}-raster`,
+    type: "raster",
+    source: sourceId,
+    ...(options.minzoom ?? from) !== undefined
+      ? { minzoom: Math.floor(options.minzoom ?? from ?? 0) }
+      : {},
+    paint: {
+      "raster-opacity": rasterOpacity,
+      "raster-fade-duration": 150
+    }
   };
 }

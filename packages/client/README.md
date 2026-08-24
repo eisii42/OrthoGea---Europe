@@ -74,16 +74,16 @@ for TMS layers.
 
 ## Services without EPSG:3857
 
-MapLibre substitutes only `{bbox-epsg-3857}`, and several official services (the Italian
-cadastre, Croatia's DGU, Umbria, Marche) never publish Web Mercator. `toRasterSource()` detects
+MapLibre substitutes only `{bbox-epsg-3857}`, and several official services (Lombardia,
+Basilicata, Umbria, Marche, Croatia's DGU) never publish Web Mercator. `toRasterSource()` detects
 this and emits an `orthogea://` template served by the protocol handler, which converts each
 tile index into a geographic extent:
 
 ```ts
 needsTileReprojection(layer);        // true
 supportsWebMercator(layer.service);  // false
-pickReprojectionCrs(layer.service);  // "EPSG:6706"
-toRasterSource(layer).tiles;         // ["orthogea://it.ade.catasto-particelle/{z}/{x}/{y}"]
+pickReprojectionCrs(layer.service);  // "CRS:84"
+toRasterSource(layer).tiles;         // ["orthogea://it.lombardia.ortofoto-2024/{z}/{x}/{y}"]
 ```
 
 `createOrthoGeaProtocol()` supports both the MapLibre 4/5 promise signature and the MapLibre 3

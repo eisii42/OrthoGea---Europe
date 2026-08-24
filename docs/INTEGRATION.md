@@ -62,7 +62,7 @@ How it behaves:
 | several candidates | smallest extent, then cached tile services, then finest resolution, then most recent |
 | across a border | the source of the country the tile is in; foreign rectangles are dropped |
 | a source fails or answers blank | the next candidate, and the failing one is skipped for a minute |
-| nothing else covers the tile | the satellite fallback, so no tile is ever empty |
+| nothing else covers the tile | the fallback, or a transparent tile when the mosaic has none |
 
 Options worth knowing:
 
@@ -96,6 +96,10 @@ mosaic.tileUrl(layer, x, y, z); // the request behind a tile, for debugging
 await mosaic.fetchTile(x, y, z);// server side or for tests
 ```
 
+For a gradual hand-over, draw the base as its own layer and put an orthophoto-only mosaic on
+top with `toMosaicRasterLayer(mosaic, { fadeFromZoom: 13.5, fadeToZoom: 15.5 })`: the imagery
+fades in over a couple of zoom levels, and holes stay transparent so the base shows through.
+
 Attribution: `toMosaicRasterSource()` credits the sources drawn so far, which keeps the line
 short. Refresh MapLibre's control when `onTile` reports a new provider (see `apps/demo`), or
 pass `attributionMode: "all"` to list every possible provider once.
@@ -121,7 +125,7 @@ const map = new maplibregl.Map({
 });
 
 map.on("load", () => {
-  for (const id of ["it.toscana.ortofoto-2024", "it.ade.catasto-particelle"]) {
+  for (const id of ["it.toscana.ortofoto-2024", "eu.eea.corine-land-cover-2018"]) {
     const { sourceId, source, layer } = toMapLibreBinding(getLayer(id)!);
     map.addSource(sourceId, source);
     map.addLayer(layer);
@@ -180,7 +184,6 @@ function addOrthoGeaLayer(map, layer, options = {}) {
 
 const map = L.map("map").setView([43.7696, 11.2558], 15);
 addOrthoGeaLayer(map, getLayer("it.toscana.ortofoto-2024"));
-addOrthoGeaLayer(map, getLayer("it.ade.catasto-particelle"));
 ```
 
 The descriptor already contains `attribution`, `minZoom`, `maxZoom`, `bounds`
@@ -266,9 +269,9 @@ import {
 
 bestOrthophotoFor(11.2558, 43.7696);           // most local orthophoto, Sentinel-2 as fallback
 imageryStackFor(11.2558, 43.7696);             // local -> national -> pan-European
-layersForPoint(11.2558, 43.7696, { category: "cadastre" });
+layersForPoint(11.2558, 43.7696, { category: "orthophoto" });
 
-findLayers({ country: "ES", category: "cadastre" });
+findLayers({ country: "ES", category: "orthophoto" });
 findLayers({ nuts: "ITI" });                   // a NUTS-1 region and everything below it
 findLayers({ service: "WMTS", queryable: true });
 findLayers({ text: "sentinel" });
@@ -295,7 +298,7 @@ const answer = await getFeatureInfo(layer, {
 });
 
 answer.format;                 // "geojson" | "json" | "gml" | "html" | "text" | "empty" | "unknown"
-answer.features[0]?.properties; // { "InspireId localId": "IT.AGE.PLA.D612_016600.162", ... }
+answer.features[0]?.properties; // whatever the service publishes for that point
 answer.raw;                     // the untouched body, to render the server's own HTML
 ```
 

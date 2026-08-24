@@ -4,6 +4,33 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the packages share one version
 number.
 
+## [0.3.1] - 2026-08-24
+
+### Fixed
+
+- **The orthophoto no longer drops back to the base at deep zoom.** A service that has drawn a
+  tile is remembered as covering that area, so its later tiles are trusted even when they are
+  tiny - a uniform roof at zoom 19 compresses to a few hundred bytes, which the empty-tile guard
+  used to mistake for a hole.
+
+### Added
+
+- `toMosaicRasterLayer()`: a style layer with an opacity ramp over zoom, so the orthophotos
+  **fade in** over the Copernicus base instead of replacing it in one step.
+- A mosaic without a fallback answers uncovered tiles with a transparent image rather than an
+  error, which is what lets it sit on top of a base layer. Disable with
+  `transparentWhenUncovered: false`.
+
+### Removed
+
+- **All cadastre layers** - Agenzia delle Entrate (parcels, zoning, full drawing), Spanish
+  Catastro (parcels, buildings) and the French Parcellaire Express.
+
+### Changed
+
+- The demo draws the Copernicus base and an orthophoto-only mosaic above it, fading in between
+  zoom 13.5 and 15.5, and keeps its source label and credits in step with what is on screen.
+
 ## [0.3.0] - 2026-08-24
 
 ### Changed

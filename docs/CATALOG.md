@@ -3,12 +3,11 @@
 Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 `pnpm --filter @orthogea/catalog docs` after changing the data.
 
-**47 layers · 19 scopes · 24 queryable · last verified 2026-08-24**
+**41 layers · 19 scopes · 18 queryable · last verified 2026-08-24**
 
 | Category | Layers |
 | --- | --- |
 | orthophoto | 36 |
-| cadastre | 6 |
 | custom | 2 |
 | satellite | 1 |
 | land_use | 1 |
@@ -16,7 +15,7 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 
 | Service | Layers |
 | --- | --- |
-| WMS | 43 |
+| WMS | 37 |
 | WMTS | 3 |
 | XYZ | 1 |
 
@@ -81,8 +80,6 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 
 | Id | Title | Scope | Category | Service | Licence | Provider |
 | --- | --- | --- | --- | --- | --- | --- |
-| `es.catastro.buildings` | Catastro - Buildings (Spain) | Spain | cadastre | WMS, queryable | Catastro free access, no massive downloading | Catastro |
-| `es.catastro.parcels` | Catastro - Cadastral parcels (Spain) | Spain | cadastre | WMS, queryable | Catastro free access, no massive downloading | Catastro |
 | `es.ign.mtn-raster` | Mapa raster MTN - Spain | Spain | custom | WMS | CC-BY-4.0 | IGN |
 | `es.ign.pnoa-ma` | PNOA Maxima Actualidad - Spain | Spain | orthophoto | WMS | CC-BY-4.0 | IGN |
 
@@ -92,7 +89,6 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | --- | --- | --- | --- | --- | --- | --- |
 | `fr.ign.bdortho` | BD ORTHO 50 cm - France | France | orthophoto | WMS, queryable | etalab-2.0 | IGN |
 | `fr.ign.bdortho-wmts` | Ortho 20 cm - France (WMTS) | France | orthophoto | WMTS | etalab-2.0 | IGN |
-| `fr.ign.parcellaire-express` | Parcellaire Express (PCI) - France | France | cadastre | WMS, queryable | etalab-2.0 | IGN |
 
 ## Croatia (HR)
 
@@ -105,9 +101,6 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | Id | Title | Scope | Category | Service | Licence | Provider |
 | --- | --- | --- | --- | --- | --- | --- |
 | `it.abruzzo.agea-2022` | Ortofoto AGEA 2022 RGB - Abruzzo | Italy - Abruzzo | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Abruzzo |
-| `it.ade.catasto-completo` | Catasto - Cartografia completa (Agenzia delle Entrate) | Italy | cadastre | WMS, queryable, needs reprojection | CC-BY-4.0 | Agenzia delle Entrate |
-| `it.ade.catasto-mappe` | Catasto - Mappe e fogli (Agenzia delle Entrate) | Italy | cadastre | WMS, queryable, needs reprojection | CC-BY-4.0 | Agenzia delle Entrate |
-| `it.ade.catasto-particelle` | Catasto - Particelle (Agenzia delle Entrate) | Italy | cadastre | WMS, queryable, needs reprojection | CC-BY-4.0 | Agenzia delle Entrate |
 | `it.basilicata.ortofoto-2013` | Ortofoto CTR 20 cm 2013 - Basilicata | Italy - Basilicata | orthophoto | WMS, needs reprojection | CC-BY-4.0 | Regione Basilicata |
 | `it.bolzano.ortofoto-2023` | Ortofoto 2023 - Provincia autonoma di Bolzano | Italy - Bolzano - Bozen | orthophoto | WMS | CC-BY-4.0 | Provincia di Bolzano |
 | `it.emilia-romagna.agea-2023` | Ortofoto AGEA 2023 RGB - Emilia-Romagna | Italy - Emilia-Romagna | orthophoto | WMS | CC-BY-4.0 | Regione Emilia-Romagna |
@@ -165,7 +158,7 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 ## NUTS tree
 
 ```
-EU     Europe (47)
+EU     Europe (41)
   AT     Austria (1)
   BE     Belgium (2)
     BE2    Vlaanderen (1)
@@ -176,10 +169,10 @@ EU     Europe (47)
   DK     Denmark (1)
   EE     Estonia (1)
   EL     Greece (1)
-  ES     Spain (4)
-  FR     France (3)
+  ES     Spain (2)
+  FR     France (2)
   HR     Croatia (1)
-  IT     Italy (21)
+  IT     Italy (18)
     ITC    ITC (2)
       ITC1   Piemonte (1)
       ITC4   Lombardia (1)

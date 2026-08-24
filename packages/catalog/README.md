@@ -1,7 +1,7 @@
 # @orthogea/catalog
 
 A validated registry of European open geodata services for
-[OrthoGea - Europe](../../README.md): 47 layers from 19 scopes, indexed from NUTS-0 down to
+[OrthoGea - Europe](../../README.md): 41 layers from 19 scopes, indexed from NUTS-0 down to
 NUTS-2/3, every endpoint probed live. Italy is covered region by region: 16 of the 21 regions
 and autonomous provinces publish an orthophoto service, all of them the most recent flight the
 provider exposes.
@@ -32,8 +32,8 @@ covering the point, with the key-free Copernicus base behind it.
 ```ts
 import { catalog, findLayers, getLayer, layersForPoint } from "@orthogea/catalog";
 
-getLayer("it.ade.catasto-particelle");
-findLayers({ country: "ES", category: "cadastre" });
+getLayer("it.toscana.ortofoto-2024");
+findLayers({ country: "ES", category: "orthophoto" });
 findLayers({ nuts: "ITI" });                    // a NUTS-1 region and everything below it
 findLayers({ service: "WMTS", queryable: true });
 findLayers({ text: "sentinel" });

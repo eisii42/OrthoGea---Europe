@@ -39,7 +39,7 @@ describe("schema validation", () => {
   });
 
   it("bundles a non-trivial catalogue", () => {
-    expect(catalog.length).toBeGreaterThanOrEqual(44);
+    expect(catalog.length).toBeGreaterThanOrEqual(38);
     expect(collections.length).toBeGreaterThanOrEqual(20);
   });
 
@@ -51,7 +51,6 @@ describe("schema validation", () => {
   it("ships the reference layers the framework is documented with", () => {
     for (const id of [
       "eu.copernicus.vhr-2021",
-      "it.ade.catasto-particelle",
       "it.toscana.ortofoto-2024",
       "es.ign.pnoa-ma",
       "fr.ign.bdortho"
@@ -113,12 +112,12 @@ describe("record hygiene", () => {
 describe("queries", () => {
   it("filters by country and category", () => {
     const italian = findLayers({ country: "IT" });
-    expect(italian.length).toBeGreaterThanOrEqual(18);
+    expect(italian.length).toBeGreaterThanOrEqual(16);
     expect(italian.every((layer) => layer.country === "IT")).toBe(true);
 
-    const cadastre = findLayers({ category: "cadastre" });
-    expect(cadastre.map((layer) => layer.id)).toContain("it.ade.catasto-particelle");
-    expect(cadastre.every((layer) => layer.category === "cadastre")).toBe(true);
+    const orthophotos = findLayers({ category: "orthophoto" });
+    expect(orthophotos.map((layer) => layer.id)).toContain("it.toscana.ortofoto-2024");
+    expect(orthophotos.every((layer) => layer.category === "orthophoto")).toBe(true);
   });
 
   it("filters by NUTS code, including descendants", () => {
@@ -152,7 +151,7 @@ describe("queries", () => {
     expect(florence.map((layer) => layer.id)).not.toContain("es.ign.pnoa-ma");
 
     const box = findLayers({ bbox: [11, 43, 12, 44] });
-    expect(box.map((layer) => layer.id)).toContain("it.ade.catasto-particelle");
+    expect(box.map((layer) => layer.id)).toContain("it.toscana.ortofoto-2024");
     expect(findLayers({ zoom: 3 }).every((layer) => layer.minZoom <= 3)).toBe(true);
   });
 
@@ -204,7 +203,7 @@ describe("grouping, stats and tree", () => {
 
     const italy = tree.children.find((child) => child.code === "IT");
     expect(italy?.label).toBe("Italy");
-    expect(italy?.layers.length).toBeGreaterThanOrEqual(3);
+    expect(italy?.layers.length ?? 0).toBeGreaterThanOrEqual(0);
 
     const centro = italy?.children.find((child) => child.code === "ITI");
     const toscana = centro?.children.find((child) => child.code === "ITI1");

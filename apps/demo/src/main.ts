@@ -1,7 +1,6 @@
 import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
-  DEFAULT_SATELLITE_FALLBACK_ID,
   buildNutsTree,
   catalog,
   catalogStats,
@@ -16,11 +15,11 @@ import {
   type OrthoGeaLayer
 } from "@orthogea/core";
 import {
-  DEFAULT_ORTHOPHOTO_FROM_ZOOM,
   createMosaic,
   formatAttribution,
   getFeatureInfo,
   registerMosaicProtocol,
+  toMosaicRasterLayer,
   toMosaicRasterSource,
   type Mosaic,
   layerIdFor,
@@ -42,9 +41,16 @@ const isOverlay = (layer: OrthoGeaLayer): boolean => OVERLAY_CATEGORIES.has(laye
 /** Special base-layer id: the seamless, self-selecting imagery mosaic. */
 const MOSAIC_ID = "orthogea:mosaic";
 
+/** The single European background the map always sits on. */
+const BASE_LAYER_ID = "eu.copernicus.vhr-2021";
+
+/** Zooms across which the orthophotos fade in over the base. */
+const FADE_FROM_ZOOM = 13.5;
+const FADE_TO_ZOOM = 15.5;
+
 const state = {
   baseId: MOSAIC_ID,
-  overlayIds: new Set<string>(["it.ade.catasto-particelle"]),
+  overlayIds: new Set<string>(),
   opacity: 1,
   proxy: true,
   search: ""
@@ -99,18 +105,18 @@ function registerProtocol(): void {
     ...adapterOptions()
   });
 
-  // One seamless imagery layer: the best official orthophoto per tile above
-  // zoom 12, the Copernicus Sentinel-2 mosaic below it and wherever no
-  // orthophoto exists.
+  // Orthophotos only, with no fallback: a hole is drawn transparent and the
+  // Copernicus base underneath shows through, which is what makes the
+  // hand-over gradual instead of a flip between two whole-map layers.
   mosaic = createMosaic({
-    layers: [...catalog],
-    fallback: DEFAULT_SATELLITE_FALLBACK_ID,
+    id: "orthophotos",
+    layers: catalog.filter((layer) => layer.category === "orthophoto"),
+    orthophotoFromZoom: 0,
     ...adapterOptions(),
     onTile: ({ layer }) => {
-      if (layer.id === lastMosaicLayer?.id) return;
       lastMosaicLayer = layer;
       window.clearTimeout(mosaicLabelTimer);
-      mosaicLabelTimer = window.setTimeout(updateMosaicLabel, 120);
+      mosaicLabelTimer = window.setTimeout(updateMosaicLabel, 200);
     }
   });
   registerMosaicProtocol(maplibregl, mosaic);
@@ -119,17 +125,22 @@ function registerProtocol(): void {
 function updateMosaicLabel(): void {
   const label = document.getElementById("mosaic-source");
   if (label) {
+    const drawn = mosaic.activeSources(20_000)[0] ?? getLayer(BASE_LAYER_ID);
     label.textContent =
-      state.baseId === MOSAIC_ID && lastMosaicLayer ? `drawing: ${lastMosaicLayer.title}` : "";
+      state.baseId === MOSAIC_ID && drawn ? `drawing: ${drawn.title}` : "";
   }
   if (state.baseId !== MOSAIC_ID) return;
 
   // MapLibre reads source.attribution once, so the control is refreshed by
   // hand as the mosaic starts drawing from new providers.
   map.removeControl(attributionControl);
+  const base = getLayer(BASE_LAYER_ID);
   attributionControl = new maplibregl.AttributionControl({
     compact: true,
-    customAttribution: mosaic.activeAttribution({}, 25_000)
+    customAttribution: [
+      ...(base ? [formatAttribution(base)] : []),
+      ...mosaic.activeSources(25_000).map((layer) => formatAttribution(layer))
+    ].join(" | ")
   });
   map.addControl(attributionControl, "bottom-right");
   updateAttribution();
@@ -151,18 +162,35 @@ interface MapEntry {
 /** Style layers currently on the map, in draw order. */
 let currentEntries: MapEntry[] = [];
 
+/** The Copernicus base: one fast service, drawn at every zoom. */
+function baseEntry(): MapEntry | undefined {
+  const base = getLayer(BASE_LAYER_ID);
+  if (!base) return undefined;
+  return {
+    styleLayerId: "orthogea-base-raster",
+    sourceId: "orthogea-base",
+    source: toRasterSource(base, { ...adapterOptions(), tileSize: 512 }),
+    styleLayer: {
+      id: "orthogea-base-raster",
+      type: "raster",
+      source: "orthogea-base",
+      paint: { "raster-opacity": 1, "raster-fade-duration": 150 }
+    },
+    opacity: 1
+  };
+}
+
+/** The orthophotos, fading in over the base as the reader zooms in. */
 function mosaicEntry(): MapEntry {
-  const sourceId = "orthogea-mosaic";
+  const sourceId = "orthogea-mosaic-orthophotos";
   return {
     styleLayerId: `${sourceId}-raster`,
     sourceId,
     source: toMosaicRasterSource(mosaic),
-    styleLayer: {
-      id: `${sourceId}-raster`,
-      type: "raster",
-      source: sourceId,
-      paint: { "raster-opacity": 1, "raster-fade-duration": 120 }
-    },
+    styleLayer: toMosaicRasterLayer(mosaic, {
+      fadeFromZoom: FADE_FROM_ZOOM,
+      fadeToZoom: FADE_TO_ZOOM
+    }),
     opacity: 1
   };
 }
@@ -187,6 +215,8 @@ function desiredEntries(): MapEntry[] {
   const entries: MapEntry[] = [];
 
   if (state.baseId === MOSAIC_ID) {
+    const base = baseEntry();
+    if (base) entries.push(base);
     entries.push(mosaicEntry());
   } else {
     const base = getLayer(state.baseId);
@@ -225,7 +255,7 @@ function syncMap(): void {
 
     if (!map.getLayer(entry.styleLayerId)) {
       map.addLayer(entry.styleLayer as never);
-    } else if (entry.styleLayerId !== "orthogea-mosaic-raster") {
+    } else if (!entry.styleLayerId.startsWith("orthogea-mosaic")) {
       map.setPaintProperty(entry.styleLayerId, "raster-opacity", entry.opacity);
     }
 
@@ -263,9 +293,10 @@ function updateAttribution(): void {
   el("stats").innerHTML = `${stats.layers} layers · ${stats.countries} countries · verified ${
     stats.lastVerified ?? "-"
   }`;
+  const base = getLayer(BASE_LAYER_ID);
   const shown =
     state.baseId === MOSAIC_ID
-      ? [...mosaic.activeSources(25_000), ...visibleLayers().slice(1)]
+      ? [...(base ? [base] : []), ...mosaic.activeSources(25_000), ...visibleLayers().slice(1)]
       : visibleLayers();
   el("layer-attribution").innerHTML = [...new Set(shown.map((layer) => formatAttribution(layer)))]
     .join(" · ");
@@ -340,7 +371,7 @@ function mosaicRow(): HTMLElement {
   const title = document.createElement("strong");
   title.textContent = "Seamless imagery (recommended)";
   const meta = document.createElement("small");
-  meta.textContent = `Copernicus VHR 2021 across Europe, orthophotos from z${DEFAULT_ORTHOPHOTO_FROM_ZOOM}`;
+  meta.textContent = `Copernicus VHR 2021 across Europe, orthophotos fading in from z${FADE_FROM_ZOOM}`;
   const source = document.createElement("small");
   source.id = "mosaic-source";
   source.className = "mosaic-source";
@@ -361,6 +392,7 @@ function renderLayerLists(): void {
   const sorted = [...catalog].sort((a, b) => a.title.localeCompare(b.title));
   for (const layer of sorted) {
     if (!matchesSearch(layer)) continue;
+    if (layer.id === BASE_LAYER_ID) continue;
     const target = isOverlay(layer) ? overlayContainer : baseContainer;
     target.append(layerRow(layer, isOverlay(layer) ? "overlay" : "base"));
   }
@@ -566,6 +598,11 @@ el("info-close").addEventListener("click", () => {
 });
 
 map.on("moveend", () => {
+  if (state.baseId === MOSAIC_ID) updateMosaicLabel();
+});
+
+// Once the map settles, the label and the credits match what is on screen.
+map.on("idle", () => {
   if (state.baseId === MOSAIC_ID) updateMosaicLabel();
 });
 

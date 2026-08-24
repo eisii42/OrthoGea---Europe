@@ -30,7 +30,8 @@ export interface RasterLayerSpecification {
   maxzoom?: number;
   layout?: { visibility?: "visible" | "none" };
   paint?: {
-    "raster-opacity"?: number;
+    /** A number, or a MapLibre expression such as an `interpolate` on zoom. */
+    "raster-opacity"?: number | unknown[];
     "raster-fade-duration"?: number;
     "raster-resampling"?: "linear" | "nearest";
   };

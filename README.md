@@ -3,8 +3,8 @@
 **Official European imagery for your map, instead of Google Satellite or ESRI World Imagery.**
 
 OrthoGea is a modular TypeScript framework (MIT) that aggregates, parses, catalogues and renders
-open European geodata - regional orthophotos, cadastre, Copernicus imagery, DTM, land use -
-inside any modern web-GIS.
+open European geodata - regional orthophotos, Copernicus imagery, DTM, land use - inside any
+modern web-GIS.
 
 ```
 harvest (GetCapabilities)  ->  catalogue (validated JSON)  ->  render (MapLibre, Leaflet, OpenLayers)
@@ -12,14 +12,14 @@ harvest (GetCapabilities)  ->  catalogue (validated JSON)  ->  render (MapLibre,
 
 | | |
 | --- | --- |
-| **47 layers, 18 countries + EU** | every endpoint probed live, `lastVerified` stored per record |
+| **41 layers, 18 countries + EU** | every endpoint probed live, `lastVerified` stored per record |
 | **Better than a global mosaic** | 8-30 cm official orthophotos where they exist, Sentinel-2 elsewhere |
 | **MIT code, open data** | no API key, no tile quota, no terms-of-service trap; licence and attribution carried per layer |
 | **Seamless mosaic** | one virtual layer picks the best source per tile, Copernicus imagery when zoomed out |
 | **Built for slow links** | JPEG tiles, 512 px requests, browser tile cache, empty areas remembered |
 | **Any map library** | MapLibre GL, Leaflet and OpenLayers adapters, plus a plain `(x, y, z) => url` builder |
 | **Protocol-correct** | WMS 1.1.1 and 1.3.0 axis order, CRS normalisation, WMTS KVP/REST, GetFeatureInfo, WFS |
-| **Handles awkward services** | renders WMS endpoints that do not publish EPSG:3857, such as the Italian cadastre |
+| **Handles awkward services** | renders WMS endpoints that do not publish EPSG:3857, such as Lombardia or Basilicata |
 
 - [Catalogue of every layer](docs/CATALOG.md)
 - [Integration recipes](docs/INTEGRATION.md) - MapLibre, Leaflet, OpenLayers, React, Node, QGIS
@@ -38,6 +38,22 @@ registerMosaicProtocol(maplibregl, mosaic);
 
 map.addSource("imagery", toMosaicRasterSource(mosaic));
 map.addLayer({ id: "imagery", type: "raster", source: "imagery" });
+```
+
+For the smoothest result, draw the Copernicus base and let the orthophotos **fade in** over it:
+
+```ts
+const orthophotos = createMosaic({
+  id: "orthophotos",
+  layers: catalog.filter((layer) => layer.category === "orthophoto"),
+  orthophotoFromZoom: 0            // no threshold: the fade decides what shows
+});                                // no fallback: holes stay transparent
+
+map.addSource("base", toRasterSource(getLayer("eu.copernicus.vhr-2021")!, { tileSize: 512 }));
+map.addLayer({ id: "base", type: "raster", source: "base" });
+
+map.addSource("orthophotos", toMosaicRasterSource(orthophotos));
+map.addLayer(toMosaicRasterLayer(orthophotos, { fadeFromZoom: 13.5, fadeToZoom: 15.5 }));
 ```
 
 That is **one seamless imagery layer for the whole of Europe**, and it behaves like a commercial
@@ -94,10 +110,9 @@ without it, for example `corepack pnpm --filter @orthogea/core test`.
 
 ## What the demo shows
 
-The Tuscan orthophoto with the Italian cadastre on top, both from official services, with a
-click returning the real INSPIRE parcel identifier:
+The Copernicus base with the Tuscan orthophoto fading in over it, both from official services:
 
-- layer switcher over the whole catalogue, grouped into base layers and overlays;
+- the seamless imagery layer, plus a switcher over the whole catalogue;
 - "jump to" selector built from the NUTS tree (Europe -> Italy -> Centro -> Toscana);
 - `GetFeatureInfo` on every visible queryable layer, parsed into a property table;
 - attributions rendered from the catalogue licence data;
@@ -124,8 +139,8 @@ CRS strings are normalised first, so `urn:ogc:def:crs:EPSG::3857`, `EPSG:900913`
 ### 2. Services without Web Mercator
 
 MapLibre raster sources can only substitute `{bbox-epsg-3857}`, but several national services
-publish only geodetic CRS. The Agenzia delle Entrate cadastre advertises `EPSG:6706`,
-`EPSG:4258` and the ETRS89 TM zones, and answers `InvalidFormat` for `EPSG:3857`.
+publish only geodetic CRS. The Lombardia orthophoto advertises `CRS:84`, `EPSG:4326` and
+RDN2008/UTM32N, and never Web Mercator; Basilicata, Marche and Croatia are the same.
 
 `toRasterSource()` detects this and emits an `orthogea://` tile template; the protocol handler
 converts each tile index into a geographic extent and issues the `GetMap` in a CRS the service
@@ -133,7 +148,7 @@ does support. Leaflet gets the same treatment through `createTileUrlBuilder()`.
 
 ```ts
 registerOrthoGeaProtocol(maplibregl, { layers, proxyUrl });
-toRasterSource(layer).tiles; // ["orthogea://it.ade.catasto-particelle/{z}/{x}/{y}"]
+toRasterSource(layer).tiles; // ["orthogea://it.lombardia.ortofoto-2024/{z}/{x}/{y}"]
 ```
 
 `GetFeatureInfo` uses the same fallback, switching to a geographic window centred exactly on the
@@ -168,9 +183,8 @@ Everything below is on by default:
 | Scope | Layers |
 | --- | --- |
 | Pan-European | **Copernicus VHR 2021 (about 2 m)** as the single base, CORINE Land Cover 2018, EU-DEM |
-| Italy - national | Agenzia delle Entrate cadastre (parcels, zoning, full drawing) |
 | Italy - regional | 16 of 21 regions and autonomous provinces: Piemonte 2024, Lombardia 2024, Bolzano 2023, Trento 2015, Veneto 2024 (WMS + WMTS), Friuli-Venezia Giulia 2020, Emilia-Romagna 2023-24, Toscana 2024/2025, Umbria 2020, Marche 2022, Lazio 2023, Abruzzo 2022, Puglia 2023, Basilicata 2013, Sicilia 2022, Sardegna 2022 |
-| Rest of Europe | Spain (PNOA, MTN, Catastro parcels and buildings), France (BD ORTHO WMS and WMTS, Parcellaire Express), Germany (basemap.de, Sen2Europe), Netherlands, Belgium (Flanders, Wallonia), Portugal, Switzerland, Austria, Poland, Czechia, Slovakia, Slovenia, Croatia, Greece, Estonia, Denmark, Sweden |
+| Rest of Europe | Spain (PNOA, MTN raster), France (BD ORTHO WMS and WMTS), Germany (basemap.de), Netherlands, Belgium (Flanders, Wallonia), Portugal, Switzerland, Austria, Poland, Czechia, Slovakia, Slovenia, Croatia, Greece, Estonia, Denmark, Sweden |
 
 The full table lives in [docs/CATALOG.md](docs/CATALOG.md). Every record is checked end to end -
 capabilities **and** one real tile per layer - with:
