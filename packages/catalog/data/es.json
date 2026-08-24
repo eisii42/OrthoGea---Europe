@@ -1,0 +1,241 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "ES",
+  "title": "Spain",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "es.ign.pnoa-ma",
+      "title": "PNOA Maxima Actualidad - Spain",
+      "description": "Most recent orthophoto mosaic of Spain from the Plan Nacional de Ortofotografia Aerea, with Sentinel-2 fill outside the PNOA coverage.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Instituto Geografico Nacional",
+        "shortName": "IGN",
+        "url": "https://www.ign.es/"
+      },
+      "country": "ES",
+      "bbox": [
+        -19,
+        27,
+        5,
+        44
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://www.ign.es/wms-inspire/pnoa-ma",
+        "options": {
+          "layers": [
+            "OI.MosaicElement"
+          ],
+          "styles": [
+            "OI.MosaicElement.Default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25830",
+            "EPSG:25831"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "application/json",
+            "text/html",
+            "text/plain"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.scne.es/"
+      },
+      "attribution": "PNOA - Sistema Cartografico Nacional (CC BY 4.0 scne.es)",
+      "minZoom": 6,
+      "maxZoom": 20,
+      "resolutionMeters": 0.25,
+      "tags": [
+        "pnoa",
+        "ortofoto",
+        "inspire",
+        "spain"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "es.ign.mtn-raster",
+      "title": "Mapa raster MTN - Spain",
+      "description": "Rasterised national topographic map series of Spain.",
+      "category": "custom",
+      "provider": {
+        "name": "Instituto Geografico Nacional",
+        "shortName": "IGN",
+        "url": "https://www.ign.es/"
+      },
+      "country": "ES",
+      "bbox": [
+        -19,
+        27,
+        5,
+        44
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://www.ign.es/wms-inspire/mapa-raster",
+        "options": {
+          "layers": [
+            "mtn_rasterizado"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25830"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.ign.es/"
+      },
+      "attribution": "Instituto Geografico Nacional (CC BY 4.0 ign.es)",
+      "minZoom": 4,
+      "maxZoom": 18,
+      "tags": [
+        "topographic",
+        "mtn",
+        "spain"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "es.catastro.parcels",
+      "title": "Catastro - Cadastral parcels (Spain)",
+      "description": "INSPIRE cadastral parcels of the Spanish Directorate General for Cadastre.",
+      "category": "cadastre",
+      "provider": {
+        "name": "Direccion General del Catastro",
+        "shortName": "Catastro",
+        "url": "https://www.catastro.hacienda.gob.es/"
+      },
+      "country": "ES",
+      "bbox": [
+        -18.5,
+        26.2,
+        5.3,
+        44.8
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx",
+        "options": {
+          "layers": [
+            "CP.CadastralParcel"
+          ],
+          "styles": [
+            "CP.CadastralParcel.Default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25830"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": true,
+          "infoFormats": [
+            "text/html"
+          ]
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "Catastro free access, no massive downloading",
+        "url": "https://www.catastro.hacienda.gob.es/webinspire/index.html",
+        "notes": "Free access for consultation; the capabilities forbid massive automated downloading."
+      },
+      "attribution": "Direccion General del Catastro",
+      "minZoom": 13,
+      "maxZoom": 22,
+      "tags": [
+        "cadastre",
+        "catastro",
+        "inspire",
+        "spain"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "es.catastro.buildings",
+      "title": "Catastro - Buildings (Spain)",
+      "description": "INSPIRE building footprints of the Spanish cadastre.",
+      "category": "cadastre",
+      "provider": {
+        "name": "Direccion General del Catastro",
+        "shortName": "Catastro",
+        "url": "https://www.catastro.hacienda.gob.es/"
+      },
+      "country": "ES",
+      "bbox": [
+        -18.5,
+        26.2,
+        5.3,
+        44.8
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx",
+        "options": {
+          "layers": [
+            "BU.Building"
+          ],
+          "styles": [
+            "BU.Building.Default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25830"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": true,
+          "infoFormats": [
+            "text/html"
+          ]
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "Catastro free access, no massive downloading",
+        "url": "https://www.catastro.hacienda.gob.es/webinspire/index.html",
+        "notes": "Free access for consultation; the capabilities forbid massive automated downloading."
+      },
+      "attribution": "Direccion General del Catastro",
+      "minZoom": 13,
+      "maxZoom": 22,
+      "tags": [
+        "cadastre",
+        "buildings",
+        "inspire",
+        "spain"
+      ]
+    }
+  ]
+}

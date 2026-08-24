@@ -1,0 +1,70 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "CH",
+  "title": "Switzerland",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "ch.swisstopo.swissimage",
+      "title": "SWISSIMAGE - Switzerland",
+      "description": "National orthophoto mosaic of Switzerland, updated on a three year cycle.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "swisstopo",
+        "shortName": "swisstopo",
+        "url": "https://www.swisstopo.admin.ch/"
+      },
+      "country": "CH",
+      "bbox": [
+        5.9,
+        45.8,
+        10.5,
+        47.8
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://wms.geo.admin.ch/",
+        "options": {
+          "layers": [
+            "ch.swisstopo.swissimage"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:2056",
+            "EPSG:21781"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "application/json",
+            "text/html",
+            "application/vnd.ogc.gml"
+          ]
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "swisstopo free geodata licence",
+        "url": "https://www.geo.admin.ch/en/terms-of-use",
+        "notes": "Free use with the mandatory source note (c) swisstopo."
+      },
+      "attribution": "© swisstopo",
+      "minZoom": 7,
+      "maxZoom": 20,
+      "resolutionMeters": 0.1,
+      "tags": [
+        "swissimage",
+        "orthophoto",
+        "switzerland"
+      ]
+    }
+  ]
+}

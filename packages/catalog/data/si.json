@@ -1,0 +1,69 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "SI",
+  "title": "Slovenia",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "si.gurs.dof025",
+      "title": "DOF 025 - Slovenia",
+      "description": "Digital orthophoto of Slovenia at 25 cm resolution.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Geodetska uprava Republike Slovenije",
+        "shortName": "GURS",
+        "url": "https://www.e-prostor.gov.si/"
+      },
+      "country": "SI",
+      "bbox": [
+        13.355,
+        45.408,
+        16.612,
+        46.886
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://ipi.eprostor.gov.si/wms-si-gurs-dts/wms",
+        "options": {
+          "layers": [
+            "SI.GURS.ZPDZ:DOF025_3857"
+          ],
+          "styles": [
+            "raster"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:3794"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "application/vnd.ogc.gml",
+            "text/plain",
+            "text/xml"
+          ]
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "GURS public geodetic data",
+        "url": "https://www.e-prostor.gov.si/",
+        "notes": "Public viewing service of the Slovenian surveying authority."
+      },
+      "attribution": "Geodetska uprava Republike Slovenije",
+      "minZoom": 7,
+      "maxZoom": 20,
+      "resolutionMeters": 0.25,
+      "tags": [
+        "dof",
+        "orthophoto",
+        "slovenia"
+      ]
+    }
+  ]
+}

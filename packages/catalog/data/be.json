@@ -1,0 +1,129 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "BE",
+  "title": "Belgium",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "be.vlaanderen.orthofoto-winter",
+      "title": "Orthofotomozaiek winteropnamen - Flanders",
+      "description": "Most recent medium scale winter orthophoto mosaic of Flanders.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Digitaal Vlaanderen",
+        "shortName": "Digitaal Vlaanderen",
+        "url": "https://www.vlaanderen.be/digitaal-vlaanderen"
+      },
+      "country": "BE",
+      "nuts": "BE2",
+      "regionName": "Vlaanderen",
+      "bbox": [
+        2.52,
+        50.64,
+        5.94,
+        51.51
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://geo.api.vlaanderen.be/OMWRGBMRVL/wms",
+        "options": {
+          "layers": [
+            "Ortho"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:31370"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": [
+            "text/xml"
+          ]
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "Gratis Open Data Licentie Vlaanderen v1.2",
+        "url": "https://www.vlaanderen.be/digitaal-vlaanderen/onze-oplossingen/open-data",
+        "notes": "Free reuse with attribution to Digitaal Vlaanderen."
+      },
+      "attribution": "Digitaal Vlaanderen - Orthofotomozaiek",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "tags": [
+        "orthophoto",
+        "flanders",
+        "belgium"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "be.wallonie.ortho-last",
+      "title": "Orthophotos les plus recentes - Wallonia",
+      "description": "Latest orthophoto coverage of Wallonia served by the SPW geoservices.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Service public de Wallonie",
+        "shortName": "SPW",
+        "url": "https://geoportail.wallonie.be/"
+      },
+      "country": "BE",
+      "nuts": "BE3",
+      "regionName": "Wallonie",
+      "bbox": [
+        2.835,
+        49.475,
+        6.439,
+        50.823
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://geoservices.wallonie.be/arcgis/services/IMAGERIE/ORTHO_LAST/MapServer/WMSServer",
+        "options": {
+          "layers": [
+            "0"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:31370"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "text/xml",
+            "application/vnd.ogc.wms_xml"
+          ]
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "SPW open data licence",
+        "url": "https://geoportail.wallonie.be/",
+        "notes": "Free reuse with attribution to the Service public de Wallonie."
+      },
+      "attribution": "Service public de Wallonie (SPW)",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "tags": [
+        "orthophoto",
+        "wallonia",
+        "belgium"
+      ]
+    }
+  ]
+}

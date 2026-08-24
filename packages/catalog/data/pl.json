@@ -1,0 +1,66 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "PL",
+  "title": "Poland",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "pl.geoportal.ortofotomapa",
+      "title": "Ortofotomapa - Poland",
+      "description": "National orthophoto viewing service of the Polish head office of geodesy (GUGiK).",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Glowny Urzad Geodezji i Kartografii",
+        "shortName": "GUGiK",
+        "url": "https://www.geoportal.gov.pl/"
+      },
+      "country": "PL",
+      "bbox": [
+        14,
+        48.902,
+        24.779,
+        54.926
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution",
+        "options": {
+          "layers": [
+            "Raster"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:2180"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "Free use under the Polish geodetic law",
+        "url": "https://www.geoportal.gov.pl/",
+        "notes": "No fees; reuse of the service is not restricted according to the capabilities document."
+      },
+      "attribution": "GUGiK - Geoportal krajowy",
+      "minZoom": 6,
+      "maxZoom": 21,
+      "tags": [
+        "ortofotomapa",
+        "poland"
+      ]
+    }
+  ]
+}

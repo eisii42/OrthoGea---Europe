@@ -1,0 +1,996 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "IT",
+  "title": "Italy - regional orthophotos",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.piemonte.agea-2024",
+      "title": "Ortofoto AGEA 2024 - Piemonte",
+      "description": "Colour orthophoto from the summer 2024 AGEA flight, 30 cm ground resolution.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Piemonte - CSI Piemonte",
+        "shortName": "Regione Piemonte",
+        "url": "https://www.geoportale.piemonte.it/"
+      },
+      "country": "IT",
+      "nuts": "ITC1",
+      "regionName": "Piemonte",
+      "bbox": [
+        6.6,
+        44,
+        9.3,
+        46.5
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://opengis.csi.it/mp/regp_agea_2024",
+        "options": {
+          "layers": [
+            "regp_agea_2024"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "EPSG:32632",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": [
+            "text/plain",
+            "text/html"
+          ]
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "AGEA 2024 - viewing service, all rights reserved",
+        "url": "https://www.geoportale.piemonte.it/",
+        "notes": "The metadata records the imagery as AGEA copyright with unknown reuse conditions; the view service is public."
+      },
+      "attribution": "Regione Piemonte - AGEA 2024",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "resolutionMeters": 0.3,
+      "temporal": {
+        "start": "2024-06",
+        "end": "2024-09"
+      },
+      "tags": [
+        "ortofoto",
+        "agea",
+        "piemonte"
+      ],
+      "metadataUrl": "https://www.geoportale.piemonte.it/geonetwork/srv/api/records/r_piemon:ad786e89-4c44-4de7-8ea7-5c96aab65af2"
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.lombardia.ortofoto-2021",
+      "title": "Ortofoto 2021 - Lombardia",
+      "description": "Regional colour orthophoto, 2021 flight, served from the Lombardia image server.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Lombardia",
+        "shortName": "Regione Lombardia",
+        "url": "https://www.geoportale.regione.lombardia.it/"
+      },
+      "country": "IT",
+      "nuts": "ITC4",
+      "regionName": "Lombardia",
+      "bbox": [
+        8.442,
+        44.647,
+        11.532,
+        46.657
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://www.cartografia.servizirl.it/arcgis5/services/BaseMap/Ortofoto2021/ImageServer/WMSServer",
+        "options": {
+          "layers": [
+            "0"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:32632"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.geoportale.regione.lombardia.it/note-legali"
+      },
+      "attribution": "Regione Lombardia - Geoportale",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2021-01",
+        "end": "2021-12"
+      },
+      "tags": [
+        "ortofoto",
+        "lombardia"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.bolzano.ortofoto-2023",
+      "title": "Ortofoto 2023 - Provincia autonoma di Bolzano",
+      "description": "Province-wide RGB orthophoto, 2023 flight, published through the MapProxy service of the Südtiroler Informatik.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Provincia autonoma di Bolzano - Alto Adige",
+        "shortName": "Provincia di Bolzano",
+        "url": "https://geoportal.buergernetz.bz.it/"
+      },
+      "country": "IT",
+      "nuts": "ITH1",
+      "regionName": "Bolzano - Bozen",
+      "bbox": [
+        10.351,
+        46.175,
+        12.525,
+        47.141
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://geoservices.buergernetz.bz.it/mapproxy/ows",
+        "options": {
+          "layers": [
+            "p_bz-Orthoimagery:Aerial-2023-RGB"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:25832",
+            "EPSG:32632",
+            "CRS:84"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://geoportal.buergernetz.bz.it/"
+      },
+      "attribution": "Provincia autonoma di Bolzano - Autonome Provinz Bozen",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2023-01",
+        "end": "2023-12"
+      },
+      "tags": [
+        "ortofoto",
+        "bolzano",
+        "suedtirol"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.veneto.agea-2024",
+      "title": "Ortofoto AGEA 2024 - Veneto",
+      "description": "Regional colour orthophoto from the 2024 AGEA flight, 20 cm ground resolution.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione del Veneto - IDT-RV",
+        "shortName": "Regione Veneto",
+        "url": "https://idt2.regione.veneto.it/"
+      },
+      "country": "IT",
+      "nuts": "ITH3",
+      "regionName": "Veneto",
+      "bbox": [
+        10.509,
+        44.685,
+        13.356,
+        46.809
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://idt2-geoserver.regione.veneto.it/geoserver/ows",
+        "options": {
+          "layers": [
+            "rv:ortofoto_agea_2024"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "EPSG:3003",
+            "EPSG:3004",
+            "EPSG:32632",
+            "EPSG:32633"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "application/json",
+            "text/html",
+            "text/plain"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://idt2.regione.veneto.it/condizioni_utilizzo_geoportale/"
+      },
+      "attribution": "Regione del Veneto - IDT-RV",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "resolutionMeters": 0.2,
+      "temporal": {
+        "start": "2024-01",
+        "end": "2024-12"
+      },
+      "tags": [
+        "ortofoto",
+        "agea",
+        "veneto"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.veneto.agea-2024-wmts",
+      "title": "Ortofoto AGEA 2024 - Veneto (WMTS)",
+      "description": "Cached WMTS version of the 2024 AGEA orthophoto, faster than the WMS for browsing.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione del Veneto - IDT-RV",
+        "shortName": "Regione Veneto",
+        "url": "https://idt2.regione.veneto.it/"
+      },
+      "country": "IT",
+      "nuts": "ITH3",
+      "regionName": "Veneto",
+      "bbox": [
+        10.509,
+        44.685,
+        13.356,
+        46.809
+      ],
+      "service": {
+        "type": "WMTS",
+        "url": "https://idt2.regione.veneto.it/gwc/service/wmts",
+        "options": {
+          "layer": "rv:ortofoto_agea_2024",
+          "tileMatrixSet": "EPSG:900913",
+          "tileMatrixTemplate": "EPSG:900913:{z}",
+          "style": "",
+          "format": "image/png",
+          "crs": "EPSG:3857",
+          "queryable": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://idt2.regione.veneto.it/condizioni_utilizzo_geoportale/"
+      },
+      "attribution": "Regione del Veneto - IDT-RV",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "resolutionMeters": 0.2,
+      "tags": [
+        "ortofoto",
+        "agea",
+        "veneto",
+        "wmts",
+        "cached"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.fvg.trueortofoto-2020",
+      "title": "TrueOrtofoto 2020 - Friuli Venezia Giulia",
+      "description": "Regional true orthophoto produced from the 2017-2020 flights.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Autonoma Friuli Venezia Giulia - IRDAT",
+        "shortName": "Regione FVG",
+        "url": "https://irdat.regione.fvg.it/"
+      },
+      "country": "IT",
+      "nuts": "ITH4",
+      "regionName": "Friuli-Venezia Giulia",
+      "bbox": [
+        12.293,
+        45.554,
+        13.927,
+        46.668
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://irdat-ortofoto.regione.fvg.it/geoserver/ortofoto/ows",
+        "options": {
+          "layers": [
+            "trueorto_FVG_1720"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "EPSG:3004",
+            "EPSG:25833",
+            "EPSG:32633"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "application/json",
+            "text/html",
+            "text/plain"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.regione.fvg.it/"
+      },
+      "attribution": "Regione Autonoma Friuli Venezia Giulia - IRDAT",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2017-01",
+        "end": "2020-12"
+      },
+      "tags": [
+        "ortofoto",
+        "true-ortho",
+        "fvg"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.emilia-romagna.rer-2023",
+      "title": "Ortofoto RER 2023-24 RGB - Emilia-Romagna",
+      "description": "Regional RGB orthophoto from the 2023-2024 RER flight.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Emilia-Romagna",
+        "shortName": "Regione Emilia-Romagna",
+        "url": "https://geoportale.regione.emilia-romagna.it/"
+      },
+      "country": "IT",
+      "nuts": "ITH5",
+      "regionName": "Emilia-Romagna",
+      "bbox": [
+        9.299,
+        43.813,
+        12.838,
+        45.153
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://servizigis.regione.emilia-romagna.it/wms/rer2023_24_rgb",
+        "options": {
+          "layers": [
+            "RER2023_24_RGB"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832",
+            "EPSG:32632"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://geoportale.regione.emilia-romagna.it/"
+      },
+      "attribution": "Regione Emilia-Romagna - Geoportale",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2023-01",
+        "end": "2024-12"
+      },
+      "tags": [
+        "ortofoto",
+        "emilia-romagna",
+        "rer"
+      ],
+      "metadataUrl": "https://geoportale.regione.emilia-romagna.it/servizi/servizi-ogc/elenco-capabilities-dei-servizi-wms/cartografia-di-base/service-47"
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.emilia-romagna.agea-2023",
+      "title": "Ortofoto AGEA 2023 RGB - Emilia-Romagna",
+      "description": "AGEA 2023 colour orthophoto republished by the Emilia-Romagna geoportal.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Emilia-Romagna",
+        "shortName": "Regione Emilia-Romagna",
+        "url": "https://geoportale.regione.emilia-romagna.it/"
+      },
+      "country": "IT",
+      "nuts": "ITH5",
+      "regionName": "Emilia-Romagna",
+      "bbox": [
+        9.162,
+        43.701,
+        12.868,
+        45.154
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://servizigis.regione.emilia-romagna.it/wms/agea2023_rgb",
+        "options": {
+          "layers": [
+            "Agea2023_RGB"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832",
+            "EPSG:32632"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://geoportale.regione.emilia-romagna.it/"
+      },
+      "attribution": "Regione Emilia-Romagna - AGEA 2023",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2023-01",
+        "end": "2023-12"
+      },
+      "tags": [
+        "ortofoto",
+        "agea",
+        "emilia-romagna"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.toscana.ortofoto-2013",
+      "title": "Ortofoto 2013 - Toscana (Geoscopio)",
+      "description": "Latest region-wide colour orthophoto published by the Geoscopio OFC service at 1:10.000. The same endpoint also serves the historical series back to the 1954 GAI flight.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Toscana - Geoscopio",
+        "shortName": "Regione Toscana",
+        "url": "https://www.regione.toscana.it/-/geoscopio"
+      },
+      "country": "IT",
+      "nuts": "ITI1",
+      "regionName": "Toscana",
+      "bbox": [
+        9.64,
+        42.168,
+        12.464,
+        44.504
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://www502.regione.toscana.it/wmsraster/com.rt.wms.RTmap/wms?map=wmsofc",
+        "options": {
+          "layers": [
+            "rt_ofc.10k13"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "EPSG:6706",
+            "EPSG:3003",
+            "EPSG:6707",
+            "EPSG:6708"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": [
+            "text/html",
+            "text/plain",
+            "text/gml"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.regione.toscana.it/-/geoscopio"
+      },
+      "attribution": "Regione Toscana - Geoscopio",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2013-01",
+        "end": "2013-12"
+      },
+      "tags": [
+        "ortofoto",
+        "toscana",
+        "geoscopio",
+        "ofc"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.umbria.ortofoto-2020",
+      "title": "Ortofoto 2020 - Umbria",
+      "description": "Regional orthophoto at 1:5.000, 20 cm ground resolution. The service publishes no EPSG:3857 and needs the OrthoGea reprojecting protocol in MapLibre.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Umbria - SIAT",
+        "shortName": "Regione Umbria",
+        "url": "https://umbriageo.regione.umbria.it/"
+      },
+      "country": "IT",
+      "nuts": "ITI2",
+      "regionName": "Umbria",
+      "bbox": [
+        11.832,
+        42.332,
+        13.306,
+        43.646
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://siat.regione.umbria.it/arcgis/services/public/ORTOFOTO_2020_ETRF2000_UTM33N/MapServer/WMSServer",
+        "options": {
+          "layers": [
+            "0"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "CRS:84",
+            "EPSG:4326",
+            "EPSG:32633"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "text/plain",
+            "application/vnd.ogc.wms_xml"
+          ]
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "Regione Umbria - view only",
+        "url": "https://umbriageo.regione.umbria.it/pagine/servizi-wms",
+        "notes": "The WMS may be used for visualisation only; any other use requires authorisation from Regione Umbria - SIAT."
+      },
+      "attribution": "Regione Umbria - SIAT",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "resolutionMeters": 0.2,
+      "temporal": {
+        "start": "2020-01",
+        "end": "2020-12"
+      },
+      "tags": [
+        "ortofoto",
+        "umbria",
+        "no-3857"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.marche.agea-2022",
+      "title": "Ortofoto AGEA 2022 RGB - Marche",
+      "description": "Regional AGEA 2022 colour orthophoto. The service publishes CRS:84 and EPSG:3004 but no EPSG:3857, so MapLibre needs the OrthoGea reprojecting protocol.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Marche",
+        "shortName": "Regione Marche",
+        "url": "https://www.regione.marche.it/Regione-Utile/Paesaggio-Territorio-Urbanistica/Cartografia"
+      },
+      "country": "IT",
+      "nuts": "ITI3",
+      "regionName": "Marche",
+      "bbox": [
+        12.148,
+        42.649,
+        13.961,
+        43.992
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://giscartografia.regione.marche.it/arcgis/services/Ortofoto/MapServer/WMSServer",
+        "options": {
+          "layers": [
+            "Ortofoto_RGB_AGEA_202258254"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "CRS:84",
+            "EPSG:4326",
+            "EPSG:3004"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "text/plain",
+            "application/vnd.ogc.wms_xml"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.regione.marche.it/"
+      },
+      "attribution": "Regione Marche - Cartografia",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2022-01",
+        "end": "2022-12"
+      },
+      "tags": [
+        "ortofoto",
+        "agea",
+        "marche",
+        "no-3857"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.lazio.agea-2023",
+      "title": "Ortofoto AGEA 2023 - Lazio",
+      "description": "Latest AGEA orthophoto published by the Lazio geoportal as a cloud optimized GeoTIFF layer.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Lazio",
+        "shortName": "Regione Lazio",
+        "url": "https://geoportale.regione.lazio.it/"
+      },
+      "country": "IT",
+      "nuts": "ITI4",
+      "regionName": "Lazio",
+      "bbox": [
+        11.422,
+        40.743,
+        14.04,
+        42.88
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://geoportale.regione.lazio.it/geoserver/wms",
+        "options": {
+          "layers": [
+            "geonode:2023_AGEA_25833_COG"
+          ],
+          "styles": [
+            "geonode:raster"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:25833",
+            "CRS:84"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": [
+            "application/json",
+            "text/html",
+            "text/plain"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://geoportale.regione.lazio.it/"
+      },
+      "attribution": "Regione Lazio - Geoportale",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2023-01",
+        "end": "2023-12"
+      },
+      "tags": [
+        "ortofoto",
+        "agea",
+        "lazio",
+        "cog"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.abruzzo.agea-2022",
+      "title": "Ortofoto AGEA 2022 RGB - Abruzzo",
+      "description": "Regional AGEA 2022 colour mosaic served by the Abruzzo ERDAS Apollo catalogue.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Abruzzo",
+        "shortName": "Regione Abruzzo",
+        "url": "http://geoportale.regione.abruzzo.it/"
+      },
+      "country": "IT",
+      "nuts": "ITF1",
+      "regionName": "Abruzzo",
+      "bbox": [
+        12.972,
+        41.661,
+        14.793,
+        42.906
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "http://geocatalogo.regione.abruzzo.it/erdas-iws/ogc/wms/",
+        "options": {
+          "layers": [
+            "Mosaici_UTM-WGS84_Ortofoto_2022_AGEA_RGB.ecw"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:32633"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "text/plain",
+            "text/xml"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "http://geoportale.regione.abruzzo.it/"
+      },
+      "attribution": "Regione Abruzzo - Geoportale",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2022-01",
+        "end": "2022-12"
+      },
+      "tags": [
+        "ortofoto",
+        "agea",
+        "abruzzo"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.puglia.ortofoto-2023",
+      "title": "Ortofoto 2023 - Puglia",
+      "description": "Regional orthophoto 2023 served by the SIT Puglia image server.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Puglia - SIT",
+        "shortName": "Regione Puglia",
+        "url": "https://pugliacon.regione.puglia.it/web/sit-puglia-sit"
+      },
+      "country": "IT",
+      "nuts": "ITF4",
+      "regionName": "Puglia",
+      "bbox": [
+        14.9,
+        39.7,
+        18.6,
+        42
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "http://webapps.sit.puglia.it/arcgis/services/BaseMaps/Ortofoto2023/ImageServer/WMSServer",
+        "options": {
+          "layers": [
+            "0"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:32633"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "IODL-2.0",
+        "url": "https://www.dati.gov.it/content/italian-open-data-license-v20"
+      },
+      "attribution": "Regione Puglia - SIT",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2023-01",
+        "end": "2023-12"
+      },
+      "tags": [
+        "ortofoto",
+        "puglia"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.sicilia.ata-2013",
+      "title": "Ortofoto ATA 2012-2013 - Sicilia",
+      "description": "Region-wide 25 cm orthophoto from the 2012-2013 ATA flight.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Siciliana - SITR",
+        "shortName": "Regione Siciliana",
+        "url": "https://www.sitr.regione.sicilia.it/"
+      },
+      "country": "IT",
+      "nuts": "ITG1",
+      "regionName": "Sicilia",
+      "bbox": [
+        11.831,
+        35.468,
+        15.672,
+        38.819
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://map.sitr.regione.sicilia.it/gis/services/ortofoto/ortofoto_2013_25cm_sicilia/MapServer/WMSServer",
+        "options": {
+          "layers": [
+            "0"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:32633"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "text/xml",
+            "application/vnd.ogc.wms_xml"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.sitr.regione.sicilia.it/"
+      },
+      "attribution": "Regione Siciliana - SITR",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "resolutionMeters": 0.25,
+      "temporal": {
+        "start": "2012-01",
+        "end": "2013-12"
+      },
+      "tags": [
+        "ortofoto",
+        "sicilia",
+        "ata"
+      ],
+      "metadataUrl": "https://www.sitr.regione.sicilia.it/geoportale/it/metadata/details/608"
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.sardegna.ortofoto-2022",
+      "title": "Ortofoto MASAF-AGEA 2022 - Sardegna",
+      "description": "Region-wide 20 cm orthophoto mosaic from the 2022 MASAF-AGEA flight.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Autonoma della Sardegna",
+        "shortName": "Regione Sardegna",
+        "url": "https://www.sardegnageoportale.it/"
+      },
+      "country": "IT",
+      "nuts": "ITG2",
+      "regionName": "Sardegna",
+      "bbox": [
+        8.113,
+        38.846,
+        9.845,
+        41.326
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://webgis.regione.sardegna.it/geoserverraster/ows",
+        "options": {
+          "layers": [
+            "raster:Mosaico_2022_GB"
+          ],
+          "styles": [
+            "ortofoto_2022"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "EPSG:3003",
+            "EPSG:32632"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "application/json",
+            "text/html",
+            "text/plain"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.sardegnageoportale.it/"
+      },
+      "attribution": "Regione Autonoma della Sardegna - Sardegna Geoportale",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "resolutionMeters": 0.2,
+      "temporal": {
+        "start": "2022-01",
+        "end": "2022-12"
+      },
+      "tags": [
+        "ortofoto",
+        "sardegna",
+        "agea",
+        "masaf"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "SE",
+  "title": "Sweden",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "se.lantmateriet.ortofoto-025",
+      "title": "Ortofoto 0,25 m - Sweden",
+      "description": "National colour orthophoto of Sweden at 25 cm resolution.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Lantmateriet",
+        "shortName": "Lantmateriet",
+        "url": "https://www.lantmateriet.se/"
+      },
+      "country": "SE",
+      "bbox": [
+        10.5,
+        55,
+        24.5,
+        69.2
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://minkarta.lantmateriet.se/map/ortofoto",
+        "options": {
+          "layers": [
+            "Ortofoto_0.25"
+          ],
+          "styles": [
+            "Ortofoto.default"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:3006"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC0-1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "attribution": "© Lantmateriet",
+      "minZoom": 6,
+      "maxZoom": 20,
+      "resolutionMeters": 0.25,
+      "tags": [
+        "ortofoto",
+        "sweden"
+      ]
+    }
+  ]
+}

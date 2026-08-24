@@ -1,0 +1,55 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "AT",
+  "title": "Austria",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "at.basemap.orthofoto",
+      "title": "basemap.at Orthofoto - Austria",
+      "description": "National orthophoto tiles of Austria from the basemap.at cooperation.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "basemap.at",
+        "shortName": "basemap.at",
+        "url": "https://basemap.at/"
+      },
+      "country": "AT",
+      "bbox": [
+        8.78,
+        46.36,
+        17.5,
+        49.04
+      ],
+      "service": {
+        "type": "WMTS",
+        "url": "https://mapsneu.wien.gv.at/basemap/1.0.0/WMTSCapabilities.xml",
+        "options": {
+          "layer": "bmaporthofoto30cm",
+          "tileMatrixSet": "google3857",
+          "style": "normal",
+          "format": "image/jpeg",
+          "crs": "EPSG:3857",
+          "requestEncoding": "REST",
+          "urlTemplate": "https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{TileMatrix}/{TileRow}/{TileCol}.jpeg",
+          "queryable": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://basemap.at/"
+      },
+      "attribution": "basemap.at (CC BY 4.0)",
+      "minZoom": 5,
+      "maxZoom": 19,
+      "resolutionMeters": 0.3,
+      "tags": [
+        "orthophoto",
+        "austria",
+        "wmts"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OrthoGea - Europe</title>
+    <meta
+      name="description"
+      content="Browse verified European open geodata services - orthophotos, cadastre, Copernicus - on a MapLibre GL map."
+    />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛰️</text></svg>" />
+  </head>
+  <body>
+    <div id="app">
+      <aside id="sidebar">
+        <header>
+          <h1>OrthoGea<span>Europe</span></h1>
+          <p id="stats">Loading catalogue…</p>
+        </header>
+
+        <section>
+          <label class="field">
+            <span>Jump to</span>
+            <select id="region-select"></select>
+          </label>
+          <label class="field">
+            <span>Search</span>
+            <input id="search" type="search" placeholder="ortofoto, catasto, sentinel…" />
+          </label>
+        </section>
+
+        <section>
+          <h2>Base layer</h2>
+          <div id="base-layers" class="layer-list"></div>
+        </section>
+
+        <section>
+          <h2>Overlays</h2>
+          <div id="overlays" class="layer-list"></div>
+          <label class="field">
+            <span>Overlay opacity <output id="opacity-value">100%</output></span>
+            <input id="opacity" type="range" min="0" max="100" value="100" />
+          </label>
+        </section>
+
+        <footer>
+          <label class="checkbox">
+            <input id="use-proxy" type="checkbox" checked />
+            <span>Route requests through the dev CORS proxy</span>
+          </label>
+          <p class="hint">
+            Click the map to run <code>GetFeatureInfo</code> on the queryable layers.
+          </p>
+          <h2>Attribution</h2>
+          <p id="layer-attribution" class="attribution"></p>
+        </footer>
+      </aside>
+
+      <main>
+        <div id="map"></div>
+        <div id="info-panel" hidden>
+          <button id="info-close" type="button" aria-label="Close">×</button>
+          <div id="info-content"></div>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,640 @@
+{
+  "$ref": "#/definitions/LayerCollection",
+  "definitions": {
+    "LayerCollection": {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 2
+        },
+        "title": {
+          "type": "string",
+          "minLength": 2
+        },
+        "updated": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:[-.][a-z0-9]+)*$",
+                "minLength": 3,
+                "maxLength": 120
+              },
+              "title": {
+                "type": "string",
+                "minLength": 2
+              },
+              "description": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "orthophoto",
+                  "satellite",
+                  "cadastre",
+                  "elevation",
+                  "land_use",
+                  "custom"
+                ]
+              },
+              "provider": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "shortName": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              "country": {
+                "type": "string"
+              },
+              "nuts": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}[A-Z0-9]{0,3}$"
+              },
+              "regionName": {
+                "type": "string"
+              },
+              "bbox": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": [
+                  {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  }
+                ],
+                "description": "[minLng, minLat, maxLng, maxLat] in WGS84 degrees"
+              },
+              "service": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "WMS"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "options": {
+                        "type": "object",
+                        "properties": {
+                          "layers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "minItems": 1
+                          },
+                          "styles": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "default": []
+                          },
+                          "format": {
+                            "type": "string",
+                            "pattern": "^image\\/[a-z0-9+.\\-]+(;\\s*[a-z0-9\\-]+=[a-z0-9\\-]+)?$",
+                            "default": "image/png"
+                          },
+                          "infoFormats": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 3
+                            },
+                            "default": []
+                          },
+                          "crs": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 3
+                            },
+                            "minItems": 1,
+                            "default": [
+                              "EPSG:3857"
+                            ]
+                          },
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "1.1.0",
+                              "1.1.1",
+                              "1.3.0"
+                            ],
+                            "default": "1.3.0"
+                          },
+                          "queryable": {
+                            "type": "boolean",
+                            "default": false
+                          },
+                          "transparent": {
+                            "type": "boolean",
+                            "default": true
+                          },
+                          "tileSize": {
+                            "type": "number",
+                            "enum": [
+                              256,
+                              512
+                            ],
+                            "default": 256
+                          },
+                          "time": {
+                            "type": "string"
+                          },
+                          "maxWidth": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0
+                          },
+                          "maxHeight": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0
+                          },
+                          "extraParams": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": [
+                                "string",
+                                "number",
+                                "boolean"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "layers"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "url",
+                      "options"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "WMTS"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "options": {
+                        "type": "object",
+                        "properties": {
+                          "layer": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "tileMatrixSet": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "style": {
+                            "type": "string",
+                            "default": "default"
+                          },
+                          "format": {
+                            "type": "string",
+                            "pattern": "^image\\/[a-z0-9+.\\-]+(;\\s*[a-z0-9\\-]+=[a-z0-9\\-]+)?$",
+                            "default": "image/png"
+                          },
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "1.0.0"
+                            ],
+                            "default": "1.0.0"
+                          },
+                          "requestEncoding": {
+                            "type": "string",
+                            "enum": [
+                              "KVP",
+                              "REST"
+                            ],
+                            "default": "KVP"
+                          },
+                          "urlTemplate": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "crs": {
+                            "type": "string",
+                            "minLength": 3,
+                            "default": "EPSG:3857"
+                          },
+                          "tileSize": {
+                            "type": "number",
+                            "enum": [
+                              256,
+                              512
+                            ],
+                            "default": 256
+                          },
+                          "dimensions": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          },
+                          "queryable": {
+                            "type": "boolean",
+                            "default": false
+                          },
+                          "infoFormats": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 3
+                            },
+                            "default": []
+                          }
+                        },
+                        "required": [
+                          "layer",
+                          "tileMatrixSet"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "url",
+                      "options"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "XYZ"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "options": {
+                        "type": "object",
+                        "properties": {
+                          "urlTemplate": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "scheme": {
+                            "type": "string",
+                            "enum": [
+                              "xyz",
+                              "tms"
+                            ],
+                            "default": "xyz"
+                          },
+                          "subdomains": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "default": []
+                          },
+                          "tileSize": {
+                            "type": "number",
+                            "enum": [
+                              256,
+                              512
+                            ],
+                            "default": 256
+                          },
+                          "apiKeyParam": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "urlTemplate"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "url",
+                      "options"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "WFS"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "options": {
+                        "type": "object",
+                        "properties": {
+                          "typeNames": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "minItems": 1
+                          },
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "1.0.0",
+                              "1.1.0",
+                              "2.0.0"
+                            ],
+                            "default": "2.0.0"
+                          },
+                          "outputFormat": {
+                            "type": "string",
+                            "default": "application/json"
+                          },
+                          "crs": {
+                            "type": "string",
+                            "minLength": 3,
+                            "default": "EPSG:4326"
+                          },
+                          "maxFeatures": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 100000
+                          },
+                          "extraParams": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": [
+                                "string",
+                                "number",
+                                "boolean"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "typeNames"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "url",
+                      "options"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "COG"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "options": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "bands": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "nodata": {
+                            "type": "number"
+                          },
+                          "resampling": {
+                            "type": "string",
+                            "enum": [
+                              "nearest",
+                              "bilinear",
+                              "cubic"
+                            ],
+                            "default": "nearest"
+                          },
+                          "crs": {
+                            "type": "string",
+                            "minLength": 3,
+                            "default": "EPSG:3857"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "url",
+                      "options"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "license": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "enum": [
+                      "CC-BY-4.0",
+                      "CC-BY-SA-4.0",
+                      "CC-BY-3.0",
+                      "CC-BY-2.5",
+                      "CC0-1.0",
+                      "IODL-2.0",
+                      "IODL-1.0",
+                      "ODbL-1.0",
+                      "etalab-2.0",
+                      "etalab-1.0",
+                      "dl-de-by-2.0",
+                      "dl-de-zero-2.0",
+                      "OGL-3.0",
+                      "NLOD-2.0",
+                      "copernicus-free",
+                      "inspire-open",
+                      "proprietary",
+                      "custom",
+                      "unknown"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 2
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              },
+              "attribution": {
+                "type": "string",
+                "minLength": 2
+              },
+              "minZoom": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 24,
+                "default": 0
+              },
+              "maxZoom": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 24,
+                "default": 20
+              },
+              "resolutionMeters": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "temporal": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$"
+                  },
+                  "end": {
+                    "type": "string",
+                    "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "default": []
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "experimental",
+                  "deprecated",
+                  "offline"
+                ],
+                "default": "active"
+              },
+              "metadataUrl": {
+                "type": "string",
+                "format": "uri"
+              },
+              "documentationUrl": {
+                "type": "string",
+                "format": "uri"
+              },
+              "lastVerified": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "category",
+              "provider",
+              "country",
+              "bbox",
+              "service",
+              "license",
+              "attribution"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "scope",
+        "title",
+        "layers"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

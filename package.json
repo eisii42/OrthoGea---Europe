@@ -1,0 +1,48 @@
+{
+  "name": "orthogea-europe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OrthoGea - Europe: modular open-source framework to aggregate, parse, catalog and render open European geodata (orthophotos, cadastre, Copernicus, DTM, land use) in modern web-GIS.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "demo": "pnpm --filter @orthogea/demo dev",
+    "test": "turbo run test",
+    "test:watch": "vitest",
+    "typecheck": "turbo run typecheck",
+    "verify": "pnpm --filter @orthogea/catalog verify",
+    "schema": "pnpm --filter @orthogea/catalog schema",
+    "docs": "pnpm --filter @orthogea/catalog docs",
+    "clean": "turbo run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.3.5",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "gis",
+    "wms",
+    "wmts",
+    "ogc",
+    "inspire",
+    "orthophoto",
+    "cadastre",
+    "copernicus",
+    "maplibre",
+    "leaflet",
+    "openlayers",
+    "europe",
+    "basemap",
+    "geodata"
+  ]
+}

@@ -1,0 +1,266 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "IT",
+  "title": "Italy - national services",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.ade.catasto-particelle",
+      "title": "Catasto - Particelle (Agenzia delle Entrate)",
+      "description": "INSPIRE cadastral parcels of the Italian cadastre. The service publishes no EPSG:3857: MapLibre needs the OrthoGea reprojecting protocol, OpenLayers can request EPSG:6706 directly.",
+      "category": "cadastre",
+      "provider": {
+        "name": "Agenzia delle Entrate",
+        "shortName": "Agenzia delle Entrate",
+        "url": "https://www.agenziaentrate.gov.it/"
+      },
+      "country": "IT",
+      "bbox": [
+        6.6,
+        35.4,
+        18.6,
+        47.2
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://wms.cartografia.agenziaentrate.gov.it/inspire/wms/ows01.php",
+        "options": {
+          "layers": [
+            "CP.CadastralParcel"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:6706",
+            "EPSG:4258",
+            "EPSG:3044",
+            "EPSG:3045",
+            "EPSG:3046",
+            "EPSG:25832",
+            "EPSG:25833",
+            "EPSG:25834"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": true,
+          "infoFormats": [
+            "text/html",
+            "text/plain",
+            "application/vnd.ogc.gml"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "attribution": "Agenzia delle Entrate - Cartografia catastale",
+      "minZoom": 14,
+      "maxZoom": 22,
+      "tags": [
+        "catasto",
+        "cadastre",
+        "inspire",
+        "particelle",
+        "no-3857"
+      ],
+      "documentationUrl": "https://www.agenziaentrate.gov.it/portale/schede/fabbricatiterreni/consultazione-cartografia-catastale/servizio-consultazione-cartografia"
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.ade.catasto-mappe",
+      "title": "Catasto - Mappe e fogli (Agenzia delle Entrate)",
+      "description": "INSPIRE cadastral zoning: sheets and map boundaries of the Italian cadastre. The service publishes no EPSG:3857: MapLibre needs the OrthoGea reprojecting protocol, OpenLayers can request EPSG:6706 directly.",
+      "category": "cadastre",
+      "provider": {
+        "name": "Agenzia delle Entrate",
+        "shortName": "Agenzia delle Entrate",
+        "url": "https://www.agenziaentrate.gov.it/"
+      },
+      "country": "IT",
+      "bbox": [
+        6.6,
+        35.4,
+        18.6,
+        47.2
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://wms.cartografia.agenziaentrate.gov.it/inspire/wms/ows01.php",
+        "options": {
+          "layers": [
+            "CP.CadastralZoning"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:6706",
+            "EPSG:4258",
+            "EPSG:3044",
+            "EPSG:3045",
+            "EPSG:3046",
+            "EPSG:25832",
+            "EPSG:25833",
+            "EPSG:25834"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": true,
+          "infoFormats": [
+            "text/html",
+            "text/plain",
+            "application/vnd.ogc.gml"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "attribution": "Agenzia delle Entrate - Cartografia catastale",
+      "minZoom": 12,
+      "maxZoom": 22,
+      "tags": [
+        "catasto",
+        "cadastre",
+        "inspire",
+        "fogli",
+        "no-3857"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.ade.catasto-completo",
+      "title": "Catasto - Cartografia completa (Agenzia delle Entrate)",
+      "description": "Full cadastral drawing: parcels, buildings, roads, water bodies and labels in a single layer. The service publishes no EPSG:3857: MapLibre needs the OrthoGea reprojecting protocol, OpenLayers can request EPSG:6706 directly.",
+      "category": "cadastre",
+      "provider": {
+        "name": "Agenzia delle Entrate",
+        "shortName": "Agenzia delle Entrate",
+        "url": "https://www.agenziaentrate.gov.it/"
+      },
+      "country": "IT",
+      "bbox": [
+        6.6,
+        35.4,
+        18.6,
+        47.2
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://wms.cartografia.agenziaentrate.gov.it/inspire/wms/ows01.php",
+        "options": {
+          "layers": [
+            "Cartografia_Catastale"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:6706",
+            "EPSG:4258",
+            "EPSG:3044",
+            "EPSG:3045",
+            "EPSG:3046",
+            "EPSG:25832",
+            "EPSG:25833",
+            "EPSG:25834"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": true,
+          "infoFormats": [
+            "text/html",
+            "text/plain",
+            "application/vnd.ogc.gml"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "attribution": "Agenzia delle Entrate - Cartografia catastale",
+      "minZoom": 14,
+      "maxZoom": 22,
+      "tags": [
+        "catasto",
+        "cadastre",
+        "inspire",
+        "no-3857"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "it.pcn.ortofoto-2012",
+      "title": "Ortofoto nazionale 2012 (Geoportale Nazionale)",
+      "description": "National colour orthophoto flown in 2012, published by the Geoportale Nazionale. Coverage is split by UTM zone: this record uses the zone 32 mosaic.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Ministero dell'Ambiente e della Sicurezza Energetica - Geoportale Nazionale",
+        "shortName": "Geoportale Nazionale",
+        "url": "https://gn.mase.gov.it/"
+      },
+      "country": "IT",
+      "bbox": [
+        6.34,
+        35.03,
+        19.84,
+        47.31
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_12.map",
+        "options": {
+          "layers": [
+            "OI.ORTOIMMAGINI.2012.32"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:32632",
+            "EPSG:32633"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": [
+            "text/plain",
+            "application/vnd.ogc.gml"
+          ]
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "Geoportale Nazionale - free consultation with attribution",
+        "url": "https://gn.mase.gov.it/portale/en/consultation-service-wms",
+        "notes": "The capabilities declare no fees and no access constraints; attribution to the Geoportale Nazionale is expected."
+      },
+      "attribution": "Geoportale Nazionale - MASE",
+      "minZoom": 6,
+      "maxZoom": 18,
+      "resolutionMeters": 0.5,
+      "temporal": {
+        "start": "2012-01",
+        "end": "2012-12"
+      },
+      "tags": [
+        "ortofoto",
+        "nazionale",
+        "pcn",
+        "agea"
+      ]
+    }
+  ]
+}

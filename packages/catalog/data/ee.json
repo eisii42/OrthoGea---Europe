@@ -1,0 +1,49 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "EE",
+  "title": "Estonia",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "ee.maaamet.fotokaart",
+      "title": "Fotokaart - Estonia",
+      "description": "National orthophoto map of Estonia, served as Web Mercator tiles in the TMS scheme. The INSPIRE WMS at kaart.maaamet.ee publishes only EPSG:3301, so the tile service is the practical choice for web maps.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Maa- ja Ruumiamet",
+        "shortName": "Maa-amet",
+        "url": "https://maaamet.ee/"
+      },
+      "country": "EE",
+      "bbox": [
+        21.5,
+        57.5,
+        28.2,
+        59.7
+      ],
+      "service": {
+        "type": "XYZ",
+        "url": "https://tiles.maaamet.ee/tm/tms/1.0.0/foto@GMC",
+        "options": {
+          "urlTemplate": "https://tiles.maaamet.ee/tm/tms/1.0.0/foto@GMC/{z}/{x}/{y}.jpg",
+          "scheme": "tms"
+        }
+      },
+      "license": {
+        "id": "custom",
+        "name": "Estonian Land Board open data",
+        "url": "https://geoportaal.maaamet.ee/",
+        "notes": "Free of charge; attribution to Maa- ja Ruumiamet is required."
+      },
+      "attribution": "Maa- ja Ruumiamet",
+      "minZoom": 6,
+      "maxZoom": 18,
+      "tags": [
+        "orthophoto",
+        "estonia",
+        "tms"
+      ]
+    }
+  ]
+}

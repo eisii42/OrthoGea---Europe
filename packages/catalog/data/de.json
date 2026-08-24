@@ -1,0 +1,123 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "DE",
+  "title": "Germany",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "de.bkg.basemapde-grau",
+      "title": "basemap.de Web Raster grau - Germany",
+      "description": "Official grey topographic web map of Germany, published by the BKG.",
+      "category": "custom",
+      "provider": {
+        "name": "Bundesamt fuer Kartographie und Geodaesie",
+        "shortName": "BKG",
+        "url": "https://basemap.de/"
+      },
+      "country": "DE",
+      "bbox": [
+        5.8,
+        47.2,
+        15.1,
+        55.1
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://sgx.geodatenzentrum.de/wms_basemapde",
+        "options": {
+          "layers": [
+            "de_basemapde_web_raster_grau"
+          ],
+          "styles": [
+            "inspire_common:DEFAULT"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "dl-de-by-2.0",
+        "url": "https://www.govdata.de/dl-de/by-2-0"
+      },
+      "attribution": "© basemap.de / BKG",
+      "minZoom": 4,
+      "maxZoom": 19,
+      "tags": [
+        "basemap",
+        "topographic",
+        "germany"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-23",
+      "id": "de.bkg.sen2europe",
+      "title": "Sen2Europe RGB mosaic",
+      "description": "Cloud-free Sentinel-2 RGB mosaic of Europe assembled by the BKG from Copernicus data.",
+      "category": "satellite",
+      "provider": {
+        "name": "Bundesamt fuer Kartographie und Geodaesie",
+        "shortName": "BKG",
+        "url": "https://gdz.bkg.bund.de/"
+      },
+      "country": "DE",
+      "bbox": [
+        -49.3,
+        26.2,
+        63.3,
+        72.2
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://sgx.geodatenzentrum.de/wms_sen2europe",
+        "options": {
+          "layers": [
+            "rgb"
+          ],
+          "styles": [
+            "default"
+          ],
+          "format": "image/png",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:25832"
+          ],
+          "version": "1.3.0",
+          "queryable": true,
+          "transparent": false,
+          "infoFormats": [
+            "text/plain",
+            "text/xml",
+            "application/vnd.ogc.gml"
+          ]
+        }
+      },
+      "license": {
+        "id": "copernicus-free",
+        "url": "https://www.copernicus.eu/en/access-data/copyright-and-licences",
+        "name": "Copernicus free, full and open data policy"
+      },
+      "attribution": "European Union, contains modified Copernicus Sentinel data / BKG",
+      "minZoom": 3,
+      "maxZoom": 14,
+      "resolutionMeters": 10,
+      "tags": [
+        "sentinel-2",
+        "mosaic",
+        "europe",
+        "bkg"
+      ]
+    }
+  ]
+}

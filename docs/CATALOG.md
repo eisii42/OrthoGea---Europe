@@ -1,0 +1,210 @@
+# Catalogue
+
+Generated from `packages/catalog/data/*.json` - do not edit by hand, run
+`pnpm --filter @orthogea/catalog docs` after changing the data.
+
+**49 layers · 19 scopes · 26 queryable · last verified 2026-08-23**
+
+| Category | Layers |
+| --- | --- |
+| orthophoto | 35 |
+| cadastre | 6 |
+| satellite | 3 |
+| custom | 3 |
+| land_use | 1 |
+| elevation | 1 |
+
+| Service | Layers |
+| --- | --- |
+| WMS | 45 |
+| WMTS | 3 |
+| XYZ | 1 |
+
+## Pan-European (EU)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `eu.copernicus.sentinel2-l2a-true-color` | Sentinel-2 L2A True Color (Copernicus Data Space) | Europe | satellite | WMS, experimental | Copernicus free, full and open data policy | Copernicus |
+| `eu.eea.corine-land-cover-2018` | CORINE Land Cover 2018 | Europe | land_use | WMS, queryable | Copernicus free, full and open data policy | EEA |
+| `eu.eea.eu-dem` | EU-DEM v1.1 hillshade | Europe | elevation | WMS, queryable | Copernicus free, full and open data policy | EEA |
+| `eu.eox.s2cloudless-2024` | Sentinel-2 cloudless 2024 (EOX) | Europe | satellite | WMS | CC-BY-4.0 | EOX |
+| `eu.eox.terrain-light` | Terrain Light (EOX) | Europe | custom | WMS | CC-BY-4.0 | EOX |
+
+## Austria (AT)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `at.basemap.orthofoto` | basemap.at Orthofoto - Austria | Austria | orthophoto | WMTS | CC-BY-4.0 | basemap.at |
+
+## Belgium (BE)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `be.vlaanderen.orthofoto-winter` | Orthofotomozaiek winteropnamen - Flanders | Belgium - Vlaanderen | orthophoto | WMS | Gratis Open Data Licentie Vlaanderen v1.2 | Digitaal Vlaanderen |
+| `be.wallonie.ortho-last` | Orthophotos les plus recentes - Wallonia | Belgium - Wallonie | orthophoto | WMS, queryable | SPW open data licence | SPW |
+
+## Switzerland (CH)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `ch.swisstopo.swissimage` | SWISSIMAGE - Switzerland | Switzerland | orthophoto | WMS, queryable | swisstopo free geodata licence | swisstopo |
+
+## Czechia (CZ)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `cz.cuzk.ortofoto` | Ortofoto CR - Czechia | Czechia | orthophoto | WMS, queryable | CUZK viewing service | CUZK |
+
+## Germany (DE)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `de.bkg.basemapde-grau` | basemap.de Web Raster grau - Germany | Germany | custom | WMS | dl-de-by-2.0 | BKG |
+| `de.bkg.sen2europe` | Sen2Europe RGB mosaic | Germany | satellite | WMS, queryable | Copernicus free, full and open data policy | BKG |
+
+## Denmark (DK)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `dk.dataforsyningen.orto-foraar` | Ortofoto foraar - Denmark | Denmark | orthophoto | WMS, experimental | CC-BY-4.0 | Dataforsyningen |
+
+## Estonia (EE)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `ee.maaamet.fotokaart` | Fotokaart - Estonia | Estonia | orthophoto | XYZ | Estonian Land Board open data | Maa-amet |
+
+## Greece (EL)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `el.ktimatologio.basemap` | Hellenic Cadastre orthophoto basemap - Greece | Greece | orthophoto | WMS, queryable | Hellenic Cadastre open viewing service | Ktimatologio |
+
+## Spain (ES)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `es.catastro.buildings` | Catastro - Buildings (Spain) | Spain | cadastre | WMS, queryable | Catastro free access, no massive downloading | Catastro |
+| `es.catastro.parcels` | Catastro - Cadastral parcels (Spain) | Spain | cadastre | WMS, queryable | Catastro free access, no massive downloading | Catastro |
+| `es.ign.mtn-raster` | Mapa raster MTN - Spain | Spain | custom | WMS | CC-BY-4.0 | IGN |
+| `es.ign.pnoa-ma` | PNOA Maxima Actualidad - Spain | Spain | orthophoto | WMS, queryable | CC-BY-4.0 | IGN |
+
+## France (FR)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `fr.ign.bdortho` | BD ORTHO 50 cm - France | France | orthophoto | WMS, queryable | etalab-2.0 | IGN |
+| `fr.ign.bdortho-wmts` | Ortho 20 cm - France (WMTS) | France | orthophoto | WMTS | etalab-2.0 | IGN |
+| `fr.ign.parcellaire-express` | Parcellaire Express (PCI) - France | France | cadastre | WMS, queryable | etalab-2.0 | IGN |
+
+## Croatia (HR)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `hr.dgu.dof-2019` | Digitalni ortofoto 2019 - Croatia | Croatia | orthophoto | WMS, queryable, needs reprojection | DGU INSPIRE view service | DGU |
+
+## Italy (IT)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `it.abruzzo.agea-2022` | Ortofoto AGEA 2022 RGB - Abruzzo | Italy - Abruzzo | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Abruzzo |
+| `it.ade.catasto-completo` | Catasto - Cartografia completa (Agenzia delle Entrate) | Italy | cadastre | WMS, queryable, needs reprojection | CC-BY-4.0 | Agenzia delle Entrate |
+| `it.ade.catasto-mappe` | Catasto - Mappe e fogli (Agenzia delle Entrate) | Italy | cadastre | WMS, queryable, needs reprojection | CC-BY-4.0 | Agenzia delle Entrate |
+| `it.ade.catasto-particelle` | Catasto - Particelle (Agenzia delle Entrate) | Italy | cadastre | WMS, queryable, needs reprojection | CC-BY-4.0 | Agenzia delle Entrate |
+| `it.bolzano.ortofoto-2023` | Ortofoto 2023 - Provincia autonoma di Bolzano | Italy - Bolzano - Bozen | orthophoto | WMS | CC-BY-4.0 | Provincia di Bolzano |
+| `it.emilia-romagna.agea-2023` | Ortofoto AGEA 2023 RGB - Emilia-Romagna | Italy - Emilia-Romagna | orthophoto | WMS | CC-BY-4.0 | Regione Emilia-Romagna |
+| `it.emilia-romagna.rer-2023` | Ortofoto RER 2023-24 RGB - Emilia-Romagna | Italy - Emilia-Romagna | orthophoto | WMS | CC-BY-4.0 | Regione Emilia-Romagna |
+| `it.fvg.trueortofoto-2020` | TrueOrtofoto 2020 - Friuli Venezia Giulia | Italy - Friuli-Venezia Giulia | orthophoto | WMS, queryable | CC-BY-4.0 | Regione FVG |
+| `it.lazio.agea-2023` | Ortofoto AGEA 2023 - Lazio | Italy - Lazio | orthophoto | WMS | CC-BY-4.0 | Regione Lazio |
+| `it.lombardia.ortofoto-2021` | Ortofoto 2021 - Lombardia | Italy - Lombardia | orthophoto | WMS | CC-BY-4.0 | Regione Lombardia |
+| `it.marche.agea-2022` | Ortofoto AGEA 2022 RGB - Marche | Italy - Marche | orthophoto | WMS, queryable, needs reprojection | CC-BY-4.0 | Regione Marche |
+| `it.pcn.ortofoto-2012` | Ortofoto nazionale 2012 (Geoportale Nazionale) | Italy | orthophoto | WMS | Geoportale Nazionale - free consultation with attribution | Geoportale Nazionale |
+| `it.piemonte.agea-2024` | Ortofoto AGEA 2024 - Piemonte | Italy - Piemonte | orthophoto | WMS | AGEA 2024 - viewing service, all rights reserved | Regione Piemonte |
+| `it.puglia.ortofoto-2023` | Ortofoto 2023 - Puglia | Italy - Puglia | orthophoto | WMS | IODL-2.0 | Regione Puglia |
+| `it.sardegna.ortofoto-2022` | Ortofoto MASAF-AGEA 2022 - Sardegna | Italy - Sardegna | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Sardegna |
+| `it.sicilia.ata-2013` | Ortofoto ATA 2012-2013 - Sicilia | Italy - Sicilia | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Siciliana |
+| `it.toscana.ortofoto-2013` | Ortofoto 2013 - Toscana (Geoscopio) | Italy - Toscana | orthophoto | WMS | CC-BY-4.0 | Regione Toscana |
+| `it.umbria.ortofoto-2020` | Ortofoto 2020 - Umbria | Italy - Umbria | orthophoto | WMS, queryable, needs reprojection | Regione Umbria - view only | Regione Umbria |
+| `it.veneto.agea-2024` | Ortofoto AGEA 2024 - Veneto | Italy - Veneto | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Veneto |
+| `it.veneto.agea-2024-wmts` | Ortofoto AGEA 2024 - Veneto (WMTS) | Italy - Veneto | orthophoto | WMTS | CC-BY-4.0 | Regione Veneto |
+
+## Netherlands (NL)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `nl.pdok.luchtfoto-actueel` | Luchtfoto Actueel Ortho 8 cm - Netherlands | Netherlands | orthophoto | WMS | CC-BY-4.0 | PDOK |
+
+## Poland (PL)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `pl.geoportal.ortofotomapa` | Ortofotomapa - Poland | Poland | orthophoto | WMS, queryable | Free use under the Polish geodetic law | GUGiK |
+
+## Portugal (PT)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `pt.dgt.ortos-2021` | Ortos 2021 - Portugal continental | Portugal | orthophoto | WMS | CC-BY-4.0 | DGT |
+
+## Sweden (SE)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `se.lantmateriet.ortofoto-025` | Ortofoto 0,25 m - Sweden | Sweden | orthophoto | WMS | CC0-1.0 | Lantmateriet |
+
+## Slovenia (SI)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `si.gurs.dof025` | DOF 025 - Slovenia | Slovenia | orthophoto | WMS, queryable | GURS public geodetic data | GURS |
+
+## Slovakia (SK)
+
+| Id | Title | Scope | Category | Service | Licence | Provider |
+| --- | --- | --- | --- | --- | --- | --- |
+| `sk.ugkk.ortofoto` | Ortofotomozaika SR - Slovakia | Slovakia | orthophoto | WMS, queryable | CC-BY-4.0 | UGKK SR |
+
+## NUTS tree
+
+```
+EU     Europe (49)
+  AT     Austria (1)
+  BE     Belgium (2)
+    BE2    Vlaanderen (1)
+    BE3    Wallonie (1)
+  CH     Switzerland (1)
+  CZ     Czechia (1)
+  DE     Germany (2)
+  DK     Denmark (1)
+  EE     Estonia (1)
+  EL     Greece (1)
+  ES     Spain (4)
+  FR     France (3)
+  HR     Croatia (1)
+  IT     Italy (20)
+    ITC    ITC (2)
+      ITC1   Piemonte (1)
+      ITC4   Lombardia (1)
+    ITF    ITF (2)
+      ITF1   Abruzzo (1)
+      ITF4   Puglia (1)
+    ITG    ITG (2)
+      ITG1   Sicilia (1)
+      ITG2   Sardegna (1)
+    ITH    ITH (6)
+      ITH1   Bolzano - Bozen (1)
+      ITH3   Veneto (2)
+      ITH4   Friuli-Venezia Giulia (1)
+      ITH5   Emilia-Romagna (2)
+    ITI    ITI (4)
+      ITI1   Toscana (1)
+      ITI2   Umbria (1)
+      ITI3   Marche (1)
+      ITI4   Lazio (1)
+  NL     Netherlands (1)
+  PL     Poland (1)
+  PT     Portugal (1)
+  SE     Sweden (1)
+  SI     Slovenia (1)
+  SK     Slovakia (1)
+```

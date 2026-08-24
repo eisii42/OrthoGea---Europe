@@ -1,0 +1,51 @@
+{
+  "name": "@orthogea/catalog",
+  "version": "0.1.0",
+  "description": "Hierarchical registry of verified European open geodata endpoints (NUTS-0 to NUTS-3) for OrthoGea - Europe.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./data/*": "./data/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "data",
+    "schema",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "schema": "node scripts/generate-schema.mjs",
+    "verify": "node scripts/verify-endpoints.mjs",
+    "clean": "rimraf dist .turbo",
+    "docs": "node scripts/generate-catalog-docs.mjs"
+  },
+  "dependencies": {
+    "@orthogea/core": "workspace:*",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@orthogea/harvester": "workspace:*",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "zod-to-json-schema": "^3.24.1",
+    "@orthogea/client": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

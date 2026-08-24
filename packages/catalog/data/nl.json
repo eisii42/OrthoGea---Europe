@@ -1,0 +1,63 @@
+{
+  "$schema": "../schema/layer-collection.schema.json",
+  "scope": "NL",
+  "title": "Netherlands",
+  "updated": "2026-08-23",
+  "layers": [
+    {
+      "lastVerified": "2026-08-23",
+      "id": "nl.pdok.luchtfoto-actueel",
+      "title": "Luchtfoto Actueel Ortho 8 cm - Netherlands",
+      "description": "Most recent national aerial imagery of the Netherlands at 8 cm resolution.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "PDOK - Kadaster",
+        "shortName": "PDOK",
+        "url": "https://www.pdok.nl/"
+      },
+      "country": "NL",
+      "bbox": [
+        3.171,
+        50.579,
+        7.489,
+        53.638
+      ],
+      "service": {
+        "type": "WMS",
+        "url": "https://service.pdok.nl/hwh/luchtfotorgb/wms/v1_0",
+        "options": {
+          "layers": [
+            "Actueel_orthoHR"
+          ],
+          "format": "image/jpeg",
+          "crs": [
+            "EPSG:3857",
+            "EPSG:4326",
+            "CRS:84",
+            "EPSG:28992"
+          ],
+          "version": "1.3.0",
+          "queryable": false,
+          "transparent": false,
+          "infoFormats": [
+            "text/plain",
+            "text/xml"
+          ]
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.pdok.nl/"
+      },
+      "attribution": "Beeldmateriaal.nl / PDOK",
+      "minZoom": 8,
+      "maxZoom": 21,
+      "resolutionMeters": 0.08,
+      "tags": [
+        "luchtfoto",
+        "orthophoto",
+        "netherlands"
+      ]
+    }
+  ]
+}
