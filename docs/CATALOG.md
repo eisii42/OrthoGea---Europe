@@ -3,11 +3,11 @@
 Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 `pnpm --filter @orthogea/catalog docs` after changing the data.
 
-**55 layers · 20 scopes · 18 queryable · last verified 2026-08-24**
+**54 layers · 20 scopes · 18 queryable · last verified 2026-08-24**
 
 | Category | Layers |
 | --- | --- |
-| orthophoto | 50 |
+| orthophoto | 49 |
 | custom | 2 |
 | satellite | 1 |
 | land_use | 1 |
@@ -15,7 +15,7 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 
 | Service | Layers |
 | --- | --- |
-| WMS | 51 |
+| WMS | 50 |
 | WMTS | 3 |
 | XYZ | 1 |
 
@@ -117,7 +117,6 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | `it.basilicata.ortofoto-2013` | Ortofoto CTR 20 cm 2013 - Basilicata | Italy - Basilicata | orthophoto | WMS, needs reprojection | CC-BY-4.0 | Regione Basilicata |
 | `it.bolzano.ortofoto-2023` | Ortofoto 2023 - Provincia autonoma di Bolzano | Italy - Bolzano - Bozen | orthophoto | WMS | CC-BY-4.0 | Provincia di Bolzano |
 | `it.emilia-romagna.agea-2023` | Ortofoto AGEA 2023 RGB - Emilia-Romagna | Italy - Emilia-Romagna | orthophoto | WMS | CC-BY-4.0 | Regione Emilia-Romagna |
-| `it.emilia-romagna.rer-2023` | Ortofoto RER 2023-24 RGB - Emilia-Romagna | Italy - Emilia-Romagna | orthophoto | WMS | CC-BY-4.0 | Regione Emilia-Romagna |
 | `it.fvg.trueortofoto-2020` | TrueOrtofoto 2020 - Friuli Venezia Giulia | Italy - Friuli-Venezia Giulia | orthophoto | WMS, queryable | CC-BY-4.0 | Regione FVG |
 | `it.lazio.agea-2023` | Ortofoto AGEA 2023 - Lazio | Italy - Lazio | orthophoto | WMS | CC-BY-4.0 | Regione Lazio |
 | `it.lombardia.ortofoto-2024` | Ortofoto 2024 - Lombardia | Italy - Lombardia | orthophoto | WMS, needs reprojection | CC-BY-4.0 | Regione Lombardia |
@@ -177,7 +176,7 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 ## NUTS tree
 
 ```
-EU     Europe (55)
+EU     Europe (54)
   AT     Austria (1)
   BE     Belgium (2)
     BE2    Vlaanderen (1)
@@ -191,7 +190,7 @@ EU     Europe (55)
   ES     Spain (2)
   FR     France (2)
   HR     Croatia (1)
-  IT     Italy (18)
+  IT     Italy (17)
     ITC    ITC (2)
       ITC1   Piemonte (1)
       ITC4   Lombardia (1)
@@ -202,12 +201,12 @@ EU     Europe (55)
     ITG    ITG (2)
       ITG1   Sicilia (1)
       ITG2   Sardegna (1)
-    ITH    ITH (7)
+    ITH    ITH (6)
       ITH1   Bolzano - Bozen (1)
       ITH2   Trento (1)
       ITH3   Veneto (2)
       ITH4   Friuli-Venezia Giulia (1)
-      ITH5   Emilia-Romagna (2)
+      ITH5   Emilia-Romagna (1)
     ITI    ITI (4)
       ITI1   Toscana (1)
       ITI2   Umbria (1)

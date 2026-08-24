@@ -58,6 +58,14 @@ const FADE_TO_ZOOM = 15.5;
  */
 const BASE_MAX_TILE_ZOOM = 16;
 
+/**
+ * Query-string switches, so a rendering problem can be bisected without a
+ * rebuild: `?stitch=0` stops 256 px tile caches being recombined, `?prefetch=0`
+ * stops the idle warm-up, `?zoomlimit=0` lifts the detail ceiling.
+ */
+const flags = new URLSearchParams(location.search);
+const flag = (name: string): boolean => flags.get(name) !== "0";
+
 const state = {
   baseId: MOSAIC_ID,
   overlayIds: new Set<string>(),
@@ -128,6 +136,7 @@ function registerProtocol(): void {
     id: "orthophotos",
     layers: catalog.filter((layer) => layer.category === "orthophoto"),
     orthophotoFromZoom: 0,
+    stitchTiles: flag("stitch"),
     ...adapterOptions(),
     onTile: ({ layer }) => {
       lastMosaicLayer = layer;
@@ -165,7 +174,7 @@ function applyZoomLimit(): void {
   releaseZoomLimit = undefined;
   detailLimit = undefined;
 
-  if (state.baseId !== MOSAIC_ID) return;
+  if (state.baseId !== MOSAIC_ID || !flag("zoomlimit")) return;
   releaseZoomLimit = bindDetailZoomLimit(map, [mosaic, baseMosaic], {
     onChange: (limit) => {
       detailLimit = limit;
@@ -198,6 +207,7 @@ function frugal(): boolean {
  * connection, and never while the map is moving.
  */
 function prefetchNeighbours(): void {
+  if (!flag("prefetch")) return;
   if (state.baseId !== MOSAIC_ID || frugal() || navigator.onLine === false) return;
 
   const zoom = map.getZoom();

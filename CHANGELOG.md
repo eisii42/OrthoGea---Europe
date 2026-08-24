@@ -4,6 +4,31 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the packages share one version
 number.
 
+## [0.5.1] - 2026-08-24
+
+### Fixed
+
+- **Emilia-Romagna drew nothing at all.** `servizigis.regione.emilia-romagna.it/wms/rer2023_24_rgb`
+  answers with an empty 4.8 kB image at every zoom, in every format, everywhere - Bologna and
+  Ferrara included. Its rectangle covers most of northern Italy and it outranked its neighbours
+  on locality, so every tile in that area paid a wasted round trip before falling through. The
+  working AGEA 2023 service was already in the catalogue, tagged `alternative` behind the broken
+  one; it is now the Emilia-Romagna record and the dead endpoint is gone.
+- **One dropped child request no longer blacklists a whole region.** Stitching a 256 px tile cache
+  makes four requests per tile, so four chances of a dropped connection. A rejection propagated
+  out of the stitch and was read as a failing service, taking the layer off the map for a minute -
+  which is what a hole in fully covered ground looks like.
+- **Stitched tiles keep the format the service used.** A PNG tile cache was being re-encoded as
+  JPEG, a lossy round trip for no gain.
+- **Callers no longer share one tile buffer.** The renderer and the idle prefetcher could receive
+  the same `ArrayBuffer`; an image decoder that transfers it would leave the other holding a
+  detached buffer, and a tile that never draws.
+
+### Added
+
+- `stitchTiles` on `createMosaic()`, and `?stitch=0`, `?prefetch=0`, `?zoomlimit=0` in the demo,
+  so a rendering problem can be bisected in a browser without a rebuild.
+
 ## [0.5.0] - 2026-08-24
 
 ### Added

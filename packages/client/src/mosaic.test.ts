@@ -482,8 +482,12 @@ describe("network efficiency", () => {
 
     const [a, b] = await Promise.all([tiled.fetchTile(dx, dy, 14), tiled.fetchTile(dx, dy, 14)]);
     expect(a.layer.id).toBe("it.toscana.ortofoto");
-    expect(b.data).toBe(a.data);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    // One download, but a buffer each: an image decoder may transfer the one
+    // it is given, and a detached buffer is a tile that never draws.
+    expect(b.data.byteLength).toBe(a.data.byteLength);
+    expect(b.data).not.toBe(a.data);
   });
 
   it("keeps the download alive while another caller still wants the tile", async () => {
@@ -777,5 +781,86 @@ describe("bindDetailZoomLimit", () => {
     map.fire("moveend");
     map.fire("moveend");
     expect(changes).toHaveLength(1);
+  });
+});
+
+describe("stitching failures", () => {
+  const cached: OrthoGeaLayer = {
+    ...wmtsLayer,
+    id: "it.veneto.agea-2024-wmts",
+    category: "orthophoto",
+    country: "IT",
+    bbox: regional.bbox,
+    resolutionMeters: 0.2
+  };
+
+  const stubCanvas = () =>
+    class {
+      constructor(
+        readonly width: number,
+        readonly height: number
+      ) {}
+      getContext(): unknown {
+        return { drawImage: () => undefined };
+      }
+      async convertToBlob(options?: { type?: string }): Promise<Blob> {
+        return new Blob([new Uint8Array(40_000)], { type: options?.type ?? "image/png" });
+      }
+    };
+
+  it("does not blacklist a layer because one child request failed", async () => {
+    // Four requests per tile is four chances of a dropped connection. Letting
+    // one rejection through used to take the whole region off the map for a
+    // minute, which is what a hole in a fully covered area looks like.
+    vi.stubGlobal("OffscreenCanvas", stubCanvas());
+    vi.stubGlobal("createImageBitmap", async () => ({ close: () => undefined }));
+
+    let failNext = true;
+    const fetchImpl = async (url: string) => {
+      if (failNext && url.includes("TILEMATRIX=15")) {
+        failNext = false;
+        throw new TypeError("Failed to fetch");
+      }
+      return new Response(new Uint8Array(24_000), {
+        status: 200,
+        headers: { "content-type": "image/png" }
+      });
+    };
+
+    const tiled = createMosaic({
+      layers: [cached],
+      orthophotoFromZoom: 0,
+      cacheName: false,
+      fetchImpl
+    });
+
+    // The stitch gives up and the single tile covers the ground instead.
+    expect((await tiled.fetchTile(dx, dy, 14)).layer.id).toBe("it.veneto.agea-2024-wmts");
+    // And the next tile still stitches: the layer was never blamed.
+    expect((await tiled.fetchTile(dx + 1, dy, 14)).layer.id).toBe("it.veneto.agea-2024-wmts");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps the format the service used", async () => {
+    vi.stubGlobal("OffscreenCanvas", stubCanvas());
+    vi.stubGlobal("createImageBitmap", async () => ({ close: () => undefined }));
+
+    const tiled = createMosaic({
+      layers: [cached],
+      orthophotoFromZoom: 0,
+      cacheName: false,
+      fetchImpl: async () =>
+        new Response(new Uint8Array(24_000), {
+          status: 200,
+          headers: { "content-type": "image/png" }
+        })
+    });
+
+    // A PNG service stays PNG: re-encoding it as JPEG would be a lossy round
+    // trip for no gain.
+    expect((await tiled.fetchTile(dx, dy, 14)).contentType).toBe("image/png");
+
+    vi.unstubAllGlobals();
   });
 });

@@ -38,7 +38,7 @@ globalThis.x = { createMosaic, registerMosaicProtocol, toMosaicRasterSource, bin
   },
   {
     name: "full basemap",
-    what: "mosaic plus all 55 catalogued services",
+    what: "mosaic plus all 54 catalogued services",
     code: `import { createMosaic, registerMosaicProtocol, toMosaicRasterSource, toMosaicRasterLayer, bindDetailZoomLimit } from "@orthogea/client";
 import { catalog } from "@orthogea/catalog";
 globalThis.x = { createMosaic, registerMosaicProtocol, toMosaicRasterSource, toMosaicRasterLayer, bindDetailZoomLimit, catalog };`

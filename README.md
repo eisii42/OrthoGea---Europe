@@ -12,7 +12,7 @@ harvest (GetCapabilities)  ->  catalogue (validated JSON)  ->  render (MapLibre,
 
 | | |
 | --- | --- |
-| **55 layers, 19 countries + EU** | every endpoint probed live, `lastVerified` stored per record |
+| **54 layers, 19 countries + EU** | every endpoint probed live, `lastVerified` stored per record |
 | **Better than a global mosaic** | 8-30 cm official orthophotos where they exist, Sentinel-2 elsewhere |
 | **MIT code, open data** | no API key, no tile quota, no terms-of-service trap; licence and attribution carried per layer |
 | **Seamless mosaic** | one virtual layer picks the best source per tile, Copernicus imagery when zoomed out |
@@ -38,7 +38,7 @@ imagery is, so the weight is measured rather than asserted - run `pnpm size` to 
 | `@orthogea/core` | 8.6 kB | **2.4 kB** | tile maths, CRS normalisation, bbox helpers |
 | `toRasterSource` | 13.4 kB | **4.4 kB** | one catalogue record as a MapLibre source |
 | the mosaic | 23.5 kB | **8.4 kB** | the seamless imagery layer, without the catalogue |
-| the whole basemap | 79.3 kB | **19.5 kB** | mosaic plus all 55 catalogued services |
+| the whole basemap | 79.3 kB | **19.5 kB** | mosaic plus all 54 catalogued services |
 
 Nothing on that path imports a third-party package. The two dependencies the project does have
 live behind their own entry points, so you only pay for them if you use them:

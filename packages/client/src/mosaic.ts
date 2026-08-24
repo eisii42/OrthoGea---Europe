@@ -99,6 +99,13 @@ export interface MosaicOptions extends TileUrlBuilderOptions {
    */
   cacheLimit?: number;
   /**
+   * Fetch the four native tiles of a 256 px tile cache and stitch them, rather
+   * than stretching one over a 512 px slot. Defaults to `true`: it is what
+   * keeps basemap.at, IGN, Veneto and Estonia at the resolution the reader is
+   * at. Set `false` to trade that detail for a quarter of the requests.
+   */
+  stitchTiles?: boolean;
+  /**
    * Answer with a transparent tile instead of failing when nothing covers the
    * area. Lets a mosaic without a fallback sit on top of a base layer: the base
    * shows through the holes and the console stays quiet. Defaults to `true`
@@ -367,6 +374,7 @@ export class Mosaic {
    * draws on, so its tiles have to be stitched rather than stretched.
    */
   private canStitch(layer: OrthoGeaLayer): boolean {
+    if (this.options.stitchTiles === false) return false;
     if (!isTiled(layer)) return false;
     const native = (layer.service as { options: { tileSize: number } }).options.tileSize;
     return native > 0 && this.tileSize / native === 2;
@@ -402,12 +410,20 @@ export class Mosaic {
 
     const parts = await Promise.all(
       quadrants.map(async ([dx, dy]) => {
-        const response = await fetchImpl(this.tileUrl(layer, x * 2 + dx, y * 2 + dy, z + 1), {
-          signal
-        });
-        const contentType = response.headers.get("content-type") ?? "";
-        if (!response.ok || !contentType.startsWith("image/")) return undefined;
-        return response.arrayBuffer();
+        try {
+          const response = await fetchImpl(this.tileUrl(layer, x * 2 + dx, y * 2 + dy, z + 1), {
+            signal
+          });
+          const contentType = response.headers.get("content-type") ?? "";
+          if (!response.ok || !contentType.startsWith("image/")) return undefined;
+          return { data: await response.arrayBuffer(), contentType };
+        } catch {
+          // A child that never arrives is not evidence about the service:
+          // letting it reject here would blacklist the whole layer for a
+          // minute, and one dropped request would punch a hole in a region
+          // that is otherwise fully covered.
+          return undefined;
+        }
       })
     );
     // One missing child and the tile would have a hole: fall back to the
@@ -420,18 +436,29 @@ export class Mosaic {
 
     const half = this.tileSize / 2;
     for (const [index, [dx, dy]] of quadrants.entries()) {
-      const bitmap = await createImageBitmap(new Blob([parts[index] as ArrayBuffer]));
+      const part = parts[index] as { data: ArrayBuffer; contentType: string };
+      const bitmap = await createImageBitmap(new Blob([part.data], { type: part.contentType }));
       context.drawImage(bitmap, dx * half, dy * half, half, half);
       bitmap.close();
     }
 
-    const blob = await canvas.convertToBlob({ type: "image/jpeg", quality: 0.9 });
+    // Re-encode in the format the service already used. Turning a service's
+    // PNG tiles into JPEG would be a lossy round trip for no gain, and the
+    // renderer decodes whatever it is handed either way.
+    const contentType =
+      (parts[0] as { contentType: string }).contentType === "image/png"
+        ? "image/png"
+        : "image/jpeg";
+    const blob = await canvas.convertToBlob({ type: contentType, quality: 0.9 });
     return {
       data: await blob.arrayBuffer(),
-      contentType: "image/jpeg",
+      contentType,
       // The blank test reads the originals: re-encoding changes the size, and
       // four empty children are what actually says "no coverage here".
-      bytes: parts.reduce((total, part) => total + (part as ArrayBuffer).byteLength, 0)
+      bytes: parts.reduce(
+        (total, part) => total + (part as { data: ArrayBuffer }).data.byteLength,
+        0
+      )
     };
   }
 
@@ -603,7 +630,10 @@ export class Mosaic {
       this.used.set(tile.layer.id, Date.now());
       this.options.onTile?.({ layer: tile.layer, x, y, z });
     }
-    return tile;
+    // Every caller gets its own buffer. A shared one is handed to an image
+    // decoder that may transfer it to a worker, which would leave the other
+    // callers holding a detached buffer - and a tile that never draws.
+    return { ...tile, data: tile.data.slice(0) };
   }
 
   /**

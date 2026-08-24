@@ -177,7 +177,7 @@ describe("layersForPoint", () => {
 
 describe("grouping, stats and tree", () => {
   it("groups by country and category", () => {
-    expect(groupByCountry().get("IT")?.length).toBeGreaterThanOrEqual(18);
+    expect(groupByCountry().get("IT")?.length).toBeGreaterThanOrEqual(17);
     expect(groupByCategory().get("orthophoto")?.length).toBeGreaterThanOrEqual(25);
   });
 

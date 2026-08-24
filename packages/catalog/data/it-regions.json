@@ -188,7 +188,7 @@
       "lastVerified": "2026-08-24",
       "id": "it.emilia-romagna.agea-2023",
       "title": "Ortofoto AGEA 2023 RGB - Emilia-Romagna",
-      "description": "AGEA 2023 colour orthophoto republished by the Emilia-Romagna geoportal.",
+      "description": "AGEA 2023 colour orthophoto of Emilia-Romagna, published by the regional geoportal. It replaces the RER 2023-24 endpoint, which answers with an empty image at every zoom and in every format.",
       "category": "orthophoto",
       "provider": {
         "name": "Regione Emilia-Romagna",
@@ -242,72 +242,8 @@
       "tags": [
         "ortofoto",
         "agea",
-        "emilia-romagna",
-        "alternative"
+        "emilia-romagna"
       ]
-    },
-    {
-      "lastVerified": "2026-08-24",
-      "id": "it.emilia-romagna.rer-2023",
-      "title": "Ortofoto RER 2023-24 RGB - Emilia-Romagna",
-      "description": "Regional RGB orthophoto from the 2023-2024 RER flight.",
-      "category": "orthophoto",
-      "provider": {
-        "name": "Regione Emilia-Romagna",
-        "shortName": "Regione Emilia-Romagna",
-        "url": "https://geoportale.regione.emilia-romagna.it/"
-      },
-      "country": "IT",
-      "nuts": "ITH5",
-      "regionName": "Emilia-Romagna",
-      "bbox": [
-        9.299,
-        43.813,
-        12.838,
-        45.153
-      ],
-      "service": {
-        "type": "WMS",
-        "url": "https://servizigis.regione.emilia-romagna.it/wms/rer2023_24_rgb",
-        "options": {
-          "layers": [
-            "RER2023_24_RGB"
-          ],
-          "styles": [
-            "default"
-          ],
-          "format": "image/jpeg",
-          "crs": [
-            "EPSG:3857",
-            "EPSG:4326",
-            "CRS:84",
-            "EPSG:25832",
-            "EPSG:32632"
-          ],
-          "version": "1.3.0",
-          "queryable": false,
-          "transparent": false,
-          "infoFormats": []
-        }
-      },
-      "license": {
-        "id": "CC-BY-4.0",
-        "url": "https://geoportale.regione.emilia-romagna.it/"
-      },
-      "attribution": "Regione Emilia-Romagna - Geoportale",
-      "minZoom": 8,
-      "maxZoom": 20,
-      "temporal": {
-        "start": "2023-01",
-        "end": "2024-12"
-      },
-      "tags": [
-        "ortofoto",
-        "emilia-romagna",
-        "rer"
-      ],
-      "metadataUrl": "https://geoportale.regione.emilia-romagna.it/servizi/servizi-ogc/elenco-capabilities-dei-servizi-wms/cartografia-di-base/service-47",
-      "resolutionMeters": 0.2
     },
     {
       "lastVerified": "2026-08-23",
