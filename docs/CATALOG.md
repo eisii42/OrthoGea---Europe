@@ -3,20 +3,20 @@
 Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 `pnpm --filter @orthogea/catalog docs` after changing the data.
 
-**49 layers · 19 scopes · 26 queryable · last verified 2026-08-23**
+**47 layers · 19 scopes · 24 queryable · last verified 2026-08-24**
 
 | Category | Layers |
 | --- | --- |
-| orthophoto | 35 |
+| orthophoto | 36 |
 | cadastre | 6 |
-| satellite | 3 |
-| custom | 3 |
+| custom | 2 |
+| satellite | 1 |
 | land_use | 1 |
 | elevation | 1 |
 
 | Service | Layers |
 | --- | --- |
-| WMS | 45 |
+| WMS | 43 |
 | WMTS | 3 |
 | XYZ | 1 |
 
@@ -24,11 +24,9 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 
 | Id | Title | Scope | Category | Service | Licence | Provider |
 | --- | --- | --- | --- | --- | --- | --- |
-| `eu.copernicus.sentinel2-l2a-true-color` | Sentinel-2 L2A True Color (Copernicus Data Space) | Europe | satellite | WMS, experimental | Copernicus free, full and open data policy | Copernicus |
+| `eu.copernicus.vhr-2021` | Copernicus VHR 2021 - European base imagery | Europe | satellite | WMS | Copernicus free, full and open data policy | Copernicus / EEA |
 | `eu.eea.corine-land-cover-2018` | CORINE Land Cover 2018 | Europe | land_use | WMS, queryable | Copernicus free, full and open data policy | EEA |
 | `eu.eea.eu-dem` | EU-DEM v1.1 hillshade | Europe | elevation | WMS, queryable | Copernicus free, full and open data policy | EEA |
-| `eu.eox.s2cloudless-2024` | Sentinel-2 cloudless 2024 (EOX) | Europe | satellite | WMS | CC-BY-4.0 | EOX |
-| `eu.eox.terrain-light` | Terrain Light (EOX) | Europe | custom | WMS | CC-BY-4.0 | EOX |
 
 ## Austria (AT)
 
@@ -60,7 +58,6 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | Id | Title | Scope | Category | Service | Licence | Provider |
 | --- | --- | --- | --- | --- | --- | --- |
 | `de.bkg.basemapde-grau` | basemap.de Web Raster grau - Germany | Germany | custom | WMS | dl-de-by-2.0 | BKG |
-| `de.bkg.sen2europe` | Sen2Europe RGB mosaic | Germany | satellite | WMS, queryable | Copernicus free, full and open data policy | BKG |
 
 ## Denmark (DK)
 
@@ -87,7 +84,7 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | `es.catastro.buildings` | Catastro - Buildings (Spain) | Spain | cadastre | WMS, queryable | Catastro free access, no massive downloading | Catastro |
 | `es.catastro.parcels` | Catastro - Cadastral parcels (Spain) | Spain | cadastre | WMS, queryable | Catastro free access, no massive downloading | Catastro |
 | `es.ign.mtn-raster` | Mapa raster MTN - Spain | Spain | custom | WMS | CC-BY-4.0 | IGN |
-| `es.ign.pnoa-ma` | PNOA Maxima Actualidad - Spain | Spain | orthophoto | WMS, queryable | CC-BY-4.0 | IGN |
+| `es.ign.pnoa-ma` | PNOA Maxima Actualidad - Spain | Spain | orthophoto | WMS | CC-BY-4.0 | IGN |
 
 ## France (FR)
 
@@ -111,19 +108,20 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | `it.ade.catasto-completo` | Catasto - Cartografia completa (Agenzia delle Entrate) | Italy | cadastre | WMS, queryable, needs reprojection | CC-BY-4.0 | Agenzia delle Entrate |
 | `it.ade.catasto-mappe` | Catasto - Mappe e fogli (Agenzia delle Entrate) | Italy | cadastre | WMS, queryable, needs reprojection | CC-BY-4.0 | Agenzia delle Entrate |
 | `it.ade.catasto-particelle` | Catasto - Particelle (Agenzia delle Entrate) | Italy | cadastre | WMS, queryable, needs reprojection | CC-BY-4.0 | Agenzia delle Entrate |
+| `it.basilicata.ortofoto-2013` | Ortofoto CTR 20 cm 2013 - Basilicata | Italy - Basilicata | orthophoto | WMS, needs reprojection | CC-BY-4.0 | Regione Basilicata |
 | `it.bolzano.ortofoto-2023` | Ortofoto 2023 - Provincia autonoma di Bolzano | Italy - Bolzano - Bozen | orthophoto | WMS | CC-BY-4.0 | Provincia di Bolzano |
 | `it.emilia-romagna.agea-2023` | Ortofoto AGEA 2023 RGB - Emilia-Romagna | Italy - Emilia-Romagna | orthophoto | WMS | CC-BY-4.0 | Regione Emilia-Romagna |
 | `it.emilia-romagna.rer-2023` | Ortofoto RER 2023-24 RGB - Emilia-Romagna | Italy - Emilia-Romagna | orthophoto | WMS | CC-BY-4.0 | Regione Emilia-Romagna |
 | `it.fvg.trueortofoto-2020` | TrueOrtofoto 2020 - Friuli Venezia Giulia | Italy - Friuli-Venezia Giulia | orthophoto | WMS, queryable | CC-BY-4.0 | Regione FVG |
 | `it.lazio.agea-2023` | Ortofoto AGEA 2023 - Lazio | Italy - Lazio | orthophoto | WMS | CC-BY-4.0 | Regione Lazio |
-| `it.lombardia.ortofoto-2021` | Ortofoto 2021 - Lombardia | Italy - Lombardia | orthophoto | WMS | CC-BY-4.0 | Regione Lombardia |
+| `it.lombardia.ortofoto-2024` | Ortofoto 2024 - Lombardia | Italy - Lombardia | orthophoto | WMS, needs reprojection | CC-BY-4.0 | Regione Lombardia |
 | `it.marche.agea-2022` | Ortofoto AGEA 2022 RGB - Marche | Italy - Marche | orthophoto | WMS, queryable, needs reprojection | CC-BY-4.0 | Regione Marche |
-| `it.pcn.ortofoto-2012` | Ortofoto nazionale 2012 (Geoportale Nazionale) | Italy | orthophoto | WMS | Geoportale Nazionale - free consultation with attribution | Geoportale Nazionale |
 | `it.piemonte.agea-2024` | Ortofoto AGEA 2024 - Piemonte | Italy - Piemonte | orthophoto | WMS | AGEA 2024 - viewing service, all rights reserved | Regione Piemonte |
 | `it.puglia.ortofoto-2023` | Ortofoto 2023 - Puglia | Italy - Puglia | orthophoto | WMS | IODL-2.0 | Regione Puglia |
 | `it.sardegna.ortofoto-2022` | Ortofoto MASAF-AGEA 2022 - Sardegna | Italy - Sardegna | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Sardegna |
-| `it.sicilia.ata-2013` | Ortofoto ATA 2012-2013 - Sicilia | Italy - Sicilia | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Siciliana |
-| `it.toscana.ortofoto-2013` | Ortofoto 2013 - Toscana (Geoscopio) | Italy - Toscana | orthophoto | WMS | CC-BY-4.0 | Regione Toscana |
+| `it.sicilia.ortofoto-2022` | Ortofoto 2022 20 cm - Sicilia | Italy - Sicilia | orthophoto | WMS | CC-BY-4.0 | Regione Siciliana |
+| `it.toscana.ortofoto-2024` | Ortofoto 2024/2025 - Toscana (Geoscopio) | Italy - Toscana | orthophoto | WMS | CC-BY-4.0 | Regione Toscana |
+| `it.trento.ortofoto-2015` | Ortofoto PAT 2015 RGB - Provincia autonoma di Trento | Italy - Trento | orthophoto | WMS, queryable | CC-BY-4.0 | Provincia di Trento |
 | `it.umbria.ortofoto-2020` | Ortofoto 2020 - Umbria | Italy - Umbria | orthophoto | WMS, queryable, needs reprojection | Regione Umbria - view only | Regione Umbria |
 | `it.veneto.agea-2024` | Ortofoto AGEA 2024 - Veneto | Italy - Veneto | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Veneto |
 | `it.veneto.agea-2024-wmts` | Ortofoto AGEA 2024 - Veneto (WMTS) | Italy - Veneto | orthophoto | WMTS | CC-BY-4.0 | Regione Veneto |
@@ -167,32 +165,34 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 ## NUTS tree
 
 ```
-EU     Europe (49)
+EU     Europe (47)
   AT     Austria (1)
   BE     Belgium (2)
     BE2    Vlaanderen (1)
     BE3    Wallonie (1)
   CH     Switzerland (1)
   CZ     Czechia (1)
-  DE     Germany (2)
+  DE     Germany (1)
   DK     Denmark (1)
   EE     Estonia (1)
   EL     Greece (1)
   ES     Spain (4)
   FR     France (3)
   HR     Croatia (1)
-  IT     Italy (20)
+  IT     Italy (21)
     ITC    ITC (2)
       ITC1   Piemonte (1)
       ITC4   Lombardia (1)
-    ITF    ITF (2)
+    ITF    ITF (3)
       ITF1   Abruzzo (1)
       ITF4   Puglia (1)
+      ITF5   Basilicata (1)
     ITG    ITG (2)
       ITG1   Sicilia (1)
       ITG2   Sardegna (1)
-    ITH    ITH (6)
+    ITH    ITH (7)
       ITH1   Bolzano - Bozen (1)
+      ITH2   Trento (1)
       ITH3   Veneto (2)
       ITH4   Friuli-Venezia Giulia (1)
       ITH5   Emilia-Romagna (2)

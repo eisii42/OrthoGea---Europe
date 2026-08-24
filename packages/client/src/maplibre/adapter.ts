@@ -136,7 +136,10 @@ export function toRasterLayer(
     type: "raster",
     source: options.sourceId ?? sourceIdFor(layer),
     minzoom: options.minzoom ?? layer.minZoom,
-    maxzoom: options.maxzoom ?? layer.maxZoom,
+    // No maxzoom on purpose: on a style layer it *hides* the layer above that
+    // zoom, which is why an orthophoto used to vanish when zooming right in.
+    // The data limit belongs to the source, where MapLibre overzooms instead.
+    ...(options.maxzoom === undefined ? {} : { maxzoom: options.maxzoom }),
     layout: { visibility: options.visible === false ? "none" : "visible" },
     paint: {
       "raster-opacity": options.opacity ?? 1,

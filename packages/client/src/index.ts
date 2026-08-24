@@ -14,6 +14,22 @@ export type {
 } from "./types.js";
 
 export {
+  DEFAULT_MOSAIC_MAX_ZOOM,
+  DEFAULT_ORTHOPHOTO_FROM_ZOOM,
+  MOSAIC_PROTOCOL,
+  Mosaic,
+  createMosaic,
+  createMosaicProtocol,
+  mosaicTileTemplate,
+  registerMosaicProtocol,
+  toMosaicRasterSource,
+  type MosaicOptions,
+  type MosaicProtocolResponse,
+  type MosaicSelection,
+  type MosaicSourceOptions
+} from "./mosaic.js";
+
+export {
   createTileUrlBuilder,
   fetchTile,
   fillTileTemplate,

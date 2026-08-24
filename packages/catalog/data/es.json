@@ -5,10 +5,10 @@
   "updated": "2026-08-23",
   "layers": [
     {
-      "lastVerified": "2026-08-23",
+      "lastVerified": "2026-08-24",
       "id": "es.ign.pnoa-ma",
       "title": "PNOA Maxima Actualidad - Spain",
-      "description": "Most recent orthophoto mosaic of Spain from the Plan Nacional de Ortofotografia Aerea, with Sentinel-2 fill outside the PNOA coverage.",
+      "description": "Most recent orthophoto mosaic of Spain from the Plan Nacional de Ortofotografia Aerea, with Sentinel-2 fill outside the PNOA coverage. The same endpoint publishes OI.MosaicElement, a queryable index of the flights.",
       "category": "orthophoto",
       "provider": {
         "name": "Instituto Geografico Nacional",
@@ -27,10 +27,10 @@
         "url": "https://www.ign.es/wms-inspire/pnoa-ma",
         "options": {
           "layers": [
-            "OI.MosaicElement"
+            "OI.OrthoimageCoverage"
           ],
           "styles": [
-            "OI.MosaicElement.Default"
+            "OI.OrthoimageCoverage.Default"
           ],
           "format": "image/jpeg",
           "crs": [
@@ -41,13 +41,9 @@
             "EPSG:25831"
           ],
           "version": "1.3.0",
-          "queryable": true,
+          "queryable": false,
           "transparent": false,
-          "infoFormats": [
-            "application/json",
-            "text/html",
-            "text/plain"
-          ]
+          "infoFormats": []
         }
       },
       "license": {

@@ -4,6 +4,92 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the packages share one version
 number.
 
+## [0.3.0] - 2026-08-24
+
+### Changed
+
+- **One European base.** The imagery architecture is now two tiers instead of four: Copernicus
+  VHR 2021 (about 2 m) draws the whole continent at every zoom, and the official orthophoto of
+  the area takes over from zoom 15, where 2 m starts to show. Fewer services in play means fewer
+  requests, no low-zoom patchwork and a noticeably quicker map.
+- **Cached services win.** Among sources covering the same ground, a WMTS or XYZ tile service is
+  preferred over a WMS, because pre-rendered tiles answer in milliseconds.
+- `DEFAULT_SATELLITE_FALLBACK_ID` points at `eu.copernicus.vhr-2021`.
+- `DEFAULT_ORTHOPHOTO_FROM_ZOOM` moved from 12 to 15.
+
+### Removed
+
+- The redundant background mosaics: Copernicus HR Image Mosaic, Copernicus Data Space Sentinel-2
+  L2A (instance id required), Sentinel-2 cloudless and Terrain Light by EOX, BKG Sen2Europe, and
+  the Geoportale Nazionale (MASE) orthophotos, whose raster backend was intermittent.
+
+## [0.2.1] - 2026-08-24
+
+### Fixed
+
+- **Imagery vanished when zoomed right in.** `toRasterLayer()` copied the record's `maxZoom`
+  onto the style layer, where MapLibre reads it as "hide the layer from this zoom". The limit now
+  lives on the source only, which makes MapLibre upscale instead of hiding.
+- **Imagery blinked away when an overlay was toggled.** The demo rebuilt every source on each
+  change, throwing away the tiles it had. It now applies only the difference.
+- The Veneto WMTS is served from a pre-rendered PNG cache and cannot answer in JPEG; only WMS
+  records were switched to JPEG.
+
+### Added
+
+- **Copernicus VHR 2021** (about 2 m, EEA) as the tier between national orthophotos and
+  Sentinel-2: regions with no aerial imagery - Liguria, Valle d'Aosta, Molise, Campania,
+  Calabria - now show 2 m satellite imagery at street level instead of 10 m.
+- **Copernicus HR Image Mosaic** (Sentinel-2, EEA) is the new default fallback, so the whole
+  default chain is official Copernicus material. The EOX mosaic stays catalogued as an
+  alternative.
+- Browser tile caching (Cache Storage), empty-area memory per 4x4 tile block, and a per-tile
+  timeout, so the map stays usable on a thin connection.
+
+### Changed
+
+- Imagery records request `image/jpeg`: 5-10x smaller tiles (Sicilia 194 kB to 26 kB).
+- The mosaic requests 512 px tiles and stops at zoom 19: a quarter of the round trips, a quarter
+  of the provider watermarks on screen, and no new requests when zooming deeper.
+- Attribution is compact in the map control and lists only the sources drawn in the last few
+  seconds.
+
+## [0.2.0] - 2026-08-24
+
+### Added
+
+- **Seamless imagery mosaic** (`@orthogea/client`): one virtual raster layer that picks, per
+  tile, the best official source covering it - the Copernicus Sentinel-2 mosaic below zoom 12,
+  the most local orthophoto above it, the satellite again wherever no orthophoto exists. Ranks
+  candidates by extent, then resolution, then vintage; drops imagery from another country; skips
+  sources that fail, time out or answer with a blank image; credits only the providers actually
+  drawn. Registered on MapLibre with `registerMosaicProtocol()`.
+- Framework-agnostic `createTileUrlBuilder()` and a Leaflet adapter (`toLeafletSource()`), so the
+  catalogue drops into any renderer.
+- `bestOrthophotoFor()` and `imageryStackFor()` in `@orthogea/catalog`.
+- `verify:mosaic` script: walks places and zoom levels against the real services and prints the
+  source chosen for each tile.
+- New regional layers: Provincia autonoma di Trento (2015) and Basilicata (2013).
+- The national orthophoto is now catalogued per UTM zone, so southern Italy is covered too.
+
+### Changed
+
+- Italian regional imagery updated to the most recent published flights: Toscana 2013 to
+  **2024/2025**, Sicilia 2013 to **2022**, Lombardia 2021 to **2024**.
+- Spain PNOA now requests `OI.OrthoimageCoverage`; `OI.MosaicElement` is the flight index, not
+  the imagery.
+- Duplicated coverage is resolved with an `alternative` tag (Veneto WMS behind its cached WMTS,
+  the Emilia-Romagna AGEA mosaic behind the regional flight), which the mosaic skips.
+- `pickReprojectionCrs()` honours the CRS order declared in the record, so a service that
+  advertises a CRS it cannot actually draw (Basilicata with `CRS:84`) can be corrected in data.
+- The demo opens on the seamless mosaic and refreshes its attribution as the sources change.
+
+### Fixed
+
+- Tile placeholders (`{bbox-epsg-3857}`, `{z}`, `{x}`, `{y}`) survive percent-encoding when a
+  CORS proxy is used, so proxied templates render.
+- Query values keep literal `:` and `,`, which several national services require.
+
 ## [0.1.0] - 2026-08-23
 
 First release: the whole harvest -> catalogue -> render pipeline, verified against live European

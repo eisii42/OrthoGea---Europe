@@ -12,7 +12,7 @@ Regional and national geoportals usually publish their OGC endpoints on a "servi
 geoportal). What you need is the **base endpoint**, without the OGC parameters:
 
 ```
-https://www502.regione.toscana.it/wmsraster/com.rt.wms.RTmap/wms?map=wmsofc
+https://www502.regione.toscana.it/ows_ofc/com.rt.wms.RTmap/wms?map=owsofc_rt
 ```
 
 Keep vendor parameters such as `?map=...`: `buildCapabilitiesUrl()` preserves them.

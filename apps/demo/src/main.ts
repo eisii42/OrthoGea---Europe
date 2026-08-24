@@ -1,16 +1,28 @@
 import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
+  DEFAULT_SATELLITE_FALLBACK_ID,
   buildNutsTree,
   catalog,
   catalogStats,
   getLayer,
   type CatalogTreeNode
 } from "@orthogea/catalog";
-import { bboxCenter, bboxUnion, isQueryableLayer, type OrthoGeaLayer } from "@orthogea/core";
 import {
+  bboxCenter,
+  bboxUnion,
+  isQueryableLayer,
+  lngLatToTile,
+  type OrthoGeaLayer
+} from "@orthogea/core";
+import {
+  DEFAULT_ORTHOPHOTO_FROM_ZOOM,
+  createMosaic,
   formatAttribution,
   getFeatureInfo,
+  registerMosaicProtocol,
+  toMosaicRasterSource,
+  type Mosaic,
   layerIdFor,
   needsTileReprojection,
   registerOrthoGeaProtocol,
@@ -27,8 +39,11 @@ const PROXY_URL = "/cors-proxy?url=";
 const OVERLAY_CATEGORIES = new Set(["cadastre", "land_use", "elevation"]);
 const isOverlay = (layer: OrthoGeaLayer): boolean => OVERLAY_CATEGORIES.has(layer.category);
 
+/** Special base-layer id: the seamless, self-selecting imagery mosaic. */
+const MOSAIC_ID = "orthogea:mosaic";
+
 const state = {
-  baseId: "it.toscana.ortofoto-2013",
+  baseId: MOSAIC_ID,
   overlayIds: new Set<string>(["it.ade.catasto-particelle"]),
   opacity: 1,
   proxy: true,
@@ -51,18 +66,30 @@ const map: MapLibreMap = new maplibregl.Map({
   center: [11.2558, 43.7696],
   zoom: 13,
   hash: true,
-  attributionControl: false
+  attributionControl: false,
+  // Keep more tiles around: panning back over an area is then instant, which
+  // matters far more than memory on a slow connection.
+  maxTileCacheSize: 512,
+  refreshExpiredTiles: false,
+  fadeDuration: 120
 });
 
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "top-right");
 map.addControl(new maplibregl.ScaleControl({ maxWidth: 140, unit: "metric" }), "bottom-left");
-const attributionControl = new maplibregl.AttributionControl({ compact: false });
+// Compact by default: the map is the point, not a wall of credits. The full
+// list stays one click away, and in the sidebar panel.
+let attributionControl = new maplibregl.AttributionControl({ compact: true });
 map.addControl(attributionControl, "bottom-right");
 
 /** Adapter options follow the proxy toggle, so both are rebuilt together. */
 function adapterOptions() {
   return state.proxy ? { proxyUrl: PROXY_URL } : {};
 }
+
+/** Layer currently drawn by the mosaic, shown in the sidebar. */
+let mosaic: Mosaic;
+let lastMosaicLayer: OrthoGeaLayer | undefined;
+let mosaicLabelTimer: number | undefined;
 
 function registerProtocol(): void {
   // Services without EPSG:3857 (the Italian cadastre, Croatia, Umbria, Marche)
@@ -71,6 +98,41 @@ function registerProtocol(): void {
     layers: [...catalog],
     ...adapterOptions()
   });
+
+  // One seamless imagery layer: the best official orthophoto per tile above
+  // zoom 12, the Copernicus Sentinel-2 mosaic below it and wherever no
+  // orthophoto exists.
+  mosaic = createMosaic({
+    layers: [...catalog],
+    fallback: DEFAULT_SATELLITE_FALLBACK_ID,
+    ...adapterOptions(),
+    onTile: ({ layer }) => {
+      if (layer.id === lastMosaicLayer?.id) return;
+      lastMosaicLayer = layer;
+      window.clearTimeout(mosaicLabelTimer);
+      mosaicLabelTimer = window.setTimeout(updateMosaicLabel, 120);
+    }
+  });
+  registerMosaicProtocol(maplibregl, mosaic);
+}
+
+function updateMosaicLabel(): void {
+  const label = document.getElementById("mosaic-source");
+  if (label) {
+    label.textContent =
+      state.baseId === MOSAIC_ID && lastMosaicLayer ? `drawing: ${lastMosaicLayer.title}` : "";
+  }
+  if (state.baseId !== MOSAIC_ID) return;
+
+  // MapLibre reads source.attribution once, so the control is refreshed by
+  // hand as the mosaic starts drawing from new providers.
+  map.removeControl(attributionControl);
+  attributionControl = new maplibregl.AttributionControl({
+    compact: true,
+    customAttribution: mosaic.activeAttribution({}, 25_000)
+  });
+  map.addControl(attributionControl, "bottom-right");
+  updateAttribution();
 }
 
 registerProtocol();
@@ -78,52 +140,122 @@ registerProtocol();
 // ---------------------------------------------------------------------------
 // Map synchronisation
 // ---------------------------------------------------------------------------
-const addedLayerIds = new Set<string>();
-const addedSourceIds = new Set<string>();
-
-function clearMap(): void {
-  for (const id of addedLayerIds) if (map.getLayer(id)) map.removeLayer(id);
-  addedLayerIds.clear();
-  for (const id of addedSourceIds) if (map.getSource(id)) map.removeSource(id);
-  addedSourceIds.clear();
+interface MapEntry {
+  styleLayerId: string;
+  sourceId: string;
+  source: unknown;
+  styleLayer: unknown;
+  opacity: number;
 }
 
-function addLayer(layer: OrthoGeaLayer, opacity: number): void {
-  const sourceId = sourceIdFor(layer);
-  const styleLayerId = layerIdFor(layer);
+/** Style layers currently on the map, in draw order. */
+let currentEntries: MapEntry[] = [];
+
+function mosaicEntry(): MapEntry {
+  const sourceId = "orthogea-mosaic";
+  return {
+    styleLayerId: `${sourceId}-raster`,
+    sourceId,
+    source: toMosaicRasterSource(mosaic),
+    styleLayer: {
+      id: `${sourceId}-raster`,
+      type: "raster",
+      source: sourceId,
+      paint: { "raster-opacity": 1, "raster-fade-duration": 120 }
+    },
+    opacity: 1
+  };
+}
+
+function layerEntry(layer: OrthoGeaLayer, opacity: number): MapEntry | undefined {
   try {
-    if (!map.getSource(sourceId)) {
-      map.addSource(sourceId, toRasterSource(layer, adapterOptions()) as never);
-      addedSourceIds.add(sourceId);
-    }
-    map.addLayer(toRasterLayer(layer, { opacity }) as never);
-    addedLayerIds.add(styleLayerId);
+    return {
+      styleLayerId: layerIdFor(layer),
+      sourceId: sourceIdFor(layer),
+      source: toRasterSource(layer, adapterOptions()),
+      styleLayer: toRasterLayer(layer, { opacity }),
+      opacity
+    };
   } catch (error) {
     console.error(`Could not add ${layer.id}`, error);
     reportError(`${layer.title}: ${(error as Error).message}`);
+    return undefined;
   }
 }
 
-function syncMap(): void {
-  clearMap();
+function desiredEntries(): MapEntry[] {
+  const entries: MapEntry[] = [];
 
-  const base = getLayer(state.baseId);
-  if (base) addLayer(base, 1);
+  if (state.baseId === MOSAIC_ID) {
+    entries.push(mosaicEntry());
+  } else {
+    const base = getLayer(state.baseId);
+    const entry = base ? layerEntry(base, 1) : undefined;
+    if (entry) entries.push(entry);
+  }
 
   for (const id of state.overlayIds) {
     const overlay = getLayer(id);
-    if (overlay) addLayer(overlay, state.opacity);
+    const entry = overlay ? layerEntry(overlay, state.opacity) : undefined;
+    if (entry) entries.push(entry);
   }
 
+  return entries;
+}
+
+/**
+ * Applies the difference between what is on the map and what should be.
+ *
+ * Rebuilding everything on each toggle used to drop the imagery source and its
+ * tiles, so unticking an overlay made the orthophoto blink away while it was
+ * fetched again. Only what actually changed is touched now.
+ */
+function syncMap(): void {
+  const next = desiredEntries();
+  const nextIds = new Set(next.map((entry) => entry.styleLayerId));
+
+  for (const entry of currentEntries) {
+    if (nextIds.has(entry.styleLayerId)) continue;
+    if (map.getLayer(entry.styleLayerId)) map.removeLayer(entry.styleLayerId);
+    if (map.getSource(entry.sourceId)) map.removeSource(entry.sourceId);
+  }
+
+  next.forEach((entry, index) => {
+    if (!map.getSource(entry.sourceId)) map.addSource(entry.sourceId, entry.source as never);
+
+    if (!map.getLayer(entry.styleLayerId)) {
+      map.addLayer(entry.styleLayer as never);
+    } else if (entry.styleLayerId !== "orthogea-mosaic-raster") {
+      map.setPaintProperty(entry.styleLayerId, "raster-opacity", entry.opacity);
+    }
+
+    // Keep the requested draw order without touching the sources.
+    const above = next[index - 1]?.styleLayerId;
+    if (above && map.getLayer(entry.styleLayerId)) map.moveLayer(entry.styleLayerId);
+  });
+
+  currentEntries = next;
   updateAttribution();
 }
 
 function visibleLayers(): OrthoGeaLayer[] {
-  const base = getLayer(state.baseId);
+  const base = state.baseId === MOSAIC_ID ? mosaicLayerAtCentre() : getLayer(state.baseId);
   const overlays = [...state.overlayIds]
     .map((id) => getLayer(id))
     .filter((layer): layer is OrthoGeaLayer => Boolean(layer));
   return base ? [base, ...overlays] : overlays;
+}
+
+/**
+ * Imagery the mosaic is drawing. The layer actually served wins over the first
+ * candidate, because a source can be skipped for being empty over this area.
+ */
+function mosaicLayerAtCentre(): OrthoGeaLayer | undefined {
+  if (lastMosaicLayer) return lastMosaicLayer;
+  const zoom = Math.round(map.getZoom());
+  const centre = map.getCenter();
+  const [x, y] = lngLatToTile(centre.lng, centre.lat, zoom);
+  return mosaic.bestFor(x, y, zoom);
 }
 
 function updateAttribution(): void {
@@ -131,11 +263,12 @@ function updateAttribution(): void {
   el("stats").innerHTML = `${stats.layers} layers · ${stats.countries} countries · verified ${
     stats.lastVerified ?? "-"
   }`;
-  // MapLibre reads source.attribution, this line only mirrors it in the panel.
-  const html = visibleLayers()
-    .map((layer) => formatAttribution(layer))
+  const shown =
+    state.baseId === MOSAIC_ID
+      ? [...mosaic.activeSources(25_000), ...visibleLayers().slice(1)]
+      : visibleLayers();
+  el("layer-attribution").innerHTML = [...new Set(shown.map((layer) => formatAttribution(layer)))]
     .join(" · ");
-  el("layer-attribution").innerHTML = html;
 }
 
 // ---------------------------------------------------------------------------
@@ -187,11 +320,43 @@ function layerRow(layer: OrthoGeaLayer, kind: "base" | "overlay"): HTMLElement {
   return row;
 }
 
+function mosaicRow(): HTMLElement {
+  const row = document.createElement("label");
+  row.className = "layer layer-mosaic";
+
+  const input = document.createElement("input");
+  input.type = "radio";
+  input.name = "base-layer";
+  input.value = MOSAIC_ID;
+  input.checked = state.baseId === MOSAIC_ID;
+  input.addEventListener("change", () => {
+    state.baseId = MOSAIC_ID;
+    syncMap();
+    renderLayerLists();
+  });
+
+  const text = document.createElement("span");
+  text.className = "layer-text";
+  const title = document.createElement("strong");
+  title.textContent = "Seamless imagery (recommended)";
+  const meta = document.createElement("small");
+  meta.textContent = `Copernicus VHR 2021 across Europe, orthophotos from z${DEFAULT_ORTHOPHOTO_FROM_ZOOM}`;
+  const source = document.createElement("small");
+  source.id = "mosaic-source";
+  source.className = "mosaic-source";
+  text.append(title, meta, source);
+
+  row.append(input, text);
+  return row;
+}
+
 function renderLayerLists(): void {
   const baseContainer = el("base-layers");
   const overlayContainer = el("overlays");
   baseContainer.replaceChildren();
   overlayContainer.replaceChildren();
+
+  if (!state.search) baseContainer.append(mosaicRow());
 
   const sorted = [...catalog].sort((a, b) => a.title.localeCompare(b.title));
   for (const layer of sorted) {
@@ -236,8 +401,10 @@ function renderRegionSelect(): void {
     if (layers.length === 0) return;
 
     const bounds = layers.map((layer) => layer.bbox).reduce((acc, bbox) => bboxUnion(acc, bbox));
+    // With the mosaic active there is nothing to switch: it already picks the
+    // best imagery for wherever the map goes.
     const orthophoto = layers.find((layer) => layer.category === "orthophoto");
-    if (orthophoto) {
+    if (orthophoto && state.baseId !== MOSAIC_ID) {
       state.baseId = orthophoto.id;
       renderLayerLists();
       syncMap();
@@ -398,6 +565,10 @@ el("info-close").addEventListener("click", () => {
   el("info-panel").hidden = true;
 });
 
+map.on("moveend", () => {
+  if (state.baseId === MOSAIC_ID) updateMosaicLabel();
+});
+
 map.on("load", () => {
   renderRegionSelect();
   renderLayerLists();
@@ -410,4 +581,4 @@ map.on("error", (event) => {
 });
 
 // Expose a few handles for console experiments during a demo.
-Object.assign(window, { map, catalog, state, bboxCenter });
+Object.assign(window, { map, catalog, state, bboxCenter, getMosaic: () => mosaic });

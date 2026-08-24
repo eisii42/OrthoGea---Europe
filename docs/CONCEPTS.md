@@ -3,6 +3,7 @@
 Why the framework exists, and what it does that a hand-written WMS URL does not.
 
 - [Layer records](#layer-records)
+- [The seamless mosaic](#the-seamless-mosaic)
 - [CRS normalisation](#crs-normalisation)
 - [Axis order](#axis-order)
 - [Services without Web Mercator](#services-without-web-mercator)
@@ -18,8 +19,8 @@ Everything the framework does revolves around one validated record:
 
 ```jsonc
 {
-  "id": "it.toscana.ortofoto-2013",     // stable, lowercase, dot separated
-  "title": "Ortofoto 2013 - Toscana (Geoscopio)",
+  "id": "it.toscana.ortofoto-2024",     // stable, lowercase, dot separated
+  "title": "Ortofoto 2024/2025 - Toscana (Geoscopio)",
   "category": "orthophoto",             // orthophoto | satellite | cadastre | elevation | land_use | custom
   "provider": { "name": "Regione Toscana - Geoscopio", "url": "https://..." },
   "country": "IT",                      // NUTS-0, or EU for pan-European datasets
@@ -28,9 +29,9 @@ Everything the framework does revolves around one validated record:
   "bbox": [9.64, 42.168, 12.464, 44.504], // always [minLng, minLat, maxLng, maxLat], WGS84
   "service": {
     "type": "WMS",                       // WMS | WMTS | XYZ | WFS | COG
-    "url": "https://www502.regione.toscana.it/wmsraster/com.rt.wms.RTmap/wms?map=wmsofc",
+    "url": "https://www502.regione.toscana.it/ows_ofc/com.rt.wms.RTmap/wms?map=owsofc_rt",
     "options": {
-      "layers": ["rt_ofc.10k13"],
+      "layers": ["rt_ofc.5k24.32bit"],
       "format": "image/jpeg",
       "crs": ["EPSG:3857", "EPSG:4326", "EPSG:6706", "EPSG:3003"],
       "version": "1.3.0",
@@ -51,6 +52,69 @@ Everything the framework does revolves around one validated record:
 declared country, the zoom range must be ordered, custom licences must be named, and every CRS
 string is normalised while parsing. `service` is a discriminated union, so narrowing on
 `layer.service.type` gives you the right options object with no cast.
+
+## The seamless mosaic
+
+A catalogue of 52 layers is a list; a basemap is one image. The mosaic turns the first into the
+second by choosing, per tile, which source to ask.
+
+**Two tiers, on purpose.** The architecture is deliberately shallow:
+
+| Tier | Resolution | Drawn |
+| --- | --- | --- |
+| Copernicus VHR 2021 | about 2 m | everywhere, at every zoom |
+| regional or national orthophoto | 8-30 cm | from `orthophotoFromZoom` (15) upwards |
+
+One background for the whole continent is what makes the map feel like a commercial basemap:
+every low-zoom tile comes from the same fast service, so there is no patchwork, no seam and no
+waiting for a dozen regional servers. Orthophotos are asked for only where they add something,
+past zoom 15 where 2 m starts to show, and where none is published the base simply stays on.
+
+**Speed before sharpness at equal ground.** Among candidates covering the same extent, a service
+that serves pre-rendered tiles (WMTS, XYZ) wins over a WMS that renders every request.
+
+**Ranking.** Coverage is a rectangle, and rectangles overlap: the French national extent reaches
+into Liguria, the Veneto one into Trentino. Candidates are therefore ordered by
+
+1. extent - the most local authority wins;
+2. resolution - between comparable extents, the sharper flight;
+3. vintage - between comparable flights, the most recent;
+4. id - so the choice is deterministic.
+
+Then imagery from another country is dropped: once the most local candidate is known, only its
+country and pan-European layers stay in the chain.
+
+**Blank tiles.** A WMS asked outside its real footprint does not fail: it returns a blank image
+of a few hundred bytes. Tiles below `minTileBytes` (2500 by default) are treated as empty and
+the next candidate is tried - except for the last source, so genuinely uniform tiles (open sea,
+snow) still render.
+
+**Failures.** A source that errors, times out or answers with a `ServiceException` is skipped
+for `failureTtlMs` (a minute by default), so one broken national service cannot stall the map.
+A blank answer is not counted as a failure: the same service is fine a few kilometres away.
+
+**Duplicates.** Two records for the same ground - Veneto's WMS and its cached WMTS, the two
+Emilia-Romagna flights - would fight for the same tile. The catalogue tags the secondary one
+`alternative` and the mosaic skips those tags, while the records stay available for explicit use
+and for GetFeatureInfo.
+
+## Performance
+
+A basemap is judged on how fast it draws, especially on a thin connection.
+
+- **JPEG, not PNG.** Aerial imagery is photographic: PNG costs 5-10x more bytes for no visible
+  gain. Every opaque imagery record asks for `image/jpeg`; overlays that need transparency stay
+  on PNG.
+- **512 px tiles.** One request covers four times the ground. Fewer round trips, less latency,
+  and a quarter of the watermarks that services stamp on every tile.
+- **A source `maxzoom` of 19.** A 20 cm orthophoto has no more detail past that; MapLibre
+  upscales the tiles it holds instead of firing a fresh request at every deeper zoom. Note this
+  belongs on the *source*: a `maxzoom` on a style layer **hides** it instead.
+- **Cache Storage.** Tiles are stored under `orthogea-tiles`, so panning back is instant and the
+  map keeps working when the connection drops. Pass `cacheName: false` to opt out.
+- **Empty areas are remembered.** Coverage gaps are contiguous: when a service answers blank, the
+  whole 4x4 tile block is marked, and it is not asked again there.
+- **Failures back off** for a minute, so one broken national service cannot slow the map down.
 
 ## CRS normalisation
 
@@ -107,6 +171,8 @@ the CRS of the map. Several official services never publish `EPSG:3857`:
 | Regione Marche orthophoto (IT) | `CRS:84`, `EPSG:4326`, `EPSG:3004` |
 | Regione Umbria orthophoto (IT) | `CRS:84`, `EPSG:4326`, `EPSG:32633` |
 | DGU orthophoto 2019 (HR) | `EPSG:4326`, `CRS:84`, `EPSG:3765` |
+| Regione Lombardia orthophoto 2024 (IT) | `CRS:84`, `EPSG:4326`, `EPSG:7791` |
+| Regione Basilicata orthophoto (IT) | `EPSG:4326`, `EPSG:25833`, `EPSG:32633`, `CRS:84` |
 
 OrthoGea renders them anyway. For each tile it converts the `{x, y, z}` index into the
 geographic extent of that tile and issues the `GetMap` in a CRS the service does publish:
@@ -121,6 +187,10 @@ Drawing an equirectangular request into a Mercator tile leaves a residual distor
 `(Δφ / 2) · tan(φ)`: about 0.02 % at zoom 14 (well under one pixel of a 256 px tile) and a few
 pixels at zoom 8. Layers using this path carry the `no-3857` tag in the catalogue, and a test
 keeps the tag in sync with the data.
+
+The CRS is taken from the order declared in the record, which is the only place where a broken
+advertisement can be corrected: the Basilicata service answers `CRS:84` with a blank image but
+serves `EPSG:4326` correctly, so its record lists EPSG:4326 first.
 
 `reprojection: "off"` turns the fallback into an explicit `UnsupportedServiceError` if you would
 rather handle it yourself.
@@ -175,7 +245,7 @@ Options, in order of preference:
    catalogue - copy it into your backend and keep the allowlist.
 2. **Same-origin path.** Put `/geo/<provider>` in your reverse proxy (nginx, Caddy, Cloudflare
    Worker) and pass `proxyUrl: "/geo/toscana?url="`.
-3. **Direct.** Some services do send the header - EOX, IGN France, swisstopo, PDOK among them -
+3. **Direct.** Some services do send the header - the EEA Copernicus mosaics, IGN France, swisstopo and PDOK among them -
    and need no proxy at all.
 
 Placeholders survive proxying: `applyCorsProxy()` percent-encodes the target URL but restores

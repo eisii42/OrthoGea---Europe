@@ -4,6 +4,7 @@ OrthoGea produces **plain descriptions of map sources**. It never imports a map 
 drops into an existing project without touching your rendering stack.
 
 - [Install](#install)
+- [The seamless mosaic](#the-seamless-mosaic)
 - [MapLibre GL](#maplibre-gl)
 - [Leaflet](#leaflet)
 - [OpenLayers](#openlayers)
@@ -26,6 +27,82 @@ pnpm add @orthogea/harvester                     # plus reading GetCapabilities 
 `@orthogea/core` comes along as a dependency; install it directly if you only want the schemas
 and the spatial helpers.
 
+## The seamless mosaic
+
+One virtual layer, worldwide, that picks the best official imagery for every tile - the
+replacement for Google Satellite or ESRI World Imagery.
+
+```ts
+import maplibregl from "maplibre-gl";
+import { catalog, DEFAULT_SATELLITE_FALLBACK_ID } from "@orthogea/catalog";
+import { createMosaic, registerMosaicProtocol, toMosaicRasterSource } from "@orthogea/client";
+
+const mosaic = createMosaic({
+  layers: [...catalog],
+  fallback: DEFAULT_SATELLITE_FALLBACK_ID,  // Copernicus VHR 2021, no API key
+  orthophotoFromZoom: 15,                   // below this, the European base only
+  proxyUrl: "/cors-proxy?url=",             // if your providers need one
+  onTile: ({ layer }) => console.log("drawing", layer.title)
+});
+
+registerMosaicProtocol(maplibregl, mosaic);
+
+map.on("load", () => {
+  map.addSource("imagery", toMosaicRasterSource(mosaic));
+  map.addLayer({ id: "imagery", type: "raster", source: "imagery" });
+});
+```
+
+How it behaves:
+
+| Situation | What the mosaic draws |
+| --- | --- |
+| zoom below `orthophotoFromZoom` | the European base only - one consistent, fast, never pixelated image |
+| zoom above, orthophoto available | the most local official orthophoto covering the tile |
+| several candidates | smallest extent, then cached tile services, then finest resolution, then most recent |
+| across a border | the source of the country the tile is in; foreign rectangles are dropped |
+| a source fails or answers blank | the next candidate, and the failing one is skipped for a minute |
+| nothing else covers the tile | the satellite fallback, so no tile is ever empty |
+
+Options worth knowing:
+
+| Option | Default | Effect |
+| --- | --- | --- |
+| `orthophotoFromZoom` | 15 | below it, only the European base is drawn |
+| `fallback` | - | the layer that closes every chain; pass `DEFAULT_SATELLITE_FALLBACK_ID` |
+| `cacheName` | `"orthogea-tiles"` | Cache Storage bucket; `false` disables caching |
+| `minTileBytes` | 2500 | tiles smaller than this count as empty and the next source is tried |
+| `failureTtlMs` | 60000 | how long a failing service is skipped |
+| `timeoutMs` | 12000 | per-tile timeout |
+| `excludeTags` | `["alternative"]` | catalogue tags to skip |
+| `proxyUrl` | - | CORS proxy for every request |
+
+And on the source:
+
+| Option | Default | Effect |
+| --- | --- | --- |
+| `tileSize` | 512 | fewer requests and fewer watermarks than 256 |
+| `maxzoom` | 19 | deepest zoom requested; MapLibre upscales beyond it |
+| `attributionMode` | `"active"` | credit only what has been drawn, or `"all"` |
+
+Useful members:
+
+```ts
+mosaic.bestFor(x, y, z);        // which layer would be drawn for a tile
+mosaic.select(x, y, z).layers;  // the whole candidate chain
+mosaic.activeSources();         // what has actually been drawn recently
+mosaic.activeAttribution();     // credit for exactly those sources
+mosaic.tileUrl(layer, x, y, z); // the request behind a tile, for debugging
+await mosaic.fetchTile(x, y, z);// server side or for tests
+```
+
+Attribution: `toMosaicRasterSource()` credits the sources drawn so far, which keeps the line
+short. Refresh MapLibre's control when `onTile` reports a new provider (see `apps/demo`), or
+pass `attributionMode: "all"` to list every possible provider once.
+
+Leaflet and OpenLayers use the same object through `mosaic.fetchTile` or a custom
+`getTileUrl`; only MapLibre has a protocol hook for it out of the box.
+
 ## MapLibre GL
 
 ```ts
@@ -44,7 +121,7 @@ const map = new maplibregl.Map({
 });
 
 map.on("load", () => {
-  for (const id of ["it.toscana.ortofoto-2013", "it.ade.catasto-particelle"]) {
+  for (const id of ["it.toscana.ortofoto-2024", "it.ade.catasto-particelle"]) {
     const { sourceId, source, layer } = toMapLibreBinding(getLayer(id)!);
     map.addSource(sourceId, source);
     map.addLayer(layer);
@@ -102,7 +179,7 @@ function addOrthoGeaLayer(map, layer, options = {}) {
 }
 
 const map = L.map("map").setView([43.7696, 11.2558], 15);
-addOrthoGeaLayer(map, getLayer("it.toscana.ortofoto-2013"));
+addOrthoGeaLayer(map, getLayer("it.toscana.ortofoto-2024"));
 addOrthoGeaLayer(map, getLayer("it.ade.catasto-particelle"));
 ```
 

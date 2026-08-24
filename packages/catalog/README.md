@@ -1,8 +1,10 @@
 # @orthogea/catalog
 
 A validated registry of European open geodata services for
-[OrthoGea - Europe](../../README.md): 49 layers from 19 scopes, indexed from NUTS-0 down to
-NUTS-2/3, every endpoint probed live.
+[OrthoGea - Europe](../../README.md): 47 layers from 19 scopes, indexed from NUTS-0 down to
+NUTS-2/3, every endpoint probed live. Italy is covered region by region: 16 of the 21 regions
+and autonomous provinces publish an orthophoto service, all of them the most recent flight the
+provider exposes.
 
 ```bash
 pnpm add @orthogea/catalog
@@ -17,13 +19,13 @@ import { bestOrthophotoFor, imageryStackFor } from "@orthogea/catalog";
 
 bestOrthophotoFor(11.2558, 43.7696);   // Ortofoto 2013 - Toscana
 bestOrthophotoFor(2.35, 48.85);        // BD ORTHO 50 cm - France
-bestOrthophotoFor(-30, 64);            // Sentinel-2 cloudless 2024 (fallback)
+bestOrthophotoFor(-30, 64);            // Copernicus VHR 2021 (the European base)
 
 imageryStackFor(11.2558, 43.7696);     // local -> national -> pan-European
 ```
 
 That is the replacement for a proprietary satellite basemap: the most local official orthophoto
-covering the point, with a key-free pan-European mosaic behind it.
+covering the point, with the key-free Copernicus base behind it.
 
 ## Querying
 
@@ -90,13 +92,14 @@ pnpm --filter @orthogea/catalog verify              # GetCapabilities + one real
 pnpm --filter @orthogea/catalog verify --id it.ade  # only matching ids
 pnpm --filter @orthogea/catalog verify --strict     # exit 1 when an active layer fails (CI)
 pnpm --filter @orthogea/catalog verify --json report.json
+pnpm --filter @orthogea/catalog verify:mosaic       # the seamless mosaic, zoom by zoom
 pnpm --filter @orthogea/catalog schema              # regenerate the JSON Schema
 pnpm --filter @orthogea/catalog docs                # regenerate docs/CATALOG.md
 ```
 
 `verify` is the real acceptance test of the catalogue: it renders one tile per layer through
 `@orthogea/client`, so a renamed layer, a dropped CRS or a dead host is caught immediately. At
-the last run 47 of 49 layers answered with real imagery; the two exceptions are marked
+the last run 47 of 52 layers answered with real imagery; the two exceptions are marked
 `status: "experimental"` and need credentials.
 
 Several national services throttle bursts of requests, so a sweep at high concurrency can report

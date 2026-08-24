@@ -205,11 +205,22 @@ export function layersForPoint(
   });
 }
 
-/** Key-free, pan-European mosaic used when no local imagery covers a point. */
-export const DEFAULT_SATELLITE_FALLBACK_ID = "eu.eox.s2cloudless-2024";
+/**
+ * The single European background: Copernicus VHR 2021, about 2 m.
+ *
+ * One official European Union product, served by the EEA without an API key,
+ * covers the whole continent. Keeping a single background is what makes the map
+ * fast and consistent; orthophotos are asked for only at detail zoom.
+ */
+export const DEFAULT_SATELLITE_FALLBACK_ID = "eu.copernicus.vhr-2021";
 
 export interface BestImageryOptions {
   zoom?: number;
+  /**
+   * Keep layers tagged as duplicates of a better record. Defaults to `false`,
+   * which is what keeps a stack free of two views of the same ground.
+   */
+  includeAlternatives?: boolean;
   /**
    * Layer id used when no local orthophoto covers the point, or `false` to
    * return `undefined` instead. Defaults to {@link DEFAULT_SATELLITE_FALLBACK_ID}.
@@ -235,7 +246,7 @@ export function bestOrthophotoFor(
   const local = layersForPoint(lng, lat, {
     category: "orthophoto",
     ...(options.zoom === undefined ? {} : { zoom: options.zoom })
-  });
+  }).filter((layer) => options.includeAlternatives || !layer.tags.includes("alternative"));
   if (local[0]) return local[0];
 
   if (options.fallback === false) return undefined;
@@ -254,14 +265,18 @@ export function imageryStackFor(
   const stack = layersForPoint(lng, lat, {
     category: ["orthophoto", "satellite"],
     ...(options.zoom === undefined ? {} : { zoom: options.zoom })
-  });
+  }).filter((layer) => options.includeAlternatives || !layer.tags.includes("alternative"));
 
   const fallback =
     options.fallback === false
       ? undefined
       : byId.get(options.fallback ?? DEFAULT_SATELLITE_FALLBACK_ID);
-  if (fallback && !stack.some((layer) => layer.id === fallback.id)) stack.push(fallback);
 
+  // The fallback closes the stack, wherever it ranked by extent.
+  if (fallback) {
+    const withoutFallback = stack.filter((layer) => layer.id !== fallback.id);
+    return [...withoutFallback, fallback];
+  }
   return stack;
 }
 

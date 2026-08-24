@@ -31,7 +31,8 @@
     "schema": "node scripts/generate-schema.mjs",
     "verify": "node scripts/verify-endpoints.mjs",
     "clean": "rimraf dist .turbo",
-    "docs": "node scripts/generate-catalog-docs.mjs"
+    "docs": "node scripts/generate-catalog-docs.mjs",
+    "verify:mosaic": "node scripts/verify-mosaic.mjs"
   },
   "dependencies": {
     "@orthogea/core": "workspace:*",

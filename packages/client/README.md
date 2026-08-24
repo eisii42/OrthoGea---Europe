@@ -146,3 +146,38 @@ data licences require visible credit.
 | `tileMatrixTemplate` | WMTS matrix naming, e.g. `EPSG:3857:{z}` |
 | `attribution` | `false`, or `{ html: false, includeLicense: false }` |
 | `fetchImpl` | inject a fetch implementation (tests, Node, proxies) |
+
+## Seamless mosaic
+
+One virtual layer for the whole of Europe, which is what makes the framework a drop-in
+replacement for a commercial satellite basemap.
+
+```ts
+import { createMosaic, registerMosaicProtocol, toMosaicRasterSource } from "@orthogea/client";
+
+const mosaic = createMosaic({
+  layers: [...catalog],
+  fallback: "eu.copernicus.vhr-2021",   // the European base, no API key
+  orthophotoFromZoom: 15                // below this: the base only
+});
+
+registerMosaicProtocol(maplibregl, mosaic);
+map.addSource("imagery", toMosaicRasterSource(mosaic));
+map.addLayer({ id: "imagery", type: "raster", source: "imagery" });
+```
+
+Below `orthophotoFromZoom` the whole continent is drawn from one fast Copernicus service; above
+it the mosaic ranks candidates by extent (the most local authority first), then by whether they
+serve cached tiles, then resolution and vintage. It drops imagery belonging to another country,
+skips a source that fails, times out or returns a blank image, and always ends on the European
+base, so no tile is ever empty. `mosaic.activeSources()` and `mosaic.activeAttribution()` report what is actually on
+screen, which keeps the attribution line short and correct.
+
+Inspect the decisions without drawing anything:
+
+```ts
+mosaic.bestFor(x, y, z);         // the layer that would be drawn
+mosaic.select(x, y, z).layers;   // the full candidate chain
+mosaic.tileUrl(layer, x, y, z);  // the request behind a tile
+await mosaic.fetchTile(x, y, z); // Node, tests, thumbnails
+```

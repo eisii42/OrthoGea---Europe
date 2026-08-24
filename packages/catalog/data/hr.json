@@ -2,10 +2,10 @@
   "$schema": "../schema/layer-collection.schema.json",
   "scope": "HR",
   "title": "Croatia",
-  "updated": "2026-08-23",
+  "updated": "2026-08-24",
   "layers": [
     {
-      "lastVerified": "2026-08-23",
+      "lastVerified": "2026-08-24",
       "id": "hr.dgu.dof-2019",
       "title": "Digitalni ortofoto 2019 - Croatia",
       "description": "INSPIRE orthoimagery view service of Croatia, 1:5000 digital orthophoto. The service publishes no EPSG:3857 and needs the OrthoGea reprojecting protocol in MapLibre.",
@@ -32,7 +32,7 @@
           "styles": [
             "OI.OrthoimageCoverage.Default"
           ],
-          "format": "image/png",
+          "format": "image/jpeg",
           "crs": [
             "EPSG:4326",
             "CRS:84",

@@ -165,10 +165,18 @@ describe("style layers", () => {
       type: "raster",
       source: "orthogea-it.ade.catasto",
       minzoom: 13,
-      maxzoom: 22,
       layout: { visibility: "none" }
     });
     expect(layer.paint?.["raster-opacity"]).toBe(0.6);
+  });
+
+  it("never caps the style layer, or the imagery would vanish when zoomed in", () => {
+    // On a style layer maxzoom *hides* the layer; the data limit lives on the
+    // source, where MapLibre upscales the tiles instead.
+    expect(toRasterLayer(cadastreLayer).maxzoom).toBeUndefined();
+    expect(toRasterSource(cadastreLayer).maxzoom).toBe(22);
+    // An explicit cap is still honoured.
+    expect(toRasterLayer(cadastreLayer, { maxzoom: 18 }).maxzoom).toBe(18);
   });
 
   it("binds source and layer together", () => {

@@ -33,8 +33,20 @@ export function needsTileReprojection(layer: OrthoGeaLayer): boolean {
   return layer.service.type === "WMS" && !supportsWebMercator(layer.service);
 }
 
-/** Picks the geographic CRS to request tiles in. */
+/**
+ * Picks the geographic CRS to request tiles in.
+ *
+ * The order declared in the record wins, because it is the only place where a
+ * broken advertisement can be corrected: the Basilicata orthophoto service, for
+ * instance, answers `CRS:84` with a blank image but serves `EPSG:4326`
+ * correctly, so its record lists EPSG:4326 first.
+ */
 export function pickReprojectionCrs(service: WmsService): string {
+  const declared = service.options.crs.find((crs) =>
+    GEOGRAPHIC_FALLBACKS.some((candidate) => isSameCrs(crs, candidate))
+  );
+  if (declared) return declared;
+
   for (const candidate of GEOGRAPHIC_FALLBACKS) {
     const match = service.options.crs.find((crs) => isSameCrs(crs, candidate));
     if (match) return match;

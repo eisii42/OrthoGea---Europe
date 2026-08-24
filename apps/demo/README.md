@@ -11,6 +11,9 @@ pnpm --filter @orthogea/demo dev # http://localhost:5173
 
 ## What it does
 
+- **Seamless imagery** as the default base layer: Copernicus VHR 2021 draws the whole of Europe,
+  and from zoom 15 the official orthophoto of the area takes over, tile by tile. The sidebar shows
+  live which provider is being drawn, and the attribution credits exactly those sources.
 - **Layer switcher** over the whole catalogue, split into base layers (orthophoto, satellite,
   background) and overlays (cadastre, land use, elevation), with a search box.
 - **Jump to** selector built from the NUTS tree: Europe -> Italy -> Centro -> Toscana, with the
@@ -49,6 +52,7 @@ The interesting part is small:
 
 ```ts
 registerOrthoGeaProtocol(maplibregl, { layers: [...catalog], proxyUrl });
+registerMosaicProtocol(maplibregl, createMosaic({ layers: [...catalog], fallback, proxyUrl }));
 
 const { sourceId, source, layer } = toMapLibreBinding(catalogueLayer, { proxyUrl });
 map.addSource(sourceId, source);

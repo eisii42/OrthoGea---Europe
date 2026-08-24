@@ -39,7 +39,7 @@ describe("schema validation", () => {
   });
 
   it("bundles a non-trivial catalogue", () => {
-    expect(catalog.length).toBeGreaterThanOrEqual(45);
+    expect(catalog.length).toBeGreaterThanOrEqual(44);
     expect(collections.length).toBeGreaterThanOrEqual(20);
   });
 
@@ -50,10 +50,9 @@ describe("schema validation", () => {
 
   it("ships the reference layers the framework is documented with", () => {
     for (const id of [
-      "eu.copernicus.sentinel2-l2a-true-color",
-      "eu.eox.s2cloudless-2024",
+      "eu.copernicus.vhr-2021",
       "it.ade.catasto-particelle",
-      "it.toscana.ortofoto-2013",
+      "it.toscana.ortofoto-2024",
       "es.ign.pnoa-ma",
       "fr.ign.bdortho"
     ]) {
@@ -124,13 +123,13 @@ describe("queries", () => {
 
   it("filters by NUTS code, including descendants", () => {
     expect(findLayers({ nuts: "ITI1" }).map((layer) => layer.id)).toContain(
-      "it.toscana.ortofoto-2013"
+      "it.toscana.ortofoto-2024"
     );
     // ITI is the NUTS-1 parent of Toscana, Umbria, Marche and Lazio.
     const centro = findLayers({ nuts: "ITI" }).map((layer) => layer.id);
-    expect(centro).toContain("it.toscana.ortofoto-2013");
+    expect(centro).toContain("it.toscana.ortofoto-2024");
     expect(centro).toContain("it.lazio.agea-2023");
-    expect(centro).not.toContain("it.sicilia.ata-2013");
+    expect(centro).not.toContain("it.sicilia.ortofoto-2022");
   });
 
   it("filters by service type, tags, status and queryability", () => {
@@ -141,15 +140,15 @@ describe("queries", () => {
   });
 
   it("searches free text over title, description and tags", () => {
-    expect(findLayers({ text: "sentinel" }).length).toBeGreaterThanOrEqual(2);
+    expect(findLayers({ text: "copernicus" }).length).toBeGreaterThanOrEqual(3);
     expect(findLayers({ text: "geoscopio" }).map((layer) => layer.id)).toEqual([
-      "it.toscana.ortofoto-2013"
+      "it.toscana.ortofoto-2024"
     ]);
   });
 
   it("filters by extent and zoom", () => {
     const florence = findLayers({ point: { lng: 11.2558, lat: 43.7696 } });
-    expect(florence.map((layer) => layer.id)).toContain("it.toscana.ortofoto-2013");
+    expect(florence.map((layer) => layer.id)).toContain("it.toscana.ortofoto-2024");
     expect(florence.map((layer) => layer.id)).not.toContain("es.ign.pnoa-ma");
 
     const box = findLayers({ bbox: [11, 43, 12, 44] });
@@ -158,8 +157,8 @@ describe("queries", () => {
   });
 
   it("resolves ids in bulk and ignores the unknown ones", () => {
-    expect(getLayers(["it.toscana.ortofoto-2013", "nope"]).map((layer) => layer.id)).toEqual([
-      "it.toscana.ortofoto-2013"
+    expect(getLayers(["it.toscana.ortofoto-2024", "nope"]).map((layer) => layer.id)).toEqual([
+      "it.toscana.ortofoto-2024"
     ]);
     expect(getLayer("nope")).toBeUndefined();
   });
@@ -172,11 +171,10 @@ describe("layersForPoint", () => {
     );
     // Ranking uses declared extents, which are rectangles: Firenze also falls
     // inside the Emilia-Romagna bounding box, so regional layers share the top.
-    expect(ids.slice(0, 3)).toContain("it.toscana.ortofoto-2013");
-    expect(ids).toContain("it.pcn.ortofoto-2012");
-    expect(ids.indexOf("it.toscana.ortofoto-2013")).toBeLessThan(
-      ids.indexOf("it.pcn.ortofoto-2012")
-    );
+    expect(ids.slice(0, 3)).toContain("it.toscana.ortofoto-2024");
+    // Only regional orthophotos remain over Italy: the national mosaics were
+    // dropped in favour of a single European background.
+    expect(ids.every((id) => id.startsWith("it."))).toBe(true);
   });
 
   it("returns nothing over the ocean for national layers", () => {
@@ -194,7 +192,7 @@ describe("grouping, stats and tree", () => {
     const stats = catalogStats();
     expect(stats.layers).toBe(catalog.length);
     expect(stats.countries).toBeGreaterThanOrEqual(18);
-    expect(stats.byService["WMS"]).toBeGreaterThan(30);
+    expect(stats.byService["WMS"]).toBeGreaterThan(28);
     expect(stats.lastVerified).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
@@ -202,16 +200,16 @@ describe("grouping, stats and tree", () => {
     const tree = buildNutsTree();
     expect(tree.code).toBe("EU");
     expect(tree.layerCount).toBe(catalog.length);
-    expect(tree.layers.length).toBeGreaterThanOrEqual(5);
+    expect(tree.layers.length).toBeGreaterThanOrEqual(3);
 
     const italy = tree.children.find((child) => child.code === "IT");
     expect(italy?.label).toBe("Italy");
-    expect(italy?.layers.length).toBeGreaterThanOrEqual(4);
+    expect(italy?.layers.length).toBeGreaterThanOrEqual(3);
 
     const centro = italy?.children.find((child) => child.code === "ITI");
     const toscana = centro?.children.find((child) => child.code === "ITI1");
     expect(toscana?.label).toBe("Toscana");
-    expect(toscana?.layers.map((layer) => layer.id)).toEqual(["it.toscana.ortofoto-2013"]);
+    expect(toscana?.layers.map((layer) => layer.id)).toEqual(["it.toscana.ortofoto-2024"]);
 
     const flat = flattenTree(tree);
     expect(flat[0]).toMatchObject({ code: "EU", depth: 0 });

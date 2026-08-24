@@ -94,7 +94,7 @@ whatever their casing.
 import { wmsLayerToOrthoGea, buildLayerId } from "@orthogea/harvester";
 
 const record = wmsLayerToOrthoGea(capabilities, parsedLayer, {
-  id: buildLayerId("IT", "Toscana", "Ortofoto 2013"),  // "it.toscana.ortofoto-2013"
+  id: buildLayerId("IT", "Toscana", "Ortofoto 2024"),  // "it.toscana.ortofoto-2024"
   category: "orthophoto",
   country: "IT",
   nuts: "ITI1",

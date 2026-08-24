@@ -271,3 +271,14 @@ main {
     max-height: 45vh;
   }
 }
+
+.layer-mosaic {
+  margin-bottom: 0.35rem;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.mosaic-source {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
