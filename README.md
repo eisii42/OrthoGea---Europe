@@ -232,7 +232,9 @@ pnpm --filter @orthogea/catalog docs        # regenerate docs/CATALOG.md
 
 ## Licence
 
-[MIT](LICENSE) for the framework. The data behind each catalogued endpoint keeps its own
-licence, recorded in the `license` field of every record and rendered in the map attribution -
-most of them require visible credit. Read
+The code is [MIT](LICENSE).
+
+The imagery is not: every catalogued endpoint keeps the licence of its publisher, recorded in the
+`license` field of the record and rendered in the map attribution. Most require visible credit,
+which the client builds for you. See [NOTICE.md](NOTICE.md) and
 [docs/CONCEPTS.md](docs/CONCEPTS.md#licensing-and-attribution) before publishing a map.

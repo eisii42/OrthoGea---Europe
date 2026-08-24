@@ -21,7 +21,8 @@
     "dist",
     "data",
     "schema",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",

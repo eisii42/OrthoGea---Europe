@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the packages share one version
 number.
 
+## [0.3.2] - 2026-08-24
+
+### Fixed
+
+- `LICENSE` now holds the SPDX MIT text and nothing else, so GitHub recognises the licence
+  instead of reporting "Other". The note about the data licences moved to `NOTICE.md`.
+
+### Added
+
+- `NOTICE.md`: what the MIT licence covers, what it does not, and the attribution each catalogued
+  provider expects.
+- A copy of `LICENSE` ships inside every published package.
+
 ## [0.3.1] - 2026-08-24
 
 ### Fixed

@@ -116,4 +116,5 @@ name on every custom licence.
 ## Licensing
 
 The package is MIT. The data behind each endpoint keeps its publisher's licence, recorded per
-record - see [docs/CONCEPTS.md](../../docs/CONCEPTS.md#licensing-and-attribution).
+record - see [NOTICE.md](../../NOTICE.md) and
+[docs/CONCEPTS.md](../../docs/CONCEPTS.md#licensing-and-attribution).
