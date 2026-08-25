@@ -39,11 +39,14 @@ export {
 } from "./mosaic.js";
 
 export {
-  createStitcher,
+  createTileWorker,
+  type InspectRequest,
   type StitchRequest,
   type StitchedTile,
-  type Stitcher
-} from "./stitch.js";
+  type TileVerdict,
+  type TileWorker,
+  type TileWorkerOptions
+} from "./worker.js";
 
 export {
   createTileUrlBuilder,

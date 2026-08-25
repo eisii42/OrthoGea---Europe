@@ -121,6 +121,23 @@ into Liguria, the Veneto one into Trentino. Candidates are therefore ordered by
 Then imagery from another country is dropped: once the most local candidate is known, only its
 country and pan-European layers stay in the chain.
 
+**No-data fills.** A service asked for a tile that *straddles* the edge of its coverage does not
+answer with a smaller image. It answers with the whole rectangle and fills the uncovered part with
+flat white or black - and JPEG has no alpha channel, so that fill is opaque and lands on top of
+whatever is drawn below. Along the Tuscan shoreline it affected 23 of 49 tiles; inland, and over
+the Venetian lagoon, none.
+
+The fill is found by flooding inwards from the tile border over near-flat pixels. **Connectivity is
+what makes this safe**: a car park, a deep shadow, a white roof and a snowfield are every bit as
+flat as a collar, but imagery surrounds them and the flood never arrives. Only a flat region that
+reaches the edge is treated as one - which is the difference between this and keying every dark
+pixel to transparent, a rule that would punch holes in every car park in Europe.
+
+A tile that is *entirely* fill is dropped, so the next source or the base below takes over. A tile
+that is *partly* fill has the fill made transparent and is re-encoded as PNG. Detection runs on a
+64 px thumbnail, which settles almost every tile for about 5 ms; only a tile with a real boundary
+running through it pays for the full-resolution repair. Turn it off with `trimCollars: false`.
+
 **Blank tiles.** A WMS asked outside its real footprint does not fail: it returns a blank image
 of a few hundred bytes. Tiles below `minTileBytes` (9000 for 512 px tiles, 2500 for 256 px ones)
 are treated as empty and the next candidate is tried.
@@ -160,8 +177,9 @@ Two decisions make that possible. The bundled catalogue is validated and normali
 never runs a schema; and the runtime guards that used to call into Zod - `isValidBBox` and
 `isValidNutsCode` - are written out by hand, with tests holding them in step with the schema.
 
-The whole basemap, catalogue included, is 20.8 kB gzipped - 1.3 kB of which is the stitching
-worker and the transparent tile. `pnpm size` reproduces the figure.
+The whole basemap, catalogue included, is 22.3 kB gzipped - 2.8 kB of which is the tile worker
+and the transparent tile. A map that only turns one catalogue record into a source never loads
+the worker at all, and stays at 4.4 kB. `pnpm size` reproduces the figure.
 
 ## Performance
 
@@ -195,8 +213,8 @@ A basemap is judged on how fast it draws, especially on a thin connection.
   decodes, a canvas composite and a re-encode: 68 ms a tile, four dropped frames each, and half a
   second of stutter for a viewport's worth. That work happens in a worker built from a Blob URL -
   no bundler configuration, no asset to host - and the main thread only computes the four URLs,
-  which takes microseconds. Measured over four tiles: **1645 ms of main-thread blocking inline,
-  0 ms through the worker**.
+  which takes microseconds. Measured over four tiles: **199 ms of main-thread stall inline - 50 ms
+  a tile, longest single stall 43 ms - and 0 ms through the worker**.
 
   Routing is deliberately *not* offloaded. Choosing the layer and its extent measures 12 µs a
   tile - 0.75 ms for a whole viewport - and a `postMessage` round trip costs more than that.

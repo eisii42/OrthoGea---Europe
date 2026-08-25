@@ -563,6 +563,7 @@ describe("tile caches", () => {
       layers: [cached],
       orthophotoFromZoom: 0,
       cacheName: false,
+      trimCollars: false,
       fetchImpl
     });
 
@@ -599,6 +600,7 @@ describe("tile caches", () => {
       layers: [cached],
       orthophotoFromZoom: 0,
       cacheName: false,
+      trimCollars: false,
       fetchImpl
     });
 
@@ -831,6 +833,7 @@ describe("stitching failures", () => {
       layers: [cached],
       orthophotoFromZoom: 0,
       cacheName: false,
+      trimCollars: false,
       fetchImpl
     });
 
@@ -850,6 +853,7 @@ describe("stitching failures", () => {
       layers: [cached],
       orthophotoFromZoom: 0,
       cacheName: false,
+      trimCollars: false,
       fetchImpl: async () =>
         new Response(new Uint8Array(24_000), {
           status: 200,

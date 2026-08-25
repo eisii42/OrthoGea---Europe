@@ -11,11 +11,20 @@ number.
 
 ### Added
 
+- **No-data fills are made transparent instead of drawn.** A service asked for a tile that
+  straddles the edge of its coverage answers with the whole rectangle and fills the uncovered part
+  with flat white or black; JPEG has no alpha, so that fill was painted over the Copernicus base.
+  Measured along the Tuscan shoreline: **23 of 49 tiles** carried a fill, 15 of them covering the
+  tile almost entirely. The fill is now found by flooding inwards from the tile border - a flat
+  region that does not reach the edge, such as a car park or a snowfield, is never touched - and
+  the tile is either dropped or repaired as a PNG with the fill transparent. After: **0 of 49**.
+  Inland and over the Venetian lagoon, nothing changed in either direction. Detection runs on a
+  64 px thumbnail and costs about 5 ms a tile; `trimCollars: false` turns it off.
 - **Stitching runs in a worker.** Recombining a 256 px tile cache into one 512 px tile costs four
   decodes, a canvas composite and a re-encode - measured at **68 ms per tile**, four dropped frames
-  each. It now happens off the main thread: four tiles measured 1645 ms of main-thread blocking
-  inline and **0 ms** through the worker. The main thread only computes the four URLs, which takes
-  microseconds. Where a worker is unavailable - a strict `worker-src` policy, Node - the same code
+  each. It now happens off the main thread: four tiles measured **199 ms of main-thread stall
+  inline - 50 ms a tile, longest single stall 43 ms - and 0 ms through the worker**. The main
+  thread only computes the four URLs, which takes microseconds. Where a worker is unavailable - a strict `worker-src` policy, Node - the same code
   runs inline, and `createStitcher()` is exported for hosts that want their own.
 - **Requests carry a priority.** A tile on screen is fetched at `high`, a warmed one at `low`, so
   speculative traffic can never take bandwidth from what the reader is looking at.
@@ -24,6 +33,7 @@ number.
   is ground already passed - and reaches further along it. The demo reads the heading from where
   the map has been between stops, and falls back to the ring when it is still.
 - `Mosaic.dispose()` releases the worker; `Mosaic.inFlightTiles` lists what is loading.
+- `createTileWorker()` is exported, for hosts that want to run the pixel work themselves.
 - `stitchTiles` on `createMosaic()`, and `?stitch=0`, `?prefetch=0`, `?zoomlimit=0` in the demo,
   so a rendering problem can be bisected in a browser without a rebuild.
 - **The zoom stops where the imagery does.** Half of Europe publishes no open orthophoto, and
@@ -95,8 +105,8 @@ number.
   | --- | --- | --- |
   | `@orthogea/core` | 18.4 kB gz | **2.4 kB gz** |
   | `toRasterSource` | 31.4 kB gz | **4.4 kB gz** |
-  | the mosaic | 34.9 kB gz | **9.8 kB gz** |
-  | the whole basemap | 46.5 kB gz | **20.8 kB gz** |
+  | the mosaic | 34.9 kB gz | **11.3 kB gz** |
+  | the whole basemap | 46.5 kB gz | **22.3 kB gz** |
 - The demo draws the Copernicus base and an orthophoto-only mosaic above it, fading in between
   zoom 13.5 and 15.5, and keeps its source label and credits in step with what is on screen.
 - **One European base.** The imagery architecture is now two tiers instead of four: Copernicus

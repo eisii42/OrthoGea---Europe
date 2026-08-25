@@ -186,9 +186,9 @@ map.on("idle", () => mosaic.prefetchAhead(x, y, z, headingX, headingY));
 ```
 
 Visible tiles are fetched at `high` priority and warmed ones at `low`, so speculation never
-competes with the viewport. Recombining a 256 px tile cache happens in a worker - it costs about
-68 ms a tile, which on the main thread is four dropped frames - so call `mosaic.dispose()` when
-you tear the map down.
+competes with the viewport. Recombining a 256 px tile cache and repairing a no-data fill both happen in a worker - together
+about 50 ms of main-thread stall a tile if they did not - so call `mosaic.dispose()` when you tear
+the map down.
 
 Prefetched tiles fill the cache without being credited, so `activeSources()` still describes what
 is on screen.

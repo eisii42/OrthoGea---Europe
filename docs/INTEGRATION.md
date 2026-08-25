@@ -75,6 +75,7 @@ Options worth knowing:
 | `minTileBytes` | 9000 / 2500 | tiles smaller than this count as empty and the next source is tried (512 / 256 px) |
 | `cacheLimit` | 1500 | tiles kept in Cache Storage; the oldest are trimmed past it |
 | `stitchTiles` | `true` | recombine a 256 px tile cache instead of stretching one tile over the slot |
+| `trimCollars` | `true` | make a service's no-data fill transparent instead of drawing it over the base |
 | `failureTtlMs` | 60000 | how long a failing service is skipped |
 | `timeoutMs` | 12000 | per-tile timeout |
 | `excludeTags` | `["alternative"]` | catalogue tags to skip |
@@ -130,8 +131,8 @@ viewport are aborted mid-flight, and a request is only really cancelled once the
 walked away - so a tile the prefetcher still wants keeps downloading.
 
 **The main thread.** Recombining a 256 px tile cache costs about 68 ms a tile - four dropped
-frames - so it happens in a worker; four tiles measured 1645 ms of main-thread blocking inline
-and 0 ms through the worker. It needs no bundler configuration: the worker is built from a Blob
+frames - so it happens in a worker; four tiles measured 199 ms of main-thread stall inline and
+0 ms through the worker. It needs no bundler configuration: the worker is built from a Blob
 URL, and where that is blocked (a strict `worker-src` policy, Node) the same code runs inline.
 Call `mosaic.dispose()` when you tear the map down.
 

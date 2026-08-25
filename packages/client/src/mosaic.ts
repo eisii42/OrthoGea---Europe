@@ -10,7 +10,7 @@ import {
   type OrthoGeaLayer
 } from "@orthogea/core";
 import { formatAttributions, type AttributionOptions } from "./attribution.js";
-import { createStitcher, type StitchedTile, type Stitcher } from "./stitch.js";
+import { createTileWorker, type StitchedTile, type TileWorker } from "./worker.js";
 import { createTileUrlBuilder, type TileUrlBuilder, type TileUrlBuilderOptions } from "./tiles.js";
 import type { RasterLayerSpecification, RasterSourceSpecification } from "./types.js";
 
@@ -56,7 +56,7 @@ const EMPTY_LAYER = {
 } as unknown as OrthoGeaLayer;
 
 /** Categories the mosaic can draw from. */
-const IMAGERY_CATEGORIES = new Set(["orthophoto", "satellite"]);
+const IMAGERY_CATEGORIES = /* @__PURE__ */ new Set(["orthophoto", "satellite"]);
 
 export interface MosaicOptions extends TileUrlBuilderOptions {
   /** Identifier used in the tile URL, so several mosaics can coexist. */
@@ -113,6 +113,21 @@ export interface MosaicOptions extends TileUrlBuilderOptions {
    * at. Set `false` to trade that detail for a quarter of the requests.
    */
   stitchTiles?: boolean;
+  /**
+   * Make a service's no-data fill transparent instead of drawing it.
+   *
+   * A WMS asked for a tile straddling the edge of its coverage answers with the
+   * whole rectangle and fills the uncovered part with flat white or black.
+   * JPEG has no alpha, so that fill is opaque and lands on top of the layer
+   * below. Along the Tuscan shoreline it affected 23 of 49 tiles; inland, none.
+   *
+   * The fill is found by flooding inwards from the tile border, so only a flat
+   * region that reaches the edge is removed - a car park or a snowfield in the
+   * middle of the tile is surrounded by imagery and is never touched. Costs a
+   * decode per tile in the worker, and a re-encode only for the tiles that
+   * actually have a fill. Defaults to `true`; needs `OffscreenCanvas`.
+   */
+  trimCollars?: boolean;
   /**
    * Answer with a transparent tile instead of failing when nothing covers the
    * area. Lets a mosaic without a fallback sit on top of a base layer: the base
@@ -255,8 +270,8 @@ export class Mosaic {
    * link; the request is only aborted once every caller has walked away.
    */
   private readonly inFlight = new Map<string, InFlightTile>();
-  /** Built on first use, so a mosaic that never stitches never spawns a worker. */
-  private stitcher?: Stitcher;
+  /** Built on first use, so a mosaic that never needs pixels never spawns one. */
+  private tileWorker?: TileWorker;
   private tileCache?: Promise<Cache | undefined>;
   private cacheWrites = 0;
   private trimming?: Promise<void>;
@@ -417,8 +432,7 @@ export class Mosaic {
       [1, 1]
     ].map(([dx, dy]) => this.tileUrl(layer, x * 2 + (dx as number), y * 2 + (dy as number), z + 1));
 
-    this.stitcher ??= createStitcher({ fetchImpl: this.options.fetchImpl });
-    return this.stitcher.stitch({ urls, tileSize: this.tileSize, signal, priority });
+    return this.worker().stitch({ urls, tileSize: this.tileSize, signal, priority });
   }
 
   /** Request URL of a tile for one specific layer. */
@@ -683,10 +697,15 @@ export class Mosaic {
     return [...this.inFlight.keys()];
   }
 
-  /** Releases the stitching worker. Call when the mosaic is discarded. */
+  /** Releases the tile worker. Call when the mosaic is discarded. */
   dispose(): void {
-    this.stitcher?.dispose();
-    this.stitcher = undefined;
+    this.tileWorker?.dispose();
+    this.tileWorker = undefined;
+  }
+
+  private worker(): TileWorker {
+    this.tileWorker ??= createTileWorker({ fetchImpl: this.options.fetchImpl });
+    return this.tileWorker;
   }
 
   /** Joins the download of a tile, starting it if nobody else has. */
@@ -837,12 +856,32 @@ export class Mosaic {
           weight = data.byteLength;
         }
 
+        // Look at the pixels before trusting the byte count. A service that
+        // covers half the tile answers with the whole rectangle and fills the
+        // rest flat, which is far too big to look empty and far too wrong to
+        // draw.
+        const verdict =
+          this.options.trimCollars === false
+            ? undefined
+            : await this.worker().inspect({ data, contentType });
+
+        if (verdict?.verdict === "empty") {
+          if (!isLast) {
+            this.markBlank(layer.id, x, y, z);
+            continue;
+          }
+        } else if (verdict?.verdict === "trim") {
+          data = verdict.data;
+          contentType = verdict.contentType;
+        }
+
         // The threshold scales with the tile area: an empty 256 px JPEG is
         // about 1.6 kB, an empty 512 px one about 4.7 kB, while real imagery
-        // starts around 20 kB at that size.
+        // starts around 20 kB at that size. It is only a stand-in for looking
+        // at the pixels, so it is skipped once they have been looked at.
         const minBytes = this.options.minTileBytes ?? (this.tileSize === 512 ? 9000 : 2500);
         const trusted = this.isConfirmedHere(layer.id, x, y, z);
-        if (!isLast && !trusted && minBytes > 0 && weight < minBytes) {
+        if (!verdict && !isLast && !trusted && minBytes > 0 && weight < minBytes) {
           // Blank tile: the service covers the rectangle but not the ground
           // here. It stays healthy for other tiles, so it is not blacklisted,
           // but the whole block is remembered as empty.
@@ -906,7 +945,7 @@ export function mosaicTileTemplate(id = "default"): string {
   return `${MOSAIC_PROTOCOL}://${encodeURIComponent(id)}/{z}/{x}/{y}`;
 }
 
-const TILE_URL_RE = new RegExp(`^${MOSAIC_PROTOCOL}://([^/]+)/(\\d+)/(\\d+)/(\\d+)$`);
+const TILE_URL_RE = /* @__PURE__ */ new RegExp(`^${MOSAIC_PROTOCOL}://([^/]+)/(\\d+)/(\\d+)/(\\d+)$`);
 
 export interface MosaicProtocolResponse {
   data: ArrayBuffer;
