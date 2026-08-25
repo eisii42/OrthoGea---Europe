@@ -11,6 +11,24 @@ number.
 
 ### Added
 
+- **Three Italian orthophotos moved to a WMTS tile cache.** Bolzano, Friuli-Venezia Giulia and
+  Sardegna each publish the same imagery through a pre-rendered cache in the standard Web Mercator
+  grid, alongside the WMS the catalogue already used. Measured at the same point and zoom:
+
+  | region | WMS | WMTS |
+  | --- | --- | --- |
+  | Bolzano (Bozen) | - | 2.9 s cold, real imagery confirmed |
+  | Friuli-Venezia Giulia (Udine) | 2204 ms, 103 kB | 1625 ms, 212 kB |
+  | Sardegna (Cagliari) | 870 ms, 89 kB | 380 ms, 198 kB |
+
+  Following the pattern already in place for Veneto, the WMTS record is what the mosaic draws from
+  and the WMS record is tagged `alternative` (kept, queryable, but not selected automatically) -
+  the swap is additive, nothing is removed. A wider survey checked all 45 catalogued WMS imagery
+  layers for a matching WMTS: two more exist (Piemonte, Schleswig-Holstein) but publish it on a
+  proprietary grid with an origin that has nothing to do with the standard Web Mercator pyramid,
+  which the current URL-substitution mechanism cannot address correctly - using it as-is would
+  misplace every tile. That needs real client-side reprojection and is deliberately not attempted
+  here. The other 40 layers have no discoverable WMTS.
 - **The first frame is never empty.** Every tile arrives over the network, and until the first one
   does there was nothing to draw but the background colour. `@orthogea/client/backdrop` now ships
   one 512 px picture of Europe - about 15 kB, reduced from a 2048 px grab of the same Copernicus

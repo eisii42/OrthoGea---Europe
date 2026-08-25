@@ -3,11 +3,11 @@
 Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 `pnpm --filter @orthogea/catalog docs` after changing the data.
 
-**51 layers · 19 scopes · 17 queryable · last verified 2026-08-24**
+**54 layers · 19 scopes · 17 queryable · last verified 2026-08-25**
 
 | Category | Layers |
 | --- | --- |
-| orthophoto | 48 |
+| orthophoto | 51 |
 | satellite | 1 |
 | land_use | 1 |
 | elevation | 1 |
@@ -15,7 +15,7 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | Service | Layers |
 | --- | --- |
 | WMS | 47 |
-| WMTS | 3 |
+| WMTS | 6 |
 | XYZ | 1 |
 
 ## Pan-European (EU)
@@ -107,14 +107,17 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | `it.abruzzo.agea-2022` | Ortofoto AGEA 2022 RGB - Abruzzo | Italy - Abruzzo | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Abruzzo |
 | `it.basilicata.ortofoto-2013` | Ortofoto CTR 20 cm 2013 - Basilicata | Italy - Basilicata | orthophoto | WMS, needs reprojection | CC-BY-4.0 | Regione Basilicata |
 | `it.bolzano.ortofoto-2023` | Ortofoto 2023 - Provincia autonoma di Bolzano | Italy - Bolzano - Bozen | orthophoto | WMS | CC-BY-4.0 | Provincia di Bolzano |
+| `it.bolzano.ortofoto-2023-wmts` | Ortofoto 2023 WMTS - Provincia autonoma di Bolzano | Italy - Bolzano - Bozen | orthophoto | WMTS | CC-BY-4.0 | Provincia di Bolzano |
 | `it.emilia-romagna.agea-2023` | Ortofoto AGEA 2023 RGB - Emilia-Romagna | Italy - Emilia-Romagna | orthophoto | WMS | CC-BY-4.0 | Regione Emilia-Romagna |
 | `it.fvg.trueortofoto-2020` | TrueOrtofoto 2020 - Friuli Venezia Giulia | Italy - Friuli-Venezia Giulia | orthophoto | WMS, queryable | CC-BY-4.0 | Regione FVG |
+| `it.fvg.trueortofoto-2020-wmts` | TrueOrtofoto 2020 WMTS - Friuli Venezia Giulia | Italy - Friuli-Venezia Giulia | orthophoto | WMTS | CC-BY-4.0 | Regione FVG |
 | `it.lazio.agea-2023` | Ortofoto AGEA 2023 - Lazio | Italy - Lazio | orthophoto | WMS | CC-BY-4.0 | Regione Lazio |
 | `it.lombardia.ortofoto-2024` | Ortofoto 2024 - Lombardia | Italy - Lombardia | orthophoto | WMS, needs reprojection | CC-BY-4.0 | Regione Lombardia |
 | `it.marche.agea-2022` | Ortofoto AGEA 2022 RGB - Marche | Italy - Marche | orthophoto | WMS, queryable, needs reprojection | CC-BY-4.0 | Regione Marche |
 | `it.piemonte.agea-2024` | Ortofoto AGEA 2024 - Piemonte | Italy - Piemonte | orthophoto | WMS | AGEA 2024 - viewing service, all rights reserved | Regione Piemonte |
 | `it.puglia.ortofoto-2023` | Ortofoto 2023 - Puglia | Italy - Puglia | orthophoto | WMS | IODL-2.0 | Regione Puglia |
 | `it.sardegna.ortofoto-2022` | Ortofoto MASAF-AGEA 2022 - Sardegna | Italy - Sardegna | orthophoto | WMS, queryable | CC-BY-4.0 | Regione Sardegna |
+| `it.sardegna.ortofoto-2022-wmts` | Ortofoto MASAF-AGEA 2022 WMTS - Sardegna | Italy - Sardegna | orthophoto | WMTS | CC-BY-4.0 | Regione Sardegna |
 | `it.sicilia.ortofoto-2022` | Ortofoto 2022 20 cm - Sicilia | Italy - Sicilia | orthophoto | WMS | CC-BY-4.0 | Regione Siciliana |
 | `it.toscana.ortofoto-2024` | Ortofoto 2024/2025 - Toscana (Geoscopio) | Italy - Toscana | orthophoto | WMS | CC-BY-4.0 | Regione Toscana |
 | `it.trento.ortofoto-2015` | Ortofoto PAT 2015 RGB - Provincia autonoma di Trento | Italy - Trento | orthophoto | WMS, queryable | CC-BY-4.0 | Provincia di Trento |
@@ -167,7 +170,7 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 ## NUTS tree
 
 ```
-EU     Europe (51)
+EU     Europe (54)
   AT     Austria (1)
   BE     Belgium (2)
     BE2    Vlaanderen (1)
@@ -180,7 +183,7 @@ EU     Europe (51)
   ES     Spain (1)
   FR     France (2)
   HR     Croatia (1)
-  IT     Italy (17)
+  IT     Italy (20)
     ITC    ITC (2)
       ITC1   Piemonte (1)
       ITC4   Lombardia (1)
@@ -188,14 +191,14 @@ EU     Europe (51)
       ITF1   Abruzzo (1)
       ITF4   Puglia (1)
       ITF5   Basilicata (1)
-    ITG    ITG (2)
+    ITG    ITG (3)
       ITG1   Sicilia (1)
-      ITG2   Sardegna (1)
-    ITH    ITH (6)
-      ITH1   Bolzano - Bozen (1)
+      ITG2   Sardegna (2)
+    ITH    ITH (8)
+      ITH1   Bolzano - Bozen (2)
       ITH2   Trento (1)
       ITH3   Veneto (2)
-      ITH4   Friuli-Venezia Giulia (1)
+      ITH4   Friuli-Venezia Giulia (2)
       ITH5   Emilia-Romagna (1)
     ITI    ITI (4)
       ITI1   Toscana (1)

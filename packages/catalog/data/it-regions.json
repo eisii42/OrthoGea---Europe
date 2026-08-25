@@ -2,7 +2,7 @@
   "$schema": "../schema/layer-collection.schema.json",
   "scope": "IT",
   "title": "Italy - regional orthophotos",
-  "updated": "2026-08-24",
+  "updated": "2026-08-25",
   "layers": [
     {
       "lastVerified": "2026-08-23",
@@ -127,7 +127,7 @@
       ]
     },
     {
-      "lastVerified": "2026-08-23",
+      "lastVerified": "2026-08-25",
       "id": "it.bolzano.ortofoto-2023",
       "title": "Ortofoto 2023 - Provincia autonoma di Bolzano",
       "description": "Province-wide RGB orthophoto, 2023 flight, published through the MapProxy service of the Südtiroler Informatik.",
@@ -180,12 +180,69 @@
       "tags": [
         "ortofoto",
         "bolzano",
-        "suedtirol"
+        "suedtirol",
+        "alternative"
       ],
       "resolutionMeters": 0.2
     },
     {
-      "lastVerified": "2026-08-24",
+      "lastVerified": "2026-08-25",
+      "id": "it.bolzano.ortofoto-2023-wmts",
+      "title": "Ortofoto 2023 WMTS - Provincia autonoma di Bolzano",
+      "description": "Same 2023 flight as the WMS record, served from the MapProxy tile cache in the standard Web Mercator grid: faster and lighter than rendering the WMS on request.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Provincia autonoma di Bolzano - Alto Adige",
+        "shortName": "Provincia di Bolzano",
+        "url": "https://geoportal.buergernetz.bz.it/"
+      },
+      "country": "IT",
+      "nuts": "ITH1",
+      "regionName": "Bolzano - Bozen",
+      "bbox": [
+        10.351,
+        46.175,
+        12.525,
+        47.141
+      ],
+      "service": {
+        "type": "WMTS",
+        "url": "https://geoservices.buergernetz.bz.it/mapproxy/ows",
+        "options": {
+          "layer": "p_bz-Orthoimagery:Aerial-2023-RGB",
+          "tileMatrixSet": "EPSG_3857",
+          "style": "default",
+          "format": "image/png",
+          "version": "1.0.0",
+          "requestEncoding": "KVP",
+          "crs": "EPSG:3857",
+          "tileSize": 256,
+          "queryable": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://geoportal.buergernetz.bz.it/"
+      },
+      "attribution": "Provincia autonoma di Bolzano - Autonome Provinz Bozen",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2023-01",
+        "end": "2023-12"
+      },
+      "tags": [
+        "ortofoto",
+        "bolzano",
+        "suedtirol",
+        "wmts",
+        "cached"
+      ],
+      "resolutionMeters": 0.2
+    },
+    {
+      "lastVerified": "2026-08-25",
       "id": "it.emilia-romagna.agea-2023",
       "title": "Ortofoto AGEA 2023 RGB - Emilia-Romagna",
       "description": "AGEA 2023 colour orthophoto of Emilia-Romagna, published by the regional geoportal. It replaces the RER 2023-24 endpoint, which answers with an empty image at every zoom and in every format.",
@@ -304,7 +361,65 @@
       "tags": [
         "ortofoto",
         "true-ortho",
-        "fvg"
+        "fvg",
+        "alternative"
+      ],
+      "resolutionMeters": 0.2
+    },
+    {
+      "lastVerified": "2026-08-25",
+      "id": "it.fvg.trueortofoto-2020-wmts",
+      "title": "TrueOrtofoto 2020 WMTS - Friuli Venezia Giulia",
+      "description": "Same 2017-2020 flight as the WMS record, served from the regional GeoWebCache in the standard Web Mercator grid.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Autonoma Friuli Venezia Giulia - IRDAT",
+        "shortName": "Regione FVG",
+        "url": "https://irdat.regione.fvg.it/"
+      },
+      "country": "IT",
+      "nuts": "ITH4",
+      "regionName": "Friuli-Venezia Giulia",
+      "bbox": [
+        12.293,
+        45.554,
+        13.927,
+        46.668
+      ],
+      "service": {
+        "type": "WMTS",
+        "url": "https://irdat-ortofoto.regione.fvg.it/geoserver/ortofoto/gwc/service/wmts",
+        "options": {
+          "layer": "trueorto_FVG_1720",
+          "tileMatrixSet": "EPSG:900913",
+          "style": "",
+          "format": "image/png",
+          "version": "1.0.0",
+          "requestEncoding": "KVP",
+          "crs": "EPSG:3857",
+          "tileSize": 256,
+          "tileMatrixTemplate": "EPSG:900913:{z}",
+          "queryable": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.regione.fvg.it/"
+      },
+      "attribution": "Regione Autonoma Friuli Venezia Giulia - IRDAT",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "temporal": {
+        "start": "2017-01",
+        "end": "2020-12"
+      },
+      "tags": [
+        "ortofoto",
+        "true-ortho",
+        "fvg",
+        "wmts",
+        "cached"
       ],
       "resolutionMeters": 0.2
     },
@@ -498,7 +613,7 @@
       "resolutionMeters": 0.2
     },
     {
-      "lastVerified": "2026-08-23",
+      "lastVerified": "2026-08-25",
       "id": "it.piemonte.agea-2024",
       "title": "Ortofoto AGEA 2024 - Piemonte",
       "description": "Colour orthophoto from the summer 2024 AGEA flight, 30 cm ground resolution.",
@@ -684,7 +799,66 @@
         "ortofoto",
         "sardegna",
         "agea",
-        "masaf"
+        "masaf",
+        "alternative"
+      ]
+    },
+    {
+      "lastVerified": "2026-08-25",
+      "id": "it.sardegna.ortofoto-2022-wmts",
+      "title": "Ortofoto MASAF-AGEA 2022 WMTS - Sardegna",
+      "description": "Same 2022 MASAF-AGEA flight as the WMS record, served from the regional GeoWebCache in the standard Web Mercator grid.",
+      "category": "orthophoto",
+      "provider": {
+        "name": "Regione Autonoma della Sardegna",
+        "shortName": "Regione Sardegna",
+        "url": "https://www.sardegnageoportale.it/"
+      },
+      "country": "IT",
+      "nuts": "ITG2",
+      "regionName": "Sardegna",
+      "bbox": [
+        8.113,
+        38.846,
+        9.845,
+        41.326
+      ],
+      "service": {
+        "type": "WMTS",
+        "url": "https://webgis.regione.sardegna.it/geoserverraster/gwc/service/wmts",
+        "options": {
+          "layer": "raster:Mosaico_2022_GB",
+          "tileMatrixSet": "EPSG:900913",
+          "style": "",
+          "format": "image/png",
+          "version": "1.0.0",
+          "requestEncoding": "KVP",
+          "crs": "EPSG:3857",
+          "tileSize": 256,
+          "tileMatrixTemplate": "EPSG:900913:{z}",
+          "queryable": false,
+          "infoFormats": []
+        }
+      },
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://www.sardegnageoportale.it/"
+      },
+      "attribution": "Regione Autonoma della Sardegna - Sardegna Geoportale",
+      "minZoom": 8,
+      "maxZoom": 20,
+      "resolutionMeters": 0.2,
+      "temporal": {
+        "start": "2022-01",
+        "end": "2022-12"
+      },
+      "tags": [
+        "ortofoto",
+        "sardegna",
+        "agea",
+        "masaf",
+        "wmts",
+        "cached"
       ]
     },
     {
