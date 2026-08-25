@@ -4,35 +4,28 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the packages share one version
 number.
 
-## [0.5.1] - 2026-08-24
+## [0.2.0] - 2026-08-24
 
-### Fixed
-
-- **Emilia-Romagna drew nothing at all.** `servizigis.regione.emilia-romagna.it/wms/rer2023_24_rgb`
-  answers with an empty 4.8 kB image at every zoom, in every format, everywhere - Bologna and
-  Ferrara included. Its rectangle covers most of northern Italy and it outranked its neighbours
-  on locality, so every tile in that area paid a wasted round trip before falling through. The
-  working AGEA 2023 service was already in the catalogue, tagged `alternative` behind the broken
-  one; it is now the Emilia-Romagna record and the dead endpoint is gone.
-- **One dropped child request no longer blacklists a whole region.** Stitching a 256 px tile cache
-  makes four requests per tile, so four chances of a dropped connection. A rejection propagated
-  out of the stitch and was read as a failing service, taking the layer off the map for a minute -
-  which is what a hole in fully covered ground looks like.
-- **Stitched tiles keep the format the service used.** A PNG tile cache was being re-encoded as
-  JPEG, a lossy round trip for no gain.
-- **Callers no longer share one tile buffer.** The renderer and the idle prefetcher could receive
-  the same `ArrayBuffer`; an image decoder that transfers it would leave the other holding a
-  detached buffer, and a tile that never draws.
+> Versions 0.2.0 through 0.5.1 appeared in earlier drafts of this file while the packages were
+> still unpublished at 0.1.0. They were never released, so the work they described ships here.
 
 ### Added
 
+- **Stitching runs in a worker.** Recombining a 256 px tile cache into one 512 px tile costs four
+  decodes, a canvas composite and a re-encode - measured at **68 ms per tile**, four dropped frames
+  each. It now happens off the main thread: four tiles measured 1645 ms of main-thread blocking
+  inline and **0 ms** through the worker. The main thread only computes the four URLs, which takes
+  microseconds. Where a worker is unavailable - a strict `worker-src` policy, Node - the same code
+  runs inline, and `createStitcher()` is exported for hosts that want their own.
+- **Requests carry a priority.** A tile on screen is fetched at `high`, a warmed one at `low`, so
+  speculative traffic can never take bandwidth from what the reader is looking at.
+- **Prefetching follows the direction of travel.** `Mosaic.prefetchAhead(x, y, z, headingX,
+  headingY)` warms the leading edge instead of the whole ring - three quarters of which, mid-pan,
+  is ground already passed - and reaches further along it. The demo reads the heading from where
+  the map has been between stops, and falls back to the ring when it is still.
+- `Mosaic.dispose()` releases the worker; `Mosaic.inFlightTiles` lists what is loading.
 - `stitchTiles` on `createMosaic()`, and `?stitch=0`, `?prefetch=0`, `?zoomlimit=0` in the demo,
   so a rendering problem can be bisected in a browser without a rebuild.
-
-## [0.5.0] - 2026-08-24
-
-### Added
-
 - **The zoom stops where the imagery does.** Half of Europe publishes no open orthophoto, and
   there the map sits on the 2 m European base: zooming to 20 over Sofia or Hamburg only enlarges
   pixels. `Mosaic.detailZoomAt(lng, lat)` answers with the deepest zoom the imagery under a point
@@ -43,55 +36,6 @@ number.
 - `metersPerPixelAt()` and `zoomForResolutionAt()` in `@orthogea/core`: ground resolution and its
   inverse, corrected for latitude.
 - `pnpm size`: the integration weight, measured rather than asserted.
-
-### Changed
-
-- **The runtime is now free of third-party code.** Drawing a map used to pull in Zod (54 kB) and
-  an XML parser (32 kB) - 77 % of the bundle - for validation and feature queries it never ran.
-  Both now live behind their own entry points, and the bundled catalogue is validated and
-  normalised at **build** time instead of on every page load:
-
-  | import | before | after |
-  | --- | --- | --- |
-  | `@orthogea/core` | 18.4 kB gz | **2.4 kB gz** |
-  | `toRasterSource` | 31.4 kB gz | **4.4 kB gz** |
-  | the mosaic | 34.9 kB gz | **8.4 kB gz** |
-  | the whole basemap | 46.5 kB gz | **19.5 kB gz** |
-
-### Breaking
-
-- The Zod schemas moved from `@orthogea/core` to **`@orthogea/core/schemas`**. The types they
-  produce - `OrthoGeaLayer`, `Service`, `LayerCollection` and the rest - stay on the root entry,
-  because types are erased and cost nothing.
-- `getFeatureInfo` and the response parsers moved to **`@orthogea/client/featureinfo`**.
-- `safeBuildCatalog`, `buildCatalog` and `registerCollection` moved to
-  **`@orthogea/catalog/validate`**. Reading the bundled catalogue needs none of them.
-- `CountryCodeSchema` and `NutsCodeSchema` moved to `@orthogea/core/schemas`; `isValidNutsCode()`
-  is unchanged and no longer needs Zod.
-
-## [0.4.0] - 2026-08-24
-
-### Fixed
-
-- **Germany no longer washes out at detail zoom.** Coverage is modelled as a rectangle, and
-  rectangles cross borders: Austria's reaches Munich, France's reaches Frankfurt. Asked for
-  ground they do not hold, both services answer with a uniform white image rather than an error,
-  and the mosaic painted it because a single candidate was accepted unconditionally. A mosaic
-  that can draw a transparent hole now always prefers the hole, so the European base shows
-  through instead.
-- **Tile caches are no longer drawn at half resolution.** A pre-rendered cache has a fixed 256 px
-  grid; asked for the level a 512 px mosaic wants, it answered with an image the renderer then
-  stretched, leaving basemap.at, IGN, Veneto and Estonia a full zoom level behind. Their four
-  children are now fetched in parallel and stitched into one tile.
-- **A 404 is read as a gap in coverage, not as a broken service.** basemap.at answers 404 over
-  Munich, which used to blacklist it - and with it the whole of Austria - for the next minute.
-- **A neighbour's rectangle no longer hides a country's own imagery.** Foreign candidates are
-  moved to the back of the chain instead of being dropped from it, so where the closer authority
-  answers blank the map falls through to the right service rather than to a hole. North
-  Rhine-Westphalia's rectangle reaches Venlo, Bavaria's reaches Salzburg.
-
-### Added
-
 - **Germany, at last.** There is no open national orthophoto - the BKG service needs registration
   and the survey is a state responsibility - so the catalogue now carries the **13 state services
   that publish theirs as open data**: Bavaria, North Rhine-Westphalia, Lower Saxony,
@@ -110,80 +54,14 @@ number.
 - The demo serves the Copernicus base through the mosaic as well, so it inherits Cache Storage,
   shared downloads and prefetching, and stops requesting tiles past the resolution of its own 2 m
   data.
-
-## [0.3.2] - 2026-08-24
-
-### Fixed
-
-- `LICENSE` now holds the SPDX MIT text and nothing else, so GitHub recognises the licence
-  instead of reporting "Other". The note about the data licences moved to `NOTICE.md`.
-
-### Added
-
 - `NOTICE.md`: what the MIT licence covers, what it does not, and the attribution each catalogued
   provider expects.
 - A copy of `LICENSE` ships inside every published package.
-
-## [0.3.1] - 2026-08-24
-
-### Fixed
-
-- **The orthophoto no longer drops back to the base at deep zoom.** A service that has drawn a
-  tile is remembered as covering that area, so its later tiles are trusted even when they are
-  tiny - a uniform roof at zoom 19 compresses to a few hundred bytes, which the empty-tile guard
-  used to mistake for a hole.
-
-### Added
-
 - `toMosaicRasterLayer()`: a style layer with an opacity ramp over zoom, so the orthophotos
   **fade in** over the Copernicus base instead of replacing it in one step.
 - A mosaic without a fallback answers uncovered tiles with a transparent image rather than an
   error, which is what lets it sit on top of a base layer. Disable with
   `transparentWhenUncovered: false`.
-
-### Removed
-
-- **All cadastre layers** - Agenzia delle Entrate (parcels, zoning, full drawing), Spanish
-  Catastro (parcels, buildings) and the French Parcellaire Express.
-
-### Changed
-
-- The demo draws the Copernicus base and an orthophoto-only mosaic above it, fading in between
-  zoom 13.5 and 15.5, and keeps its source label and credits in step with what is on screen.
-
-## [0.3.0] - 2026-08-24
-
-### Changed
-
-- **One European base.** The imagery architecture is now two tiers instead of four: Copernicus
-  VHR 2021 (about 2 m) draws the whole continent at every zoom, and the official orthophoto of
-  the area takes over from zoom 15, where 2 m starts to show. Fewer services in play means fewer
-  requests, no low-zoom patchwork and a noticeably quicker map.
-- **Cached services win.** Among sources covering the same ground, a WMTS or XYZ tile service is
-  preferred over a WMS, because pre-rendered tiles answer in milliseconds.
-- `DEFAULT_SATELLITE_FALLBACK_ID` points at `eu.copernicus.vhr-2021`.
-- `DEFAULT_ORTHOPHOTO_FROM_ZOOM` moved from 12 to 15.
-
-### Removed
-
-- The redundant background mosaics: Copernicus HR Image Mosaic, Copernicus Data Space Sentinel-2
-  L2A (instance id required), Sentinel-2 cloudless and Terrain Light by EOX, BKG Sen2Europe, and
-  the Geoportale Nazionale (MASE) orthophotos, whose raster backend was intermittent.
-
-## [0.2.1] - 2026-08-24
-
-### Fixed
-
-- **Imagery vanished when zoomed right in.** `toRasterLayer()` copied the record's `maxZoom`
-  onto the style layer, where MapLibre reads it as "hide the layer from this zoom". The limit now
-  lives on the source only, which makes MapLibre upscale instead of hiding.
-- **Imagery blinked away when an overlay was toggled.** The demo rebuilt every source on each
-  change, throwing away the tiles it had. It now applies only the difference.
-- The Veneto WMTS is served from a pre-rendered PNG cache and cannot answer in JPEG; only WMS
-  records were switched to JPEG.
-
-### Added
-
 - **Copernicus VHR 2021** (about 2 m, EEA) as the tier between national orthophotos and
   Sentinel-2: regions with no aerial imagery - Liguria, Valle d'Aosta, Molise, Campania,
   Calabria - now show 2 m satellite imagery at street level instead of 10 m.
@@ -192,19 +70,6 @@ number.
   alternative.
 - Browser tile caching (Cache Storage), empty-area memory per 4x4 tile block, and a per-tile
   timeout, so the map stays usable on a thin connection.
-
-### Changed
-
-- Imagery records request `image/jpeg`: 5-10x smaller tiles (Sicilia 194 kB to 26 kB).
-- The mosaic requests 512 px tiles and stops at zoom 19: a quarter of the round trips, a quarter
-  of the provider watermarks on screen, and no new requests when zooming deeper.
-- Attribution is compact in the map control and lists only the sources drawn in the last few
-  seconds.
-
-## [0.2.0] - 2026-08-24
-
-### Added
-
 - **Seamless imagery mosaic** (`@orthogea/client`): one virtual raster layer that picks, per
   tile, the best official source covering it - the Copernicus Sentinel-2 mosaic below zoom 12,
   the most local orthophoto above it, the satellite again wherever no orthophoto exists. Ranks
@@ -221,6 +86,32 @@ number.
 
 ### Changed
 
+- **The runtime is now free of third-party code.** Drawing a map used to pull in Zod (54 kB) and
+  an XML parser (32 kB) - 77 % of the bundle - for validation and feature queries it never ran.
+  Both now live behind their own entry points, and the bundled catalogue is validated and
+  normalised at **build** time instead of on every page load:
+
+  | import | before | after |
+  | --- | --- | --- |
+  | `@orthogea/core` | 18.4 kB gz | **2.4 kB gz** |
+  | `toRasterSource` | 31.4 kB gz | **4.4 kB gz** |
+  | the mosaic | 34.9 kB gz | **9.8 kB gz** |
+  | the whole basemap | 46.5 kB gz | **20.8 kB gz** |
+- The demo draws the Copernicus base and an orthophoto-only mosaic above it, fading in between
+  zoom 13.5 and 15.5, and keeps its source label and credits in step with what is on screen.
+- **One European base.** The imagery architecture is now two tiers instead of four: Copernicus
+  VHR 2021 (about 2 m) draws the whole continent at every zoom, and the official orthophoto of
+  the area takes over from zoom 15, where 2 m starts to show. Fewer services in play means fewer
+  requests, no low-zoom patchwork and a noticeably quicker map.
+- **Cached services win.** Among sources covering the same ground, a WMTS or XYZ tile service is
+  preferred over a WMS, because pre-rendered tiles answer in milliseconds.
+- `DEFAULT_SATELLITE_FALLBACK_ID` points at `eu.copernicus.vhr-2021`.
+- `DEFAULT_ORTHOPHOTO_FROM_ZOOM` moved from 12 to 15.
+- Imagery records request `image/jpeg`: 5-10x smaller tiles (Sicilia 194 kB to 26 kB).
+- The mosaic requests 512 px tiles and stops at zoom 19: a quarter of the round trips, a quarter
+  of the provider watermarks on screen, and no new requests when zooming deeper.
+- Attribution is compact in the map control and lists only the sources drawn in the last few
+  seconds.
 - Italian regional imagery updated to the most recent published flights: Toscana 2013 to
   **2024/2025**, Sicilia 2013 to **2022**, Lombardia 2021 to **2024**.
 - Spain PNOA now requests `OI.OrthoimageCoverage`; `OI.MosaicElement` is the flight index, not
@@ -233,9 +124,68 @@ number.
 
 ### Fixed
 
+- **Holes are drawn as a full 512x512 transparent tile**, not a single pixel stretched over the
+  quad, and they are returned with `cache-control: no-store` - a hole is a fact about this moment,
+  not about the ground, so the area is asked for again on the next pass instead of staying empty
+  for the rest of the session.
+- **Emilia-Romagna drew nothing at all.** `servizigis.regione.emilia-romagna.it/wms/rer2023_24_rgb`
+  answers with an empty 4.8 kB image at every zoom, in every format, everywhere - Bologna and
+  Ferrara included. Its rectangle covers most of northern Italy and it outranked its neighbours
+  on locality, so every tile in that area paid a wasted round trip before falling through. The
+  working AGEA 2023 service was already in the catalogue, tagged `alternative` behind the broken
+  one; it is now the Emilia-Romagna record and the dead endpoint is gone.
+- **One dropped child request no longer blacklists a whole region.** Stitching a 256 px tile cache
+  makes four requests per tile, so four chances of a dropped connection. A rejection propagated
+  out of the stitch and was read as a failing service, taking the layer off the map for a minute -
+  which is what a hole in fully covered ground looks like.
+- **Stitched tiles keep the format the service used.** A PNG tile cache was being re-encoded as
+  JPEG, a lossy round trip for no gain.
+- **Callers no longer share one tile buffer.** The renderer and the idle prefetcher could receive
+  the same `ArrayBuffer`; an image decoder that transfers it would leave the other holding a
+  detached buffer, and a tile that never draws.
+- **Germany no longer washes out at detail zoom.** Coverage is modelled as a rectangle, and
+  rectangles cross borders: Austria's reaches Munich, France's reaches Frankfurt. Asked for
+  ground they do not hold, both services answer with a uniform white image rather than an error,
+  and the mosaic painted it because a single candidate was accepted unconditionally. A mosaic
+  that can draw a transparent hole now always prefers the hole, so the European base shows
+  through instead.
+- **Tile caches are no longer drawn at half resolution.** A pre-rendered cache has a fixed 256 px
+  grid; asked for the level a 512 px mosaic wants, it answered with an image the renderer then
+  stretched, leaving basemap.at, IGN, Veneto and Estonia a full zoom level behind. Their four
+  children are now fetched in parallel and stitched into one tile.
+- **A 404 is read as a gap in coverage, not as a broken service.** basemap.at answers 404 over
+  Munich, which used to blacklist it - and with it the whole of Austria - for the next minute.
+- **A neighbour's rectangle no longer hides a country's own imagery.** Foreign candidates are
+  moved to the back of the chain instead of being dropped from it, so where the closer authority
+  answers blank the map falls through to the right service rather than to a hole. North
+  Rhine-Westphalia's rectangle reaches Venlo, Bavaria's reaches Salzburg.
+- `LICENSE` now holds the SPDX MIT text and nothing else, so GitHub recognises the licence
+  instead of reporting "Other". The note about the data licences moved to `NOTICE.md`.
+- **The orthophoto no longer drops back to the base at deep zoom.** A service that has drawn a
+  tile is remembered as covering that area, so its later tiles are trusted even when they are
+  tiny - a uniform roof at zoom 19 compresses to a few hundred bytes, which the empty-tile guard
+  used to mistake for a hole.
+- **Imagery vanished when zoomed right in.** `toRasterLayer()` copied the record's `maxZoom`
+  onto the style layer, where MapLibre reads it as "hide the layer from this zoom". The limit now
+  lives on the source only, which makes MapLibre upscale instead of hiding.
+- **Imagery blinked away when an overlay was toggled.** The demo rebuilt every source on each
+  change, throwing away the tiles it had. It now applies only the difference.
+- The Veneto WMTS is served from a pre-rendered PNG cache and cannot answer in JPEG; only WMS
+  records were switched to JPEG.
 - Tile placeholders (`{bbox-epsg-3857}`, `{z}`, `{x}`, `{y}`) survive percent-encoding when a
   CORS proxy is used, so proxied templates render.
 - Query values keep literal `:` and `,`, which several national services require.
+
+### Breaking
+
+- The Zod schemas moved from `@orthogea/core` to **`@orthogea/core/schemas`**. The types they
+  produce - `OrthoGeaLayer`, `Service`, `LayerCollection` and the rest - stay on the root entry,
+  because types are erased and cost nothing.
+- `getFeatureInfo` and the response parsers moved to **`@orthogea/client/featureinfo`**.
+- `safeBuildCatalog`, `buildCatalog` and `registerCollection` moved to
+  **`@orthogea/catalog/validate`**. Reading the bundled catalogue needs none of them.
+- `CountryCodeSchema` and `NutsCodeSchema` moved to `@orthogea/core/schemas`; `isValidNutsCode()`
+  is unchanged and no longer needs Zod.
 
 ## [0.1.0] - 2026-08-23
 

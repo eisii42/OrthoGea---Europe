@@ -160,7 +160,8 @@ Two decisions make that possible. The bundled catalogue is validated and normali
 never runs a schema; and the runtime guards that used to call into Zod - `isValidBBox` and
 `isValidNutsCode` - are written out by hand, with tests holding them in step with the schema.
 
-The whole basemap, catalogue included, is 19.5 kB gzipped. `pnpm size` reproduces the figure.
+The whole basemap, catalogue included, is 20.8 kB gzipped - 1.3 kB of which is the stitching
+worker and the transparent tile. `pnpm size` reproduces the figure.
 
 ## Performance
 
@@ -190,6 +191,23 @@ A basemap is judged on how fast it draws, especially on a thin connection.
 - **Empty areas are remembered.** Coverage gaps are contiguous: when a service answers blank, the
   whole 4x4 tile block is marked, and it is not asked again there.
 - **Failures back off** for a minute, so one broken national service cannot slow the map down.
+- **The main thread stays free.** Recombining a 256 px tile cache into one 512 px tile costs four
+  decodes, a canvas composite and a re-encode: 68 ms a tile, four dropped frames each, and half a
+  second of stutter for a viewport's worth. That work happens in a worker built from a Blob URL -
+  no bundler configuration, no asset to host - and the main thread only computes the four URLs,
+  which takes microseconds. Measured over four tiles: **1645 ms of main-thread blocking inline,
+  0 ms through the worker**.
+
+  Routing is deliberately *not* offloaded. Choosing the layer and its extent measures 12 µs a
+  tile - 0.75 ms for a whole viewport - and a `postMessage` round trip costs more than that.
+- **Requests carry a priority.** A tile on screen is fetched at `high` and a warmed one at `low`,
+  so speculative traffic can never take bandwidth from what the reader is looking at.
+- **Aborting is immediate.** A tile that leaves the viewport is dropped mid-flight, and the request
+  is only really cancelled once the last caller has walked away - a tile the prefetcher still wants
+  keeps downloading.
+- **A hole is not cached.** An uncovered tile is a full 512 × 512 transparent PNG returned with
+  `cache-control: no-store`, so a service that was rate-limiting for a moment gets asked again on
+  the next pass rather than leaving the area empty for the session.
 
 ## CRS normalisation
 

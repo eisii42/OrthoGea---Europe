@@ -1,6 +1,6 @@
 {
   "name": "@orthogea/client",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Web-GIS adapters (MapLibre GL, OpenLayers) and a universal GetFeatureInfo engine for OrthoGea - Europe.",
   "license": "MIT",
   "type": "module",

@@ -116,6 +116,15 @@ let mosaic: Mosaic;
 let baseMosaic: Mosaic;
 let lastMosaicLayer: OrthoGeaLayer | undefined;
 let mosaicLabelTimer: number | undefined;
+/**
+ * Where the map was when it last settled, so the next stop reveals a heading.
+ *
+ * A ring around the viewport is the right shape when the reader is still. Once
+ * they are moving, three quarters of it is ground they have already passed.
+ */
+let lastCentre: { lng: number; lat: number } | undefined;
+let heading: [number, number] = [0, 0];
+
 /** Removes the zoom limit, when the reader turns the seamless layer off. */
 let releaseZoomLimit: (() => void) | undefined;
 /** Deepest zoom the imagery under the map supports, shown in the sidebar. */
@@ -222,6 +231,19 @@ function prefetchNeighbours(): void {
   if ((east - west + 3) * (south - north + 3) > 48) return;
 
   const wantsOrthophotos = zoom >= FADE_FROM_ZOOM;
+  const [headingX, headingY] = heading;
+
+  // Moving: warm only the leading edge, and reach further along it than a ring
+  // ever would. Standing still: the ring, because any direction is as likely.
+  if (Math.hypot(headingX, headingY) > 0.25) {
+    const centre = map.getCenter();
+    const [cx, cy] = lngLatToTile(centre.lng, centre.lat, z);
+    const reach = Math.max(2, Math.ceil((east - west) / 2) + 2);
+    if (z <= BASE_MAX_TILE_ZOOM) baseMosaic.prefetchAhead(cx, cy, z, headingX, headingY, reach);
+    if (wantsOrthophotos) mosaic.prefetchAhead(cx, cy, z, headingX, headingY, reach);
+    return;
+  }
+
   for (let x = west - 1; x <= east + 1; x += 1) {
     for (let y = north - 1; y <= south + 1; y += 1) {
       if (x >= west && x <= east && y >= north && y <= south) continue;
@@ -230,6 +252,24 @@ function prefetchNeighbours(): void {
       if (wantsOrthophotos) mosaic.prefetch(x, y, z);
     }
   }
+}
+
+/**
+ * Reads the direction of travel from where the map has been.
+ *
+ * Screen space, so the vector can be handed straight to `prefetchAhead`: x
+ * grows east, y grows south. Its length is in tiles, which is what decides
+ * whether the reader counts as moving at all.
+ */
+function trackHeading(): void {
+  const centre = map.getCenter();
+  const z = Math.max(0, Math.round(map.getZoom()) - 1);
+  if (lastCentre) {
+    const [fromX, fromY] = lngLatToTile(lastCentre.lng, lastCentre.lat, z);
+    const [toX, toY] = lngLatToTile(centre.lng, centre.lat, z);
+    heading = [toX - fromX, toY - fromY];
+  }
+  lastCentre = { lng: centre.lng, lat: centre.lat };
 }
 
 function updateMosaicLabel(): void {
@@ -714,6 +754,7 @@ el("info-close").addEventListener("click", () => {
 });
 
 map.on("moveend", () => {
+  trackHeading();
   if (state.baseId === MOSAIC_ID) updateMosaicLabel();
 });
 

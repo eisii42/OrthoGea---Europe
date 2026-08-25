@@ -39,6 +39,13 @@ export {
 } from "./mosaic.js";
 
 export {
+  createStitcher,
+  type StitchRequest,
+  type StitchedTile,
+  type Stitcher
+} from "./stitch.js";
+
+export {
   createTileUrlBuilder,
   fetchTile,
   fillTileTemplate,

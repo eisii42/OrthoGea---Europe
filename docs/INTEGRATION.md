@@ -74,6 +74,7 @@ Options worth knowing:
 | `cacheName` | `"orthogea-tiles"` | Cache Storage bucket; `false` disables caching |
 | `minTileBytes` | 9000 / 2500 | tiles smaller than this count as empty and the next source is tried (512 / 256 px) |
 | `cacheLimit` | 1500 | tiles kept in Cache Storage; the oldest are trimmed past it |
+| `stitchTiles` | `true` | recombine a 256 px tile cache instead of stretching one tile over the slot |
 | `failureTtlMs` | 60000 | how long a failing service is skipped |
 | `timeoutMs` | 12000 | per-tile timeout |
 | `excludeTags` | `["alternative"]` | catalogue tags to skip |
@@ -99,8 +100,40 @@ await mosaic.fetchTile(x, y, z);// server side or for tests
 
 mosaic.prefetch(x, y, z);       // warm one tile, silently
 mosaic.prefetchAround(x, y, z); // warm the ring around it
+mosaic.prefetchAhead(x, y, z, headingX, headingY);  // warm the leading edge
 mosaic.detailZoomAt(lng, lat);  // deepest zoom the imagery here supports
+mosaic.dispose();               // release the stitching worker
 ```
+
+**Prefetch where the reader is going.** A ring is the right shape when the map is still; mid-pan
+three quarters of it is ground already passed. Give `prefetchAhead` a screen-space heading - x
+grows east, y grows south, length irrelevant - and it warms the leading edge instead, reaching
+further along it:
+
+```ts
+let previous: [number, number] | undefined;
+
+map.on("moveend", () => {
+  const z = Math.round(map.getZoom()) - 1;
+  const { lng, lat } = map.getCenter();
+  const here = lngLatToTile(lng, lat, z);
+  if (previous) mosaic.prefetchAhead(...here, z, here[0] - previous[0], here[1] - previous[1]);
+  previous = here;
+});
+```
+
+A zero heading falls back to the ring, so a map that has not moved is still warmed.
+
+**Priorities and cancellation.** A tile on screen is fetched at `high` and a warmed one at `low`,
+so speculative traffic never competes with what the reader is looking at. Tiles that leave the
+viewport are aborted mid-flight, and a request is only really cancelled once the last caller has
+walked away - so a tile the prefetcher still wants keeps downloading.
+
+**The main thread.** Recombining a 256 px tile cache costs about 68 ms a tile - four dropped
+frames - so it happens in a worker; four tiles measured 1645 ms of main-thread blocking inline
+and 0 ms through the worker. It needs no bundler configuration: the worker is built from a Blob
+URL, and where that is blocked (a strict `worker-src` policy, Node) the same code runs inline.
+Call `mosaic.dispose()` when you tear the map down.
 
 **Stop the zoom before the imagery blurs.** Where no orthophoto is published the map sits on the
 2 m European base, and zooming past about 16.5 only enlarges pixels. One call holds the map at

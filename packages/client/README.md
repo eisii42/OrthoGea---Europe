@@ -177,11 +177,18 @@ Tiles are kept in Cache Storage (trimmed at `cacheLimit`, 1500 by default), conc
 for the same tile share one download, and a 256 px tile cache is stitched from its four children
 rather than stretched, so a cached service is drawn at the resolution the reader is at.
 
-Warm the ground ahead of a pan while the map is still:
+Warm the ground ahead of a pan while the map is still - a ring when it has not moved, the
+leading edge when it has:
 
 ```ts
 map.on("idle", () => mosaic.prefetchAround(x, y, z));
+map.on("idle", () => mosaic.prefetchAhead(x, y, z, headingX, headingY));
 ```
+
+Visible tiles are fetched at `high` priority and warmed ones at `low`, so speculation never
+competes with the viewport. Recombining a 256 px tile cache happens in a worker - it costs about
+68 ms a tile, which on the main thread is four dropped frames - so call `mosaic.dispose()` when
+you tear the map down.
 
 Prefetched tiles fill the cache without being credited, so `activeSources()` still describes what
 is on screen.

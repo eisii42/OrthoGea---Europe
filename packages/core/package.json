@@ -1,6 +1,6 @@
 {
   "name": "@orthogea/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Core types, Zod schemas and spatial helpers (BBox, CRS, NUTS) for OrthoGea - Europe.",
   "license": "MIT",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@orthogea/harvester",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "GetCapabilities parsers (WMS 1.1.1/1.3.0, WMTS 1.0.0) and endpoint health checks for OrthoGea - Europe.",
   "license": "MIT",
   "type": "module",

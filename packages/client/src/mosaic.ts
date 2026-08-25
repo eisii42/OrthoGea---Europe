@@ -10,6 +10,7 @@ import {
   type OrthoGeaLayer
 } from "@orthogea/core";
 import { formatAttributions, type AttributionOptions } from "./attribution.js";
+import { createStitcher, type StitchedTile, type Stitcher } from "./stitch.js";
 import { createTileUrlBuilder, type TileUrlBuilder, type TileUrlBuilderOptions } from "./tiles.js";
 import type { RasterLayerSpecification, RasterSourceSpecification } from "./types.js";
 
@@ -35,9 +36,16 @@ export const DEFAULT_ORTHOPHOTO_FROM_ZOOM = 15;
  */
 export const DEFAULT_MOSAIC_MAX_ZOOM = 19;
 
-/** 1x1 fully transparent PNG, base64. */
+/**
+ * 512x512 fully transparent PNG, base64 - 1.1 kB.
+ *
+ * Full size rather than a single pixel on purpose. A 1x1 texture stretched over
+ * a 512 px tile quad is at the mercy of the renderer's filtering and wrapping
+ * rules, and a hole is drawn often enough that it is not worth the kilobyte
+ * saved to find out how each driver handles it.
+ */
 const TRANSPARENT_PNG =
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+  "iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAED0lEQVR42u3BMQEAAADCoPVPbQdvoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4DcC8AABL9rASwAAAABJRU5ErkJggg==";
 
 /** Placeholder reported when a tile is a hole rather than imagery. */
 const EMPTY_LAYER = {
@@ -247,6 +255,8 @@ export class Mosaic {
    * link; the request is only aborted once every caller has walked away.
    */
   private readonly inFlight = new Map<string, InFlightTile>();
+  /** Built on first use, so a mosaic that never stitches never spawns a worker. */
+  private stitcher?: Stitcher;
   private tileCache?: Promise<Cache | undefined>;
   private cacheWrites = 0;
   private trimming?: Promise<void>;
@@ -395,71 +405,20 @@ export class Mosaic {
     x: number,
     y: number,
     z: number,
-    signal: AbortSignal
-  ): Promise<{ data: ArrayBuffer; contentType: string; bytes: number } | undefined> {
-    const canvasCtor = (globalThis as { OffscreenCanvas?: typeof OffscreenCanvas }).OffscreenCanvas;
-    if (!canvasCtor || typeof createImageBitmap !== "function") return undefined;
-
-    const fetchImpl = this.options.fetchImpl ?? globalThis.fetch;
-    const quadrants: readonly [number, number][] = [
+    signal: AbortSignal,
+    priority: RequestPriority = "auto"
+  ): Promise<StitchedTile | undefined> {
+    // Only the four URLs are computed here - microseconds. Everything that
+    // costs milliseconds happens in the worker.
+    const urls = [
       [0, 0],
       [1, 0],
       [0, 1],
       [1, 1]
-    ];
+    ].map(([dx, dy]) => this.tileUrl(layer, x * 2 + (dx as number), y * 2 + (dy as number), z + 1));
 
-    const parts = await Promise.all(
-      quadrants.map(async ([dx, dy]) => {
-        try {
-          const response = await fetchImpl(this.tileUrl(layer, x * 2 + dx, y * 2 + dy, z + 1), {
-            signal
-          });
-          const contentType = response.headers.get("content-type") ?? "";
-          if (!response.ok || !contentType.startsWith("image/")) return undefined;
-          return { data: await response.arrayBuffer(), contentType };
-        } catch {
-          // A child that never arrives is not evidence about the service:
-          // letting it reject here would blacklist the whole layer for a
-          // minute, and one dropped request would punch a hole in a region
-          // that is otherwise fully covered.
-          return undefined;
-        }
-      })
-    );
-    // One missing child and the tile would have a hole: fall back to the
-    // stretched single tile, which at least covers the whole ground.
-    if (parts.some((part) => part === undefined)) return undefined;
-
-    const canvas = new canvasCtor(this.tileSize, this.tileSize);
-    const context = canvas.getContext("2d");
-    if (!context) return undefined;
-
-    const half = this.tileSize / 2;
-    for (const [index, [dx, dy]] of quadrants.entries()) {
-      const part = parts[index] as { data: ArrayBuffer; contentType: string };
-      const bitmap = await createImageBitmap(new Blob([part.data], { type: part.contentType }));
-      context.drawImage(bitmap, dx * half, dy * half, half, half);
-      bitmap.close();
-    }
-
-    // Re-encode in the format the service already used. Turning a service's
-    // PNG tiles into JPEG would be a lossy round trip for no gain, and the
-    // renderer decodes whatever it is handed either way.
-    const contentType =
-      (parts[0] as { contentType: string }).contentType === "image/png"
-        ? "image/png"
-        : "image/jpeg";
-    const blob = await canvas.convertToBlob({ type: contentType, quality: 0.9 });
-    return {
-      data: await blob.arrayBuffer(),
-      contentType,
-      // The blank test reads the originals: re-encoding changes the size, and
-      // four empty children are what actually says "no coverage here".
-      bytes: parts.reduce(
-        (total, part) => total + (part as { data: ArrayBuffer }).data.byteLength,
-        0
-      )
-    };
+    this.stitcher ??= createStitcher({ fetchImpl: this.options.fetchImpl });
+    return this.stitcher.stitch({ urls, tileSize: this.tileSize, signal, priority });
   }
 
   /** Request URL of a tile for one specific layer. */
@@ -625,7 +584,7 @@ export class Mosaic {
    * Concurrent requests for the same tile share one download.
    */
   async fetchTile(x: number, y: number, z: number, signal?: AbortSignal): Promise<MosaicTile> {
-    const tile = await this.share(x, y, z, signal);
+    const tile = await this.share(x, y, z, signal, "high");
     if (tile.layer !== EMPTY_LAYER) {
       this.used.set(tile.layer.id, Date.now());
       this.options.onTile?.({ layer: tile.layer, x, y, z });
@@ -643,7 +602,9 @@ export class Mosaic {
    */
   prefetch(x: number, y: number, z: number): void {
     if (this.inFlight.has(`${z}/${x}/${y}`)) return;
-    void this.share(x, y, z).catch(() => undefined);
+    // Low priority: a tile nobody is looking at yet must never take bandwidth
+    // from one that is on screen.
+    void this.share(x, y, z, undefined, "low").catch(() => undefined);
   }
 
   /**
@@ -662,8 +623,80 @@ export class Mosaic {
     }
   }
 
+  /**
+   * Warms the tiles the reader is heading towards.
+   *
+   * A ring around the viewport is the right shape when the map is still, but
+   * during a pan three quarters of it is behind the reader. Given the direction
+   * of travel, only the leading edge is worth the bandwidth - and on a thin
+   * connection that difference is the whole point.
+   *
+   * `heading` is a screen-space vector: x grows east, y grows south, and its
+   * length does not matter.
+   *
+   * ```ts
+   * map.on("moveend", () => {
+   *   const [dx, dy] = panVelocity();          // however the host tracks it
+   *   mosaic.prefetchAhead(x, y, z, dx, dy);
+   * });
+   * ```
+   */
+  prefetchAhead(
+    x: number,
+    y: number,
+    z: number,
+    headingX: number,
+    headingY: number,
+    depth = 2
+  ): void {
+    const length = Math.hypot(headingX, headingY);
+    // Standing still: no direction to favour, so warm the whole ring instead.
+    if (!Number.isFinite(length) || length < 1e-6) {
+      this.prefetchAround(x, y, z);
+      return;
+    }
+
+    const stepX = headingX / length;
+    const stepY = headingY / length;
+    const span = 2 ** z;
+    const seen = new Set<string>();
+
+    for (let step = 1; step <= depth; step += 1) {
+      const leadX = Math.round(x + stepX * step);
+      const leadY = Math.round(y + stepY * step);
+      // A column across the direction of travel, so a diagonal pan still finds
+      // the corners it is about to reveal.
+      for (let across = -1; across <= 1; across += 1) {
+        const tx = Math.round(leadX - stepY * across);
+        const ty = Math.round(leadY + stepX * across);
+        if (ty < 0 || ty >= span) continue;
+        const key = `${tx}/${ty}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        this.prefetch(((tx % span) + span) % span, ty, z);
+      }
+    }
+  }
+
+  /** Keys of the tiles being loaded right now, for tests and diagnostics. */
+  get inFlightTiles(): readonly string[] {
+    return [...this.inFlight.keys()];
+  }
+
+  /** Releases the stitching worker. Call when the mosaic is discarded. */
+  dispose(): void {
+    this.stitcher?.dispose();
+    this.stitcher = undefined;
+  }
+
   /** Joins the download of a tile, starting it if nobody else has. */
-  private share(x: number, y: number, z: number, signal?: AbortSignal): Promise<MosaicTile> {
+  private share(
+    x: number,
+    y: number,
+    z: number,
+    signal?: AbortSignal,
+    priority: RequestPriority = "auto"
+  ): Promise<MosaicTile> {
     const key = `${z}/${x}/${y}`;
     let entry = this.inFlight.get(key);
     if (!entry) {
@@ -673,7 +706,7 @@ export class Mosaic {
         refs: 0,
         promise: undefined as unknown as Promise<MosaicTile>
       };
-      created.promise = this.loadTile(x, y, z, controller.signal);
+      created.promise = this.loadTile(x, y, z, controller.signal, priority);
       void created.promise.catch(() => undefined).then(() => {
         if (this.inFlight.get(key) === created) this.inFlight.delete(key);
       });
@@ -719,7 +752,8 @@ export class Mosaic {
     x: number,
     y: number,
     z: number,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    priority: RequestPriority = "auto"
   ): Promise<MosaicTile> {
     const { layers } = this.select(x, y, z);
     if (layers.length === 0) {
@@ -773,7 +807,7 @@ export class Mosaic {
 
       try {
         const stitched = this.canStitch(layer)
-          ? await this.fetchStitched(layer, x, y, z, controller.signal)
+          ? await this.fetchStitched(layer, x, y, z, controller.signal, priority)
           : undefined;
 
         let data: ArrayBuffer;
@@ -784,7 +818,7 @@ export class Mosaic {
           ({ data, contentType } = stitched);
           weight = stitched.bytes;
         } else {
-          const response = await fetchImpl(url, { signal: controller.signal });
+          const response = await fetchImpl(url, { signal: controller.signal, priority });
           contentType = response.headers.get("content-type") ?? "";
           // A tile cache answers 404 outside its own footprint. That is a
           // coverage gap, not a broken service: blacklisting basemap.at
@@ -902,7 +936,13 @@ export function createMosaicProtocol(mosaics: Mosaic | readonly Mosaic[]) {
     if (!mosaic) throw new UnsupportedServiceError(`Unknown mosaic "${rawId}" in ${url}`);
 
     const tile = await mosaic.fetchTile(Number(x), Number(y), Number(z), signal);
-    return { data: tile.data };
+    // A hole is a fact about this moment, not about the ground: the service may
+    // have been rate-limiting, or the connection may have dropped. Telling the
+    // renderer not to store it means the area is asked for again on the next
+    // pass, instead of staying empty for the rest of the session.
+    return tile.layer.id === EMPTY_LAYER.id
+      ? { data: tile.data, cacheControl: "no-store" }
+      : { data: tile.data };
   };
 
   return function mosaicProtocol(

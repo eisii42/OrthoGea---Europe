@@ -219,7 +219,7 @@ describe("tile fetching", () => {
     const tile = await tiled.fetchTile(dx, dy, 14);
     expect(tile.contentType).toBe("image/png");
     expect(tile.layer.id).toBe("orthogea:empty");
-    expect(tile.data.byteLength).toBeLessThan(200);
+    expect(tile.data.byteLength).toBeLessThan(2000);
   });
 
   it("reports a clear error when asked to", async () => {
@@ -862,5 +862,87 @@ describe("stitching failures", () => {
     expect((await tiled.fetchTile(dx, dy, 14)).contentType).toBe("image/png");
 
     vi.unstubAllGlobals();
+  });
+});
+
+describe("traffic shaping", () => {
+  const image = () =>
+    new Response(new Uint8Array(32_768), {
+      status: 200,
+      headers: { "content-type": "image/jpeg" }
+    });
+
+  it("asks for a visible tile at high priority and a warmed one at low", async () => {
+    const priorities: (string | undefined)[] = [];
+    const fetchImpl = async (_url: string, init?: RequestInit) => {
+      priorities.push((init as { priority?: string } | undefined)?.priority);
+      return image();
+    };
+    const tiled = createMosaic({ layers, fallback: satellite, fetchImpl, cacheName: false });
+
+    await tiled.fetchTile(dx, dy, 14);
+    expect(priorities).toContain("high");
+
+    priorities.length = 0;
+    tiled.prefetch(dx + 20, dy + 20, 14);
+    await vi.waitFor(() => expect(priorities.length).toBeGreaterThan(0));
+    expect(priorities).toContain("low");
+  });
+
+  it("warms the ground ahead of a pan, not the ring behind it", async () => {
+    const asked: number[] = [];
+    const fetchImpl = async (url: string) => {
+      // Every request carries the tile extent, so the easting says which side
+      // of the reader it is on.
+      const bbox = /BBOX=([-0-9.]+),/.exec(url);
+      if (bbox?.[1]) asked.push(Number(bbox[1]));
+      return image();
+    };
+    const tiled = createMosaic({ layers, fallback: satellite, fetchImpl, cacheName: false });
+
+    const centre = await tiled.fetchTile(dx, dy, 14);
+    expect(centre.layer.id).toBe("it.toscana.ortofoto");
+    const here = asked[0] as number;
+
+    asked.length = 0;
+    // Travelling east: everything west of the reader is already behind them.
+    tiled.prefetchAhead(dx, dy, 14, 1, 0);
+    await vi.waitFor(() => expect(asked.length).toBeGreaterThanOrEqual(6));
+
+    for (const easting of asked) expect(easting).toBeGreaterThan(here);
+  });
+
+  it("falls back to a full ring when the map is standing still", async () => {
+    const fetchImpl = vi.fn<(input: string, init?: RequestInit) => Promise<Response>>(
+      async () => image()
+    );
+    const tiled = createMosaic({ layers, fallback: satellite, fetchImpl, cacheName: false });
+
+    tiled.prefetchAhead(dx, dy, 14, 0, 0);
+    await vi.waitFor(() => expect(fetchImpl).toHaveBeenCalledTimes(8));
+  });
+});
+
+describe("holes", () => {
+  it("draws a full-size transparent tile, not a single pixel", async () => {
+    // A 1x1 texture stretched over a 512 px quad is at the mercy of the
+    // renderer's filtering rules; a real tile is a kilobyte and no surprise.
+    const tiled = createMosaic({
+      layers: [regional],
+      minTileBytes: 0,
+      cacheName: false,
+      fetchImpl: async () => new Response("nope", { status: 503 })
+    });
+
+    const tile = await tiled.fetchTile(dx, dy, 14);
+    expect(tile.layer.id).toBe("orthogea:empty");
+    expect(tile.contentType).toBe("image/png");
+
+    const png = new Uint8Array(tile.data);
+    // IHDR carries the dimensions as two big-endian 32-bit integers at byte 16.
+    const view = new DataView(tile.data);
+    expect(view.getUint32(16)).toBe(512);
+    expect(view.getUint32(20)).toBe(512);
+    expect(png[25]).toBe(6); // colour type 6: RGBA, so it really is transparent
   });
 });

@@ -16,8 +16,9 @@ harvest (GetCapabilities)  ->  catalogue (validated JSON)  ->  render (MapLibre,
 | **Better than a global mosaic** | 8-30 cm official orthophotos where they exist, Sentinel-2 elsewhere |
 | **MIT code, open data** | no API key, no tile quota, no terms-of-service trap; licence and attribution carried per layer |
 | **Seamless mosaic** | one virtual layer picks the best source per tile, Copernicus imagery when zoomed out |
-| **19.5 kB gzipped** | the whole basemap, catalogue included, with no third-party runtime dependency |
-| **Built for slow links** | JPEG tiles, 512 px requests, Cache Storage, idle prefetch, empty areas remembered |
+| **20.8 kB gzipped** | the whole basemap, catalogue included, with no third-party runtime dependency |
+| **Built for slow links** | JPEG tiles, 512 px requests, Cache Storage, directional prefetch, empty areas remembered |
+| **Off the main thread** | tile recombination runs in a worker: 1645 ms of blocking became 0 ms |
 | **Never pixelated** | the zoom stops where the imagery does, and lifts again where a sharper flight exists |
 | **Any map library** | MapLibre GL, Leaflet and OpenLayers adapters, plus a plain `(x, y, z) => url` builder |
 | **Protocol-correct** | WMS 1.1.1 and 1.3.0 axis order, CRS normalisation, WMTS KVP/REST, GetFeatureInfo, WFS |
@@ -37,8 +38,8 @@ imagery is, so the weight is measured rather than asserted - run `pnpm size` to 
 | --- | --- | --- | --- |
 | `@orthogea/core` | 8.6 kB | **2.4 kB** | tile maths, CRS normalisation, bbox helpers |
 | `toRasterSource` | 13.4 kB | **4.4 kB** | one catalogue record as a MapLibre source |
-| the mosaic | 23.5 kB | **8.4 kB** | the seamless imagery layer, without the catalogue |
-| the whole basemap | 79.3 kB | **19.5 kB** | mosaic plus all 54 catalogued services |
+| the mosaic | 28.5 kB | **9.8 kB** | the seamless imagery layer, worker included |
+| the whole basemap | 83.4 kB | **20.8 kB** | mosaic plus all 54 catalogued services |
 
 Nothing on that path imports a third-party package. The two dependencies the project does have
 live behind their own entry points, so you only pay for them if you use them:
