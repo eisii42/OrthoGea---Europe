@@ -11,6 +11,25 @@ number.
 
 ### Added
 
+- **GetFeatureInfo audited across every queryable layer.** All 17 catalogued layers that declare
+  `queryable: true` were tested with a live click-to-query request. Two answered with a broken
+  service rather than data:
+  - **Switzerland** (`ch.swisstopo.swissimage`) throws a `ServiceException` on both
+    `application/json` and `text/html` (`msOGRWriteFromQuery(): OGR_DS_CreateLayer failed ...
+    Regular expression error`). The one format that does answer, GML, returns no attributes at
+    all - just the pixel footprint of the internal tile index, duplicated across two unrelated
+    raster mosaics. There is nothing a click-to-query feature could show here, so the layer no
+    longer advertises queryability.
+  - **Slovakia** (`sk.ugkk.ortofoto`) fails with a generic ArcGIS `http.400` on every declared
+    `INFO_FORMAT` and both WMS versions, despite `GetCapabilities` advertising `queryable="1"`.
+    `GetMap` (the imagery itself) is unaffected; only the query endpoint is broken. Queryability
+    turned off.
+  - **Poland** (`pl.geoportal.ortofotomapa`) turned out to be worse than a broken query: the whole
+    endpoint - `GetMap` and `GetCapabilities` alike - answered 404. GUGiK retired the
+    `StandardResolution` service; the same imagery is now live at `HighResolution`, which
+    `GetFeatureInfo` on too (verified: it returns the sampled pixel RGB). The record now points
+    there. The endpoint can be slow under load - single digits of seconds typically, occasionally
+    more - which the mosaic's existing timeout and blank-tile handling already covers.
 - **Three Italian orthophotos moved to a WMTS tile cache.** Bolzano, Friuli-Venezia Giulia and
   Sardegna each publish the same imagery through a pre-rendered cache in the standard Web Mercator
   grid, alongside the WMS the catalogue already used. Measured at the same point and zoom:

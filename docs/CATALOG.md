@@ -3,7 +3,7 @@
 Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 `pnpm --filter @orthogea/catalog docs` after changing the data.
 
-**54 layers · 19 scopes · 17 queryable · last verified 2026-08-25**
+**54 layers · 19 scopes · 15 queryable · last verified 2026-08-25**
 
 | Category | Layers |
 | --- | --- |
@@ -43,7 +43,7 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 
 | Id | Title | Scope | Category | Service | Licence | Provider |
 | --- | --- | --- | --- | --- | --- | --- |
-| `ch.swisstopo.swissimage` | SWISSIMAGE - Switzerland | Switzerland | orthophoto | WMS, queryable | swisstopo free geodata licence | swisstopo |
+| `ch.swisstopo.swissimage` | SWISSIMAGE - Switzerland | Switzerland | orthophoto | WMS | swisstopo free geodata licence | swisstopo |
 
 ## Czechia (CZ)
 
@@ -165,7 +165,7 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 
 | Id | Title | Scope | Category | Service | Licence | Provider |
 | --- | --- | --- | --- | --- | --- | --- |
-| `sk.ugkk.ortofoto` | Ortofotomozaika SR - Slovakia | Slovakia | orthophoto | WMS, queryable | CC-BY-4.0 | UGKK SR |
+| `sk.ugkk.ortofoto` | Ortofotomozaika SR - Slovakia | Slovakia | orthophoto | WMS | CC-BY-4.0 | UGKK SR |
 
 ## NUTS tree
 

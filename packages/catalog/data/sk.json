@@ -2,10 +2,10 @@
   "$schema": "../schema/layer-collection.schema.json",
   "scope": "SK",
   "title": "Slovakia",
-  "updated": "2026-08-23",
+  "updated": "2026-08-25",
   "layers": [
     {
-      "lastVerified": "2026-08-23",
+      "lastVerified": "2026-08-25",
       "id": "sk.ugkk.ortofoto",
       "title": "Ortofotomozaika SR - Slovakia",
       "description": "National orthophoto mosaic of Slovakia published by the geodesy and cadastre authority.",
@@ -40,12 +40,9 @@
             "EPSG:5514"
           ],
           "version": "1.3.0",
-          "queryable": true,
+          "queryable": false,
           "transparent": false,
-          "infoFormats": [
-            "text/xml",
-            "application/vnd.ogc.wms_xml"
-          ]
+          "infoFormats": []
         }
       },
       "license": {

@@ -2,10 +2,10 @@
   "$schema": "../schema/layer-collection.schema.json",
   "scope": "PL",
   "title": "Poland",
-  "updated": "2026-08-23",
+  "updated": "2026-08-25",
   "layers": [
     {
-      "lastVerified": "2026-08-23",
+      "lastVerified": "2026-08-25",
       "id": "pl.geoportal.ortofotomapa",
       "title": "Ortofotomapa - Poland",
       "description": "National orthophoto viewing service of the Polish head office of geodesy (GUGiK).",
@@ -24,7 +24,7 @@
       ],
       "service": {
         "type": "WMS",
-        "url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution",
+        "url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution",
         "options": {
           "layers": [
             "Raster"
@@ -43,8 +43,9 @@
           "queryable": true,
           "transparent": false,
           "infoFormats": [
-            "text/html",
-            "text/plain"
+            "application/geojson",
+            "text/plain",
+            "text/html"
           ]
         }
       },
