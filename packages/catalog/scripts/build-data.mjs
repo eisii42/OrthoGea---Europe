@@ -41,7 +41,6 @@ const FILES = [
   "sk.json",
   "si.json",
   "hr.json",
-  "el.json",
   "ee.json",
   "dk.json",
   "se.json"

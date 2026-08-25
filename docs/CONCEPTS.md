@@ -177,7 +177,7 @@ Two decisions make that possible. The bundled catalogue is validated and normali
 never runs a schema; and the runtime guards that used to call into Zod - `isValidBBox` and
 `isValidNutsCode` - are written out by hand, with tests holding them in step with the schema.
 
-The whole basemap, catalogue included, is 22.3 kB gzipped - 2.8 kB of which is the tile worker
+The whole basemap, catalogue included, is 21.8 kB gzipped - 2.8 kB of which is the tile worker
 and the transparent tile. A map that only turns one catalogue record into a source never loads
 the worker at all, and stays at 4.4 kB. `pnpm size` reproduces the figure.
 
@@ -223,6 +223,12 @@ A basemap is judged on how fast it draws, especially on a thin connection.
 - **Aborting is immediate.** A tile that leaves the viewport is dropped mid-flight, and the request
   is only really cancelled once the last caller has walked away - a tile the prefetcher still wants
   keeps downloading.
+- **The first frame is never empty.** A 512 px picture of Europe, about 15 kB, ships as a data URI
+  behind `@orthogea/client/backdrop` and sits at the bottom of the stack. It needs no network, so
+  it is on screen before the first tile request leaves, and every real tile draws over it. The
+  Copernicus mosaic it comes from holds no data over water and returns black there; that area was
+  replaced with a muted sea tone when the picture was made, because black is the one thing the
+  image exists to avoid.
 - **A hole is not cached.** An uncovered tile is a full 512 × 512 transparent PNG returned with
   `cache-control: no-store`, so a service that was rate-limiting for a moment gets asked again on
   the next pass rather than leaving the area empty for the session.

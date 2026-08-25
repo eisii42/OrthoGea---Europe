@@ -12,7 +12,6 @@ import cz from "../data/cz.json";
 import de from "../data/de.json";
 import dk from "../data/dk.json";
 import ee from "../data/ee.json";
-import el from "../data/el.json";
 import es from "../data/es.json";
 import eu from "../data/eu.json";
 import fr from "../data/fr.json";
@@ -46,7 +45,6 @@ export const RAW_COLLECTIONS: Record<string, unknown> = {
   "sk.json": sk,
   "si.json": si,
   "hr.json": hr,
-  "el.json": el,
   "ee.json": ee,
   "dk.json": dk,
   "se.json": se

@@ -32,6 +32,9 @@ import {
 // The GetFeatureInfo engine is a separate entry point: it carries an XML
 // parser, and a map that only draws imagery should not have to ship one.
 import { getFeatureInfo, type FeatureInfoResponse } from "@orthogea/client/featureinfo";
+// Likewise the backdrop: 11 kB of Europe, so the first frame is a map rather
+// than an empty rectangle. Drawn underneath everything and never requested.
+import { toBackdropLayer, toBackdropSource } from "@orthogea/client/backdrop";
 import "./style.css";
 
 /** Dev-only proxy exposed by vite.config.ts, see the CORS note in the README. */
@@ -84,8 +87,11 @@ const map: MapLibreMap = new maplibregl.Map({
   container: el("map"),
   style: {
     version: 8,
-    sources: {},
-    layers: [{ id: "background", type: "background", paint: { "background-color": "#0d1117" } }]
+    sources: { "orthogea-backdrop": toBackdropSource() },
+    layers: [
+      { id: "background", type: "background", paint: { "background-color": "#0d1117" } },
+      toBackdropLayer()
+    ]
   },
   center: [11.2558, 43.7696],
   zoom: 13,

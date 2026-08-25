@@ -125,6 +125,21 @@ map.on("moveend", () => {
 
 A zero heading falls back to the ring, so a map that has not moved is still warmed.
 
+**Never an empty first frame.** Every tile arrives over the network, and until the first one does
+there is nothing to draw. `@orthogea/client/backdrop` ships one 512 px picture of the continent -
+about 15 kB, a downsample of the same Copernicus mosaic the map uses - as a data URI, so it is on
+screen before the first request leaves. Put it at the bottom of the stack and forget about it:
+
+```ts
+import { toBackdropSource, toBackdropLayer } from "@orthogea/client/backdrop";
+
+map.addSource("orthogea-backdrop", toBackdropSource());
+map.addLayer(toBackdropLayer());   // maxzoom 8: past that, real tiles are there
+```
+
+It is deliberately soft - a placeholder, not data - and every real tile draws straight over it.
+It is a separate entry point, so a map that does not want the bytes never loads them.
+
 **Priorities and cancellation.** A tile on screen is fetched at `high` and a warmed one at `low`,
 so speculative traffic never competes with what the reader is looking at. Tiles that leave the
 viewport are aborted mid-flight, and a request is only really cancelled once the last caller has

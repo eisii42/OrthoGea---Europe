@@ -3,19 +3,18 @@
 Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 `pnpm --filter @orthogea/catalog docs` after changing the data.
 
-**54 layers · 20 scopes · 18 queryable · last verified 2026-08-24**
+**51 layers · 19 scopes · 17 queryable · last verified 2026-08-24**
 
 | Category | Layers |
 | --- | --- |
-| orthophoto | 49 |
-| custom | 2 |
+| orthophoto | 48 |
 | satellite | 1 |
 | land_use | 1 |
 | elevation | 1 |
 
 | Service | Layers |
 | --- | --- |
-| WMS | 50 |
+| WMS | 47 |
 | WMTS | 3 |
 | XYZ | 1 |
 
@@ -57,7 +56,6 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | Id | Title | Scope | Category | Service | Licence | Provider |
 | --- | --- | --- | --- | --- | --- | --- |
 | `de.bayern.dop` | Digitales Orthophoto 40 cm - Bayern | Germany - Bayern | orthophoto | WMS | dl-de-by-2.0 | LDBV |
-| `de.bkg.basemapde-grau` | basemap.de Web Raster grau - Germany | Germany | custom | WMS | dl-de-by-2.0 | BKG |
 | `de.brandenburg.dop` | Digitales Orthophoto 20 cm - Brandenburg and Berlin | Germany - Brandenburg und Berlin | orthophoto | WMS | dl-de-by-2.0 | LGB |
 | `de.bw.dop` | Digitales Orthophoto 20 cm - Baden-Wuerttemberg | Germany - Baden-Wuerttemberg | orthophoto | WMS | dl-de-by-2.0 | LGL BW |
 | `de.hessen.dop` | Digitales Orthophoto 20 cm - Hesse | Germany - Hessen | orthophoto | WMS | dl-de-by-2.0 | HVBG |
@@ -83,17 +81,10 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 | --- | --- | --- | --- | --- | --- | --- |
 | `ee.maaamet.fotokaart` | Fotokaart - Estonia | Estonia | orthophoto | XYZ | Estonian Land Board open data | Maa-amet |
 
-## Greece (EL)
-
-| Id | Title | Scope | Category | Service | Licence | Provider |
-| --- | --- | --- | --- | --- | --- | --- |
-| `el.ktimatologio.basemap` | Hellenic Cadastre orthophoto basemap - Greece | Greece | orthophoto | WMS, queryable | Hellenic Cadastre open viewing service | Ktimatologio |
-
 ## Spain (ES)
 
 | Id | Title | Scope | Category | Service | Licence | Provider |
 | --- | --- | --- | --- | --- | --- | --- |
-| `es.ign.mtn-raster` | Mapa raster MTN - Spain | Spain | custom | WMS | CC-BY-4.0 | IGN |
 | `es.ign.pnoa-ma` | PNOA Maxima Actualidad - Spain | Spain | orthophoto | WMS | CC-BY-4.0 | IGN |
 
 ## France (FR)
@@ -176,18 +167,17 @@ Generated from `packages/catalog/data/*.json` - do not edit by hand, run
 ## NUTS tree
 
 ```
-EU     Europe (54)
+EU     Europe (51)
   AT     Austria (1)
   BE     Belgium (2)
     BE2    Vlaanderen (1)
     BE3    Wallonie (1)
   CH     Switzerland (1)
   CZ     Czechia (1)
-  DE     Germany (14)
+  DE     Germany (13)
   DK     Denmark (1)
   EE     Estonia (1)
-  EL     Greece (1)
-  ES     Spain (2)
+  ES     Spain (1)
   FR     France (2)
   HR     Croatia (1)
   IT     Italy (17)

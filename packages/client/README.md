@@ -207,6 +207,17 @@ mosaic.detailZoomAt(11.58, 48.14);   // 19.0 over Munich, 40 cm imagery
 mosaic.detailZoomAt(9.99, 53.55);    // 16.5 over Hamburg, 2 m base only
 ```
 
+**A first frame that is already a map.** `@orthogea/client/backdrop` carries one 512 px picture of
+Europe, about 15 kB, as a data URI - no network, so it is drawn before the first tile is even
+requested:
+
+```ts
+import { toBackdropSource, toBackdropLayer } from "@orthogea/client/backdrop";
+
+map.addSource("orthogea-backdrop", toBackdropSource());
+map.addLayer(toBackdropLayer());
+```
+
 Inspect the decisions without drawing anything:
 
 ```ts

@@ -11,6 +11,14 @@ number.
 
 ### Added
 
+- **The first frame is never empty.** Every tile arrives over the network, and until the first one
+  does there was nothing to draw but the background colour. `@orthogea/client/backdrop` now ships
+  one 512 px picture of Europe - about 15 kB, reduced from a 2048 px grab of the same Copernicus
+  mosaic the map draws at low zoom - as a data URI, placed at the bottom of the stack. It needs no network, so it
+  is on screen before the first request leaves, and every real tile draws straight over it. It is
+  a separate entry point: a map that does not want the bytes never loads them. The mosaic holds no
+  data over water and returns black there, so that area was replaced with a muted sea tone when
+  the picture was made - black being the one thing the image exists to avoid.
 - **No-data fills are made transparent instead of drawn.** A service asked for a tile that
   straddles the edge of its coverage answers with the whole rectangle and fills the uncovered part
   with flat white or black; JPEG has no alpha, so that fill was painted over the Copernicus base.
@@ -94,6 +102,17 @@ number.
 - New regional layers: Provincia autonoma di Trento (2015) and Basilicata (2013).
 - The national orthophoto is now catalogued per UTM zone, so southern Italy is covered too.
 
+### Removed
+
+- **Greece.** The Hellenic Cadastre basemap answers with the same 4.7 kB blank image at Athens,
+  Thessaloniki and Heraklion, at every zoom, over plain `http://`. Its endpoint advertises only
+  that one layer and no other Greek service responded, so the country is out of the catalogue
+  rather than in it with a broken record.
+- **The two topographic base maps** - basemap.de Web Raster grau and the Spanish MTN raster. They
+  were the only `custom`-category records, they are maps rather than imagery, and a map that is
+  neither an orthophoto nor a satellite mosaic has no place in a layer switcher next to them.
+  Every remaining layer is imagery, land cover or elevation.
+
 ### Changed
 
 - **The runtime is now free of third-party code.** Drawing a map used to pull in Zod (54 kB) and
@@ -106,7 +125,9 @@ number.
   | `@orthogea/core` | 18.4 kB gz | **2.4 kB gz** |
   | `toRasterSource` | 31.4 kB gz | **4.4 kB gz** |
   | the mosaic | 34.9 kB gz | **11.3 kB gz** |
-  | the whole basemap | 46.5 kB gz | **22.3 kB gz** |
+  | the whole basemap | 46.5 kB gz | **21.8 kB gz** |
+
+  The backdrop adds a further 15 kB gzipped, behind its own entry point.
 - The demo draws the Copernicus base and an orthophoto-only mosaic above it, fading in between
   zoom 13.5 and 15.5, and keeps its source label and credits in step with what is on screen.
 - **One European base.** The imagery architecture is now two tiers instead of four: Copernicus

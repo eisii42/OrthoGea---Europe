@@ -14,6 +14,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./backdrop": {
+      "types": "./dist/backdrop.d.ts",
+      "import": "./dist/backdrop.js",
+      "require": "./dist/backdrop.cjs"
+    },
     "./featureinfo": {
       "types": "./dist/featureinfo/index.d.ts",
       "import": "./dist/featureinfo/index.js",

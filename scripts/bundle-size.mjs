@@ -38,10 +38,18 @@ globalThis.x = { createMosaic, registerMosaicProtocol, toMosaicRasterSource, bin
   },
   {
     name: "full basemap",
-    what: "mosaic plus all 54 catalogued services",
+    what: "mosaic plus all 51 catalogued services",
     code: `import { createMosaic, registerMosaicProtocol, toMosaicRasterSource, toMosaicRasterLayer, bindDetailZoomLimit } from "@orthogea/client";
 import { catalog } from "@orthogea/catalog";
 globalThis.x = { createMosaic, registerMosaicProtocol, toMosaicRasterSource, toMosaicRasterLayer, bindDetailZoomLimit, catalog };`
+  },
+  {
+    name: "+ backdrop",
+    what: "15 kB of Europe, so the first frame is never empty",
+    code: `import { createMosaic } from "@orthogea/client";
+import { toBackdropSource, toBackdropLayer } from "@orthogea/client/backdrop";
+import { catalog } from "@orthogea/catalog";
+globalThis.x = { createMosaic, toBackdropSource, toBackdropLayer, catalog };`
   },
   {
     name: "+ GetFeatureInfo",
@@ -57,6 +65,7 @@ const alias = {
   "@orthogea/core": "./packages/core/dist/index.js",
   "@orthogea/core/schemas": "./packages/core/dist/schemas/index.js",
   "@orthogea/client": "./packages/client/dist/index.js",
+  "@orthogea/client/backdrop": "./packages/client/dist/backdrop.js",
   "@orthogea/client/featureinfo": "./packages/client/dist/featureinfo/index.js",
   "@orthogea/catalog": "./packages/catalog/dist/index.js",
   "@orthogea/catalog/validate": "./packages/catalog/dist/validate.js"
