@@ -1,8 +1,9 @@
 import {
-  bboxContainsPoint,
-  bboxIntersects,
+  countryToNuts,
   isNutsWithin,
   isQueryableLayer,
+  layerCoversPoint,
+  layerIntersectsBBox,
   rankLayersForPoint,
   type GeoBoundingBox,
   type LayerCategory,
@@ -55,7 +56,7 @@ export function getLayers(ids: readonly string[]): OrthoGeaLayer[] {
 }
 
 export interface CatalogQuery {
-  /** NUTS-0 code or `EU`. */
+  /** ISO 3166-1 alpha-2 code, or `EU`. */
   country?: string;
   /** NUTS code of any level; matches the layer and all its descendants. */
   nuts?: string;
@@ -91,8 +92,12 @@ export function findLayers(
 
   return source.filter((layer) => {
     if (query.country && layer.country !== query.country) return false;
-    if (query.nuts && !(layer.nuts ? isNutsWithin(layer.nuts, query.nuts) : layer.country === query.nuts)) {
-      return false;
+    // A layer without its own `nuts` is scoped to its whole country, so the
+    // ISO code is translated into NUTS-0 before matching - `GR` answers to a
+    // query for `EL`, and `GB` to one for `UK`.
+    if (query.nuts) {
+      const scope = layer.nuts ?? countryToNuts(layer.country);
+      if (!scope || !isNutsWithin(scope, query.nuts)) return false;
     }
     if (categories.length > 0 && !categories.includes(layer.category)) return false;
     if (services.length > 0 && !services.includes(layer.service.type)) return false;
@@ -102,10 +107,10 @@ export function findLayers(
     if (query.zoom !== undefined && (query.zoom < layer.minZoom || query.zoom > layer.maxZoom)) {
       return false;
     }
-    if (query.point && !bboxContainsPoint(layer.bbox, query.point.lng, query.point.lat)) {
+    if (query.point && !layerCoversPoint(layer, query.point.lng, query.point.lat)) {
       return false;
     }
-    if (query.bbox && !bboxIntersects(layer.bbox, query.bbox)) return false;
+    if (query.bbox && !layerIntersectsBBox(layer, query.bbox)) return false;
     if (text) {
       const haystack = [
         layer.id,
@@ -216,7 +221,7 @@ export function imageryStackFor(
   return stack;
 }
 
-/** Groups the catalogue by NUTS-0 country code. */
+/** Groups the catalogue by ISO 3166-1 alpha-2 country code. */
 export function groupByCountry(
   source: readonly OrthoGeaLayer[] = catalog
 ): Map<string, OrthoGeaLayer[]> {

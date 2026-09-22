@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { CountryCodeSchema } from "../schemas/nuts.js";
 import {
   NUTS_COUNTRIES,
+  countryToNuts,
+  isKnownNutsCountryCode,
   isNutsWithin,
   isValidNutsCode,
   isoToNuts,
@@ -52,7 +54,43 @@ describe("NUTS codes", () => {
 
   it("accepts EU as a pan-European country code", () => {
     expect(CountryCodeSchema.safeParse("EU").success).toBe(true);
-    expect(CountryCodeSchema.safeParse("GB").success).toBe(false);
     expect(NUTS_COUNTRIES.filter((country) => country.eu)).toHaveLength(27);
+  });
+
+  it("validates `country` as ISO 3166-1, not NUTS-0", () => {
+    // The two vocabularies disagree on exactly these: ISO spells them GR and
+    // GB, NUTS spells them EL and UK. `country` is the ISO field, so the NUTS
+    // spellings are rejected there - that is what keeps the fields honest.
+    expect(CountryCodeSchema.safeParse("GR").success).toBe(true);
+    expect(CountryCodeSchema.safeParse("GB").success).toBe(true);
+    expect(CountryCodeSchema.safeParse("EL").success).toBe(false);
+    expect(CountryCodeSchema.safeParse("UK").success).toBe(false);
+  });
+
+  it("accepts countries outside the NUTS area", () => {
+    // The reason for the ISO move: a source outside Europe must be
+    // representable without a second vocabulary.
+    expect(CountryCodeSchema.safeParse("US").success).toBe(true);
+    expect(CountryCodeSchema.safeParse("CA").success).toBe(true);
+    expect(CountryCodeSchema.safeParse("ZZ").success).toBe(false);
+    expect(CountryCodeSchema.safeParse("Italy").success).toBe(false);
+  });
+
+  it("maps a country code onto its NUTS scope", () => {
+    expect(countryToNuts("IT")).toBe("IT");
+    expect(countryToNuts("GR")).toBe("EL");
+    expect(countryToNuts("GB")).toBe("UK");
+    expect(countryToNuts("EU")).toBe("EU");
+    // Outside the NUTS area there is no equivalent, and saying so beats
+    // inventing one.
+    expect(countryToNuts("US")).toBeUndefined();
+  });
+
+  it("keeps the NUTS-0 vocabulary available separately", () => {
+    expect(isKnownNutsCountryCode("EL")).toBe(true);
+    expect(isKnownNutsCountryCode("UK")).toBe(true);
+    expect(isKnownNutsCountryCode("GR")).toBe(false);
+    expect(isKnownNutsCountryCode("US")).toBe(false);
+    expect(isKnownNutsCountryCode("EU")).toBe(true);
   });
 });

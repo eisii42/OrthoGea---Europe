@@ -15,7 +15,7 @@ pnpm add @orthogea/client
 ## MapLibre GL
 
 ```ts
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import { registerOrthoGeaProtocol, toMapLibreBinding } from "@orthogea/client";
 
 registerOrthoGeaProtocol(maplibregl, { layers, proxyUrl });   // once, before the map

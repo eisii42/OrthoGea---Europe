@@ -1,9 +1,17 @@
 {
   "name": "orthogea-europe",
-  "version": "0.4.0",
+  "version": "0.3.0",
   "private": true,
   "description": "OrthoGea - Europe: modular open-source framework to aggregate, parse, catalog and render open European geodata (orthophotos, cadastre, Copernicus, DTM, land use) in modern web-GIS.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eisii42/OrthoGea---Europe.git"
+  },
+  "homepage": "https://github.com/eisii42/OrthoGea---Europe#readme",
+  "bugs": {
+    "url": "https://github.com/eisii42/OrthoGea---Europe/issues"
+  },
   "type": "module",
   "packageManager": "pnpm@9.15.9",
   "engines": {
@@ -17,10 +25,12 @@
     "test:watch": "vitest",
     "typecheck": "turbo run typecheck",
     "verify": "pnpm --filter @orthogea/catalog verify",
+    "audit:coverage": "pnpm --filter @orthogea/catalog audit:coverage",
     "schema": "pnpm --filter @orthogea/catalog schema",
     "docs": "pnpm --filter @orthogea/catalog docs",
     "clean": "turbo run clean && rimraf node_modules",
-    "size": "node scripts/bundle-size.mjs"
+    "size": "node scripts/bundle-size.mjs",
+    "release": "node scripts/release.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

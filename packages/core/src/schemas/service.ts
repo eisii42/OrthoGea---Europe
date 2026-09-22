@@ -20,10 +20,9 @@ export const TileSizeSchema = z.union([z.literal(256), z.literal(512)]);
 export const ExtraParamsSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
 
 const HttpUrlSchema = z
-  .string()
   .url()
   .refine((url) => url.startsWith("http://") || url.startsWith("https://"), {
-    message: "service URLs must use http(s)"
+    error: "service URLs must use http(s)"
   });
 
 /**

@@ -4,6 +4,109 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the packages share one version
 number.
 
+## [0.3.0] - 2026-09-21
+
+### Changed
+
+- **A layer's `country` is now an ISO 3166-1 alpha-2 code, not a NUTS-0 code.** The catalogue was
+  built on the NUTS vocabulary throughout, which describes Europe well and nothing else: a United
+  States source has no NUTS code, so it could not be catalogued at all. `country` moves to ISO
+  3166-1 and the European sub-national hierarchy stays where it belongs, on the existing optional
+  `nuts` field. The door to NAIP and to other continents is open without a second vocabulary, and
+  the change lands now because after 1.0 it would be breaking for every consumer and every record.
+
+  No catalogued record changed. The two systems disagree on exactly two codes - Greece is `EL` in
+  NUTS and `GR` in ISO, the United Kingdom `UK` and `GB` - and neither country is catalogued yet,
+  so all 19 country codes in use are spelled identically in both. The migration was free precisely
+  because it was done before those records exist.
+
+  The consistency check between the two fields now converts rather than compares: a record with
+  `country: "GR"` and `nuts: "EL3"` is correct, and a string comparison would have rejected it.
+  That trap is what made doing this early worth it.
+
+  For consumers:
+  - `isKnownCountryCode` now validates ISO 3166-1 alpha-2 (plus `EU`). The NUTS-0 vocabulary it
+    used to validate is available as `isKnownNutsCountryCode`.
+  - `countryToNuts` converts a layer's `country` to its NUTS-0 scope, and returns `undefined`
+    outside the NUTS area rather than inventing one.
+  - `ISO_3166_1_ALPHA2` and `isIsoCountryCode` are exported from `@orthogea/core`. `XK` (Kosovo)
+    is accepted alongside the official list, because Eurostat, the Commission and the NUTS table
+    in this package all use it.
+  - A `nuts` query still matches a layer that only declares a `country`; the code is translated
+    before matching, so `GR` answers a query for `EL`.
+
+- **Zod 4.** `@orthogea/core/schemas` and `@orthogea/catalog/validate` are public surface, so the
+  major was taken before 1.0 rather than after. `zod-to-json-schema` is gone: Zod 4 emits JSON
+  Schema itself, and `scripts/generate-schema.mjs` now calls `z.toJSONSchema` with `io: "input"`,
+  which correctly describes what a catalogue author writes - fields carrying a default are
+  optional in the file even though the parsed record always has them.
+
+- **`registerMosaicProtocol` and `registerOrthoGeaProtocol` take a real type.** Both declared their
+  handler as `never` and cast at the call site, which worked but left anyone wrapping them with an
+  unusable signature. They now take a structural `addProtocol`, and the handler is an overloaded
+  interface rather than a union: MapLibre 4/5/6 pass an `AbortController` and take a promise,
+  MapLibre 3 passed a callback and took a cancel handle, and only the split form satisfies
+  MapLibre's own `AddProtocolAction`. Writing it as a union is what forced the `never` in the first
+  place. No `maplibre-gl` version is imported or pinned.
+
+### Added
+
+- **Every package now carries `repository`, `homepage` and `bugs`**, so the npm page links back to
+  the source.
+
+- **`coverage`, an optional list of boxes narrowing a record's advertised extent.** A service
+  publishes the bounding rectangle of its region, and no region is a rectangle, so the hull covers
+  ground the service holds no imagery for. Because "most local first" ranks on area, a small hull
+  overhanging a large one wins for points it cannot serve. Measured against 41 European cities,
+  `bestOrthophotoFor` returned the wrong source for 10 of them, 6 of those in the wrong country:
+  Florence was served by Emilia-Romagna, Barcelona by France, Vienna by Czechia, Copenhagen by
+  Sweden.
+
+  `bbox` stays the advertised hull, because that is what a `GetMap` is framed against. `coverage`,
+  when present, is what containment and ranking use, via `layerExtents` and `layerAreaSqKm` in
+  `@orthogea/core`; the catalogue, the ranking and the mosaic all route through those helpers so
+  they cannot drift apart on the answer. Boxes must lie inside `bbox` - coverage narrows an
+  extent, it never widens one - and the build rejects a record that breaks that.
+
+  No record declares a `coverage` yet, so nothing changed for any consumer. Reordering the ranking
+  instead was measured and rejected: the best heuristic tried scored 37 of 41 against the current
+  31, still wrong once in ten, while silently changing the answer for every caller. The
+  information needed is not in the records, so it is being added to them rather than guessed at.
+
+- **`bestOrthophotoFor` is pinned to real coordinates.** The test asserted only that a point in
+  Italy returned an Italian layer, which passes when the wrong region wins. It now checks 41
+  cities against the country and region that should serve them, and the ten known failures are
+  listed explicitly, so the count cannot grow unnoticed and narrowing one of those records makes
+  the test fail as a reminder to strike it off.
+
+- **`scripts/audit-coverage.mjs`** reports which records win ground across a border they do not
+  hold, worst first, so the remaining work can be prioritised. `--strict` fails only on a record
+  that declares a `coverage` and still contests a neighbour, which is a regression rather than
+  known work.
+
+- **Continuous integration.** `ci.yml` runs typecheck, test and build on every push and pull
+  request. `verify-endpoints.yml` runs the live endpoint check weekly and opens an issue when a
+  catalogued source stops answering - a published catalogue that ages in silence shows the reader
+  an empty map with no explanation.
+
+- **`scripts/release.mjs`** moves all six manifests to one version and opens the changelog entry.
+  It does not commit, tag or publish; it prints what to run once the diff has been read. Chosen
+  over Changesets because the packages are always released in lockstep and this changelog is
+  written by hand, which a generator would fight.
+
+### Verified
+
+- **The mosaic protocol works on MapLibre GL JS 6.** Registered against 6.10.0, driven through a
+  real map: tiles requested, decoded and rendered, zero errors. The runtime contract is unchanged
+  from 5 - `{ data: ArrayBuffer }` still goes through MapLibre's `arrayBufferToCanvasImageSource`.
+
+  One caveat that is MapLibre's, not this project's: 6 is ESM-only and has **no default export**,
+  so `import maplibregl from "maplibre-gl"` throws `does not provide an export named 'default'`
+  when the module is evaluated. Use `import * as maplibregl`. Version 5 was CJS, so TypeScript
+  synthesised a default and the old form worked. Separately, Vite's dependency optimiser mangles
+  MapLibre 6's worker and the map hangs with nothing in the console; `optimizeDeps: { exclude:
+  ["maplibre-gl"] }` is the fix.
+
 ## [0.2.0] - 2026-08-24
 
 > Versions 0.2.0 through 0.5.1 appeared in earlier drafts of this file while the packages were

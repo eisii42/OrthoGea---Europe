@@ -27,6 +27,7 @@ harvest (GetCapabilities)  ->  catalogue (validated JSON)  ->  render (MapLibre,
 - [Catalogue of every layer](docs/CATALOG.md)
 - [Integration recipes](docs/INTEGRATION.md) - MapLibre, Leaflet, OpenLayers, React, Node, QGIS
 - [Concepts](docs/CONCEPTS.md) - axis order, CRS, reprojection, CORS, licensing
+- [Stability contract](docs/STABILITY.md) - what is frozen at 1.0, what is not, and the known limits
 - [Contributing a layer](CONTRIBUTING.md)
 
 ## What it costs to integrate
@@ -58,7 +59,7 @@ browser gets plain data and never runs a validator.
 ## Replace a proprietary basemap in four lines
 
 ```ts
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import { catalog, DEFAULT_SATELLITE_FALLBACK_ID } from "@orthogea/catalog";
 import { createMosaic, registerMosaicProtocol, toMosaicRasterSource } from "@orthogea/client";
 

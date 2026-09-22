@@ -1,8 +1,8 @@
 import {
   EndpointUnavailableError,
   UnsupportedServiceError,
-  bboxAreaSqKm,
-  bboxContainsPoint,
+  layerAreaSqKm,
+  layerCoversPoint,
   lngLatToTile,
   tileToBBox,
   zoomForResolutionAt,
@@ -12,6 +12,7 @@ import {
 import { formatAttributions, type AttributionOptions } from "./attribution.js";
 import { createTileWorker, type StitchedTile, type TileWorker } from "./worker.js";
 import { createTileUrlBuilder, type TileUrlBuilder, type TileUrlBuilderOptions } from "./tiles.js";
+import type { ProtocolCallback } from "./maplibre/protocol.js";
 import type { RasterLayerSpecification, RasterSourceSpecification } from "./types.js";
 
 /** URL scheme of the seamless imagery mosaic. */
@@ -191,8 +192,8 @@ function isTiled(layer: OrthoGeaLayer): boolean {
 }
 
 function compareImagery(a: OrthoGeaLayer, b: OrthoGeaLayer): number {
-  const areaA = bboxAreaSqKm(a.bbox);
-  const areaB = bboxAreaSqKm(b.bbox);
+  const areaA = layerAreaSqKm(a);
+  const areaB = layerAreaSqKm(b);
   // 5 % tolerance, so two flights over the same region rank by quality.
   if (Math.abs(areaA - areaB) > Math.min(areaA, areaB) * 0.05) return areaA - areaB;
 
@@ -315,7 +316,7 @@ export class Mosaic {
       (layer) =>
         layer.id !== this.fallback?.id &&
         this.mapZoom(z) >= layer.minZoom &&
-        bboxContainsPoint(layer.bbox, lng, lat)
+        layerCoversPoint(layer, lng, lat)
     );
 
     // Rectangles overlap across borders: North Rhine-Westphalia's reaches
@@ -954,6 +955,24 @@ export interface MosaicProtocolResponse {
 }
 
 /**
+ * A mosaic tile handler as MapLibre calls it.
+ *
+ * Two overloads rather than one union: MapLibre 4, 5 and 6 pass an
+ * `AbortController` and take a promise, MapLibre 3 passed a callback and took
+ * a cancel handle. Only the split form satisfies MapLibre's own
+ * `AddProtocolAction`.
+ */
+export interface MosaicProtocolHandler {
+  (params: { url: string }, abortController: AbortController): Promise<MosaicProtocolResponse>;
+  (params: { url: string }, callback: ProtocolCallback): { cancel: () => void };
+}
+
+/** Minimal surface of the `maplibre-gl` module used to register the mosaic. */
+export interface MosaicProtocolRegistrar {
+  addProtocol: (scheme: string, handler: MosaicProtocolHandler) => void;
+}
+
+/**
  * MapLibre protocol handler for one or more mosaics.
  *
  * ```ts
@@ -961,7 +980,9 @@ export interface MosaicProtocolResponse {
  * map.addSource("imagery", toMosaicRasterSource(mosaic));
  * ```
  */
-export function createMosaicProtocol(mosaics: Mosaic | readonly Mosaic[]) {
+export function createMosaicProtocol(
+  mosaics: Mosaic | readonly Mosaic[]
+): MosaicProtocolHandler {
   const byId = new Map(
     (Array.isArray(mosaics) ? mosaics : [mosaics as Mosaic]).map((mosaic) => [mosaic.id, mosaic])
   );
@@ -984,9 +1005,9 @@ export function createMosaicProtocol(mosaics: Mosaic | readonly Mosaic[]) {
       : { data: tile.data };
   };
 
-  return function mosaicProtocol(
+  function mosaicProtocol(
     params: { url: string },
-    second?: AbortController | ((error?: Error | null, data?: ArrayBuffer | null) => void)
+    second?: AbortController | ProtocolCallback
   ): Promise<MosaicProtocolResponse> | { cancel: () => void } {
     const controller = second instanceof AbortController ? second : new AbortController();
     const request = load(params.url, controller.signal);
@@ -999,15 +1020,30 @@ export function createMosaicProtocol(mosaics: Mosaic | readonly Mosaic[]) {
       return { cancel: () => controller.abort() };
     }
     return request;
-  };
+  }
+
+  // The implementation takes the union of both calling conventions; the
+  // overloaded type is what callers see, and this is the single place the two
+  // views are reconciled.
+  return mosaicProtocol as MosaicProtocolHandler;
 }
 
-/** Registers the mosaic protocol on a MapLibre instance. */
+/**
+ * Registers the mosaic protocol on a MapLibre instance.
+ *
+ * ```ts
+ * import * as maplibregl from "maplibre-gl";
+ * registerMosaicProtocol(maplibregl, mosaic);
+ * ```
+ *
+ * `maplibre` is typed structurally, so the module namespace, a wrapper of your
+ * own or a test double all satisfy it and no `maplibre-gl` version is pinned.
+ */
 export function registerMosaicProtocol(
-  maplibre: { addProtocol: (scheme: string, handler: never) => void },
+  maplibre: MosaicProtocolRegistrar,
   mosaics: Mosaic | readonly Mosaic[]
 ): void {
-  maplibre.addProtocol(MOSAIC_PROTOCOL, createMosaicProtocol(mosaics) as never);
+  maplibre.addProtocol(MOSAIC_PROTOCOL, createMosaicProtocol(mosaics));
 }
 
 export interface MosaicSourceOptions {

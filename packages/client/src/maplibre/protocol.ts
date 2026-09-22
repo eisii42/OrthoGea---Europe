@@ -98,7 +98,9 @@ export interface ProtocolResponse {
  * maplibregl.addProtocol("orthogea", createOrthoGeaProtocol({ layers }));
  * ```
  */
-export function createOrthoGeaProtocol(options: OrthoGeaProtocolOptions) {
+export function createOrthoGeaProtocol(
+  options: OrthoGeaProtocolOptions
+): MapLibreProtocolHandler {
   const byId = new Map(options.layers.map((layer) => [layer.id, layer]));
   const timeoutMs = options.timeoutMs ?? 15_000;
 
@@ -159,12 +161,16 @@ export function createOrthoGeaProtocol(options: OrthoGeaProtocolOptions) {
   };
 
   /**
-   * MapLibre 4/5 pass an `AbortController` and expect a promise; MapLibre 3
+   * MapLibre 4/5/6 pass an `AbortController` and expect a promise; MapLibre 3
    * passes a Node-style callback. Both calling conventions are supported.
+   *
+   * The implementation takes the union and is published through the overloaded
+   * {@link MapLibreProtocolHandler}, so callers see the shape that matches how
+   * they call it. The cast is the one place the two views are reconciled.
    */
-  return function orthoGeaProtocol(
+  function orthoGeaProtocol(
     params: ProtocolRequestParameters,
-    second?: AbortController | ((error?: Error | null, data?: ArrayBuffer | null) => void)
+    second?: AbortController | ProtocolCallback
   ): Promise<ProtocolResponse> | { cancel: () => void } {
     const controller =
       second instanceof AbortController ? second : new AbortController();
@@ -180,19 +186,47 @@ export function createOrthoGeaProtocol(options: OrthoGeaProtocolOptions) {
     }
 
     return request;
-  };
+  }
+
+  return orthoGeaProtocol as MapLibreProtocolHandler;
 }
 
-/** Minimal surface of the `maplibre-gl` module used to register the protocol. */
+/** Node-style callback used by the MapLibre 3 protocol convention. */
+export type ProtocolCallback = (error?: Error | null, data?: ArrayBuffer | null) => void;
+
+/**
+ * A protocol handler as MapLibre calls it.
+ *
+ * Two overloads rather than one union, because the calling conventions are
+ * distinct rather than interchangeable: MapLibre 4, 5 and 6 pass an
+ * `AbortController` and take a promise, MapLibre 3 passed a callback and took
+ * a cancel handle. Written as a union the promise form would not satisfy
+ * MapLibre's own `AddProtocolAction`, which is what made the previous
+ * `never` necessary.
+ *
+ * Structural, so no version of `maplibre-gl` is imported or pinned.
+ */
+export interface MapLibreProtocolHandler {
+  (params: ProtocolRequestParameters, abortController: AbortController): Promise<ProtocolResponse>;
+  (params: ProtocolRequestParameters, callback: ProtocolCallback): { cancel: () => void };
+}
+
+/**
+ * Minimal surface of the `maplibre-gl` module used to register a protocol.
+ *
+ * Declared structurally on purpose: the package stays free of a `maplibre-gl`
+ * dependency, and anything carrying a compatible `addProtocol` - the module
+ * namespace, a test double, a wrapper of your own - satisfies it.
+ */
 export interface ProtocolRegistrar {
-  addProtocol: (scheme: string, handler: never) => void;
+  addProtocol: (scheme: string, handler: MapLibreProtocolHandler) => void;
 }
 
 /**
  * Registers the reprojecting protocol on a MapLibre instance.
  *
  * ```ts
- * import maplibregl from "maplibre-gl";
+ * import * as maplibregl from "maplibre-gl";
  * registerOrthoGeaProtocol(maplibregl, { layers });
  * ```
  */
@@ -200,5 +234,5 @@ export function registerOrthoGeaProtocol(
   maplibre: ProtocolRegistrar,
   options: OrthoGeaProtocolOptions
 ): void {
-  maplibre.addProtocol(ORTHOGEA_PROTOCOL, createOrthoGeaProtocol(options) as never);
+  maplibre.addProtocol(ORTHOGEA_PROTOCOL, createOrthoGeaProtocol(options));
 }

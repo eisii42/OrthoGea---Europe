@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      # No version here: `packageManager` in package.json is the single source
+      # of truth, and pnpm/action-setup reads it.
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+
+      - run: pnpm test
+
+      - run: pnpm build
+
+      # The catalogue is validated at build time and the JSON Schema is
+      # generated from the same Zod schema. If either is stale in the tree,
+      # authors get editor hints that no longer match what the build accepts.
+      - name: Check the generated JSON Schema is current
+        run: |
+          pnpm schema
+          git diff --exit-code -- packages/catalog/schema \
+            || { echo "::error::packages/catalog/schema is stale - run 'pnpm schema' and commit"; exit 1; }

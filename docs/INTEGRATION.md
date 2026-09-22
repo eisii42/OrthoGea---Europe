@@ -27,13 +27,41 @@ pnpm add @orthogea/harvester                     # plus reading GetCapabilities 
 `@orthogea/core` comes along as a dependency; install it directly if you only want the schemas
 and the spatial helpers.
 
+## A note on MapLibre GL JS 6
+
+OrthoGea works on MapLibre 4, 5 and 6; the mosaic protocol is verified against 6.10.0 and the
+runtime contract has not changed. Two things about 6 itself will catch you out, and neither is
+specific to this project:
+
+**There is no default export.** MapLibre 6 is ESM-only, and `import maplibregl from "maplibre-gl"`
+now throws `does not provide an export named 'default'` as the module is evaluated - not a silent
+`undefined`, a hard failure. Version 5 shipped CommonJS, so TypeScript synthesised a default and
+the old form worked. Use the namespace import, which works on every version:
+
+```ts
+import * as maplibregl from "maplibre-gl";
+```
+
+`registerMosaicProtocol` and `registerOrthoGeaProtocol` take the namespace object directly; they
+are typed structurally against `addProtocol` alone, so no MapLibre version is pinned.
+
+**Vite needs one line of configuration.** The dependency optimiser rewrites MapLibre 6 and loses
+its worker entry point. The symptom is a map that hangs on style load with nothing in the console
+and no failed request - hard to diagnose from the outside:
+
+```ts
+export default defineConfig({
+  optimizeDeps: { exclude: ["maplibre-gl"] }
+});
+```
+
 ## The seamless mosaic
 
 One virtual layer, worldwide, that picks the best official imagery for every tile - the
 replacement for Google Satellite or ESRI World Imagery.
 
 ```ts
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import { catalog, DEFAULT_SATELLITE_FALLBACK_ID } from "@orthogea/catalog";
 import { createMosaic, registerMosaicProtocol, toMosaicRasterSource } from "@orthogea/client";
 
@@ -199,7 +227,7 @@ Leaflet and OpenLayers use the same object through `mosaic.fetchTile` or a custo
 ## MapLibre GL
 
 ```ts
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import { catalog, getLayer } from "@orthogea/catalog";
 import { registerOrthoGeaProtocol, toMapLibreBinding } from "@orthogea/client";
 
@@ -412,7 +440,7 @@ on 1.x, and appends the CRS to the `BBOX` so the axis order is unambiguous.
 
 ```tsx
 import { useEffect, useRef } from "react";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import { catalog, bestOrthophotoFor } from "@orthogea/catalog";
 import { registerOrthoGeaProtocol, toMapLibreBinding } from "@orthogea/client";
 

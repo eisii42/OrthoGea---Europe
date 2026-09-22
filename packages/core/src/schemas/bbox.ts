@@ -11,11 +11,11 @@ export const GeoBoundingBoxSchema = z
   .tuple([LongitudeSchema, LatitudeSchema, LongitudeSchema, LatitudeSchema])
   .describe("[minLng, minLat, maxLng, maxLat] in WGS84 degrees")
   .refine((bbox) => bbox[1] <= bbox[3], {
-    message: "minLat must be lower than or equal to maxLat"
+    error: "minLat must be lower than or equal to maxLat"
   })
   .refine((bbox) => bbox[0] <= bbox[2] || bbox[0] > 0, {
     // minLng > maxLng is only tolerated for boxes crossing the antimeridian.
-    message: "minLng must be lower than or equal to maxLng"
+    error: "minLng must be lower than or equal to maxLng"
   });
 
 export type GeoBoundingBox = [number, number, number, number];

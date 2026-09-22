@@ -28,7 +28,7 @@ export type WfsVersion = z.infer<typeof WfsVersionSchema>;
 export const ImageFormatSchema = z
   .string()
   .regex(/^image\/[a-z0-9+.\-]+(;\s*[a-z0-9\-]+=[a-z0-9\-]+)?$/i, {
-    message: "must be an image MIME type such as image/png or image/jpeg"
+    error: "must be an image MIME type such as image/png or image/jpeg"
   });
 export type ImageFormat = z.infer<typeof ImageFormatSchema>;
 
@@ -64,12 +64,12 @@ export const LicenseSchema = z
     id: LicenseIdSchema,
     /** Human readable label, required when `id` is `custom`. */
     name: z.string().min(2).optional(),
-    url: z.string().url().optional(),
+    url: z.url().optional(),
     /** Additional obligations, e.g. mandatory citation wording. */
     notes: z.string().optional()
   })
   .refine((license) => license.id !== "custom" || Boolean(license.name), {
-    message: "custom licences must provide a name"
+    error: "custom licences must provide a name"
   });
 export type License = z.infer<typeof LicenseSchema>;
 
@@ -85,7 +85,7 @@ export type LayerStatus = z.infer<typeof LayerStatusSchema>;
 /** Organisation publishing the service. */
 export const ProviderSchema = z.object({
   name: z.string().min(2),
-  url: z.string().url().optional(),
+  url: z.url().optional(),
   /** Short label used in map attributions, defaults to `name`. */
   shortName: z.string().min(1).optional()
 });

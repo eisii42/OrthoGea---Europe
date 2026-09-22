@@ -43,6 +43,7 @@ export * from "./spatial/bbox.js";
 export * from "./spatial/mercator.js";
 export * from "./spatial/coverage.js";
 
+export * from "./countries/index.js";
 export * from "./nuts/index.js";
 
 /** Version of the schema contract shared by all OrthoGea packages. */

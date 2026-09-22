@@ -53,6 +53,7 @@ export const NUTS_COUNTRIES: readonly NutsCountry[] = [
 ];
 
 import { EU_WIDE_CODE } from "../constants.js";
+import { isIsoCountryCode } from "../countries/index.js";
 
 export { EU_WIDE_CODE };
 
@@ -62,14 +63,25 @@ const byIso = new Map(NUTS_COUNTRIES.map((country) => [country.iso2, country]));
 /** Shape of a NUTS code: two country letters plus up to three level digits. */
 export const NUTS_CODE_PATTERN = /^[A-Z]{2}[A-Z0-9]{0,3}$/;
 
-/** NUTS-0 country code, or `EU` for pan-European datasets. */
+/** ISO 3166-1 alpha-2 country code, or `EU` for pan-European datasets. */
 export type CountryCode = string;
 
 /** NUTS code of any level, e.g. `IT`, `ITI`, `ITI1`, `ITI14`. */
 export type NutsCode = string;
 
-/** True when the code is `EU` or a NUTS-0 code the framework knows. */
+/**
+ * True when the code is `EU` or an ISO 3166-1 alpha-2 country code.
+ *
+ * This is what validates a layer's `country`. For the NUTS-0 vocabulary - which
+ * spells Greece `EL` and the United Kingdom `UK` - use
+ * {@link isKnownNutsCountryCode} instead.
+ */
 export function isKnownCountryCode(code: string): boolean {
+  return code === EU_WIDE_CODE || isIsoCountryCode(code);
+}
+
+/** True when the code is `EU` or a NUTS-0 code the framework knows. */
+export function isKnownNutsCountryCode(code: string): boolean {
   return code === EU_WIDE_CODE || byNuts.has(code);
 }
 
@@ -129,6 +141,17 @@ export function nutsToIso(code: string): string | undefined {
 /** Converts an ISO 3166-1 alpha-2 code to NUTS-0 (`GB` becomes `UK`). */
 export function isoToNuts(iso2: string): string | undefined {
   return byIso.get(iso2.trim().toUpperCase())?.code;
+}
+
+/**
+ * NUTS scope of a layer's `country`, which is an ISO 3166-1 alpha-2 code.
+ *
+ * Returns `EU` unchanged for pan-European datasets, and `undefined` for a
+ * country outside the NUTS area - a United States source has an ISO code but
+ * no NUTS equivalent, which is the point of keeping the two fields apart.
+ */
+export function countryToNuts(country: string): string | undefined {
+  return country === EU_WIDE_CODE ? EU_WIDE_CODE : isoToNuts(country);
 }
 
 /** English country name for a NUTS code of any level. */

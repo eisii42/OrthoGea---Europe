@@ -56,7 +56,7 @@ describe("OrthoGeaLayerSchema", () => {
     const result = safeParseLayer({ ...toscana, country: "ES" });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0]?.message).toContain("does not belong to country");
+      expect(result.error.issues[0]?.message).toContain("belongs to IT");
     }
   });
 
@@ -100,5 +100,59 @@ describe("OrthoGeaLayerSchema", () => {
       bbox: [-25, 32, 45, 72]
     });
     expect(layer.country).toBe("EU");
+  });
+
+  it("pairs an ISO country with its NUTS code where the two spellings differ", () => {
+    // Greece and the United Kingdom are the only codes where ISO 3166 and
+    // NUTS-0 disagree. A string comparison of the two fields would reject
+    // these, which is precisely the bug the conversion avoids.
+    expect(
+      safeParseLayer({ ...toscana, id: "gr.ktimatologio.ortho", country: "GR", nuts: "EL3" })
+        .success
+    ).toBe(true);
+    expect(
+      safeParseLayer({ ...toscana, id: "gb.os.aerial", country: "GB", nuts: "UKI" }).success
+    ).toBe(true);
+    // ...and the mismatch is still caught across the conversion.
+    expect(
+      safeParseLayer({ ...toscana, id: "gr.wrong", country: "GR", nuts: "UKI" }).success
+    ).toBe(false);
+  });
+
+  it("accepts a source outside the NUTS area", () => {
+    const layer = parseLayer({
+      ...toscana,
+      id: "us.usda.naip",
+      country: "US",
+      nuts: undefined,
+      regionName: undefined,
+      bbox: [-125, 24, -66, 50]
+    });
+    expect(layer.country).toBe("US");
+    expect(layer.nuts).toBeUndefined();
+  });
+
+  it("accepts coverage boxes that narrow the advertised extent", () => {
+    const layer = parseLayer({
+      ...toscana,
+      coverage: [
+        [9.68, 43.0, 11.0, 44.47],
+        [11.0, 42.23, 12.37, 44.0]
+      ]
+    });
+    expect(layer.coverage).toHaveLength(2);
+  });
+
+  it("rejects a coverage box reaching outside bbox", () => {
+    // Coverage narrows the hull; a box that widens it would claim ground the
+    // service never offered.
+    const result = safeParseLayer({
+      ...toscana,
+      coverage: [[9.68, 42.23, 13.5, 44.47]]
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toContain("reaches outside bbox");
+    }
   });
 });

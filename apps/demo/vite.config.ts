@@ -84,6 +84,11 @@ export default defineConfig({
       return hosts;
     })
   ],
+  // Vite's dependency optimiser rewrites MapLibre 6 and loses its worker
+  // entry: the map then hangs on style load with nothing in the console.
+  optimizeDeps: {
+    exclude: ["maplibre-gl"]
+  },
   server: {
     port: 5173,
     open: false
