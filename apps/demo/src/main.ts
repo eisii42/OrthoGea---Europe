@@ -38,6 +38,11 @@ import { getFeatureInfo, type FeatureInfoResponse } from "@orthogea/client/featu
 // Likewise the backdrop: 11 kB of Europe, so the first frame is a map rather
 // than an empty rectangle. Drawn underneath everything and never requested.
 import { toBackdropLayer, toBackdropSource } from "@orthogea/client/backdrop";
+// Country outlines, on their own entry point because they weigh about 230 kB.
+// Without them the catalogue picks between overlapping service extents by
+// area alone, and a neighbour whose rectangle overhangs the border wins
+// ground it holds no imagery for.
+import { countryAt } from "@orthogea/core/boundaries";
 import "./style.css";
 
 /** Dev-only proxy exposed by vite.config.ts, see the CORS note in the README. */
@@ -154,6 +159,7 @@ function registerProtocol(): void {
     id: "orthophotos",
     layers: catalog.filter((layer) => layer.category === "orthophoto"),
     orthophotoFromZoom: 0,
+    countryAt,
     stitchTiles: flag("stitch"),
     ...adapterOptions(),
     onTile: ({ layer }) => {

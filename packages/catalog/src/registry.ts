@@ -1,4 +1,5 @@
 import {
+  EU_WIDE_CODE,
   countryToNuts,
   isNutsWithin,
   isQueryableLayer,
@@ -155,6 +156,75 @@ export function layersForPoint(
  */
 export const DEFAULT_SATELLITE_FALLBACK_ID = "eu.copernicus.vhr-2021";
 
+/** Resolves the ISO 3166-1 alpha-2 country of a coordinate, or `undefined`. */
+export type CountryResolver = (lng: number, lat: number) => string | undefined;
+
+let defaultCountryResolver: CountryResolver | undefined;
+
+/**
+ * Teaches the catalogue which country a coordinate is in.
+ *
+ * Without it, a point covered by several services is resolved by extent alone,
+ * and because every service publishes the bounding rectangle of a region that
+ * is not a rectangle, a neighbour's hull can win ground it holds no imagery
+ * for - France's reaches Barcelona, Sweden's reaches Copenhagen.
+ *
+ * ```ts
+ * import { countryAt } from "@orthogea/core/boundaries";
+ * import { setCountryResolver } from "@orthogea/catalog";
+ *
+ * setCountryResolver(countryAt);
+ * ```
+ *
+ * It is opt-in because the outlines are about 230 kB, which a map that only
+ * draws tiles should not have to load. Pass `undefined` to go back to
+ * ranking on extent alone.
+ */
+export function setCountryResolver(resolver: CountryResolver | undefined): void {
+  defaultCountryResolver = resolver;
+}
+
+/** The resolver a call should use: its own override, else the registered one. */
+function resolverFor(options: BestImageryOptions): CountryResolver | undefined {
+  if (options.countryAt === false) return undefined;
+  return options.countryAt ?? defaultCountryResolver;
+}
+
+interface CountryPartition {
+  /** Sources belonging where the point is, and pan-European ones. */
+  local: OrthoGeaLayer[];
+  /** Sources whose extent merely reaches the point from another country. */
+  foreign: OrthoGeaLayer[];
+  /** False when no resolver is registered, or it could not name a country. */
+  resolved: boolean;
+}
+
+/**
+ * Splits candidates into those that belong where the point is and those whose
+ * bounding rectangle merely reaches it.
+ *
+ * "Cannot say" leaves everything local, so an absent or unsure resolver
+ * changes nothing at all - which is what keeps the feature safe to enable.
+ * Layers scoped `EU` are pan-European and always count as local.
+ */
+function partitionByCountry(
+  layers: readonly OrthoGeaLayer[],
+  lng: number,
+  lat: number,
+  resolver: CountryResolver | undefined
+): CountryPartition {
+  const country = resolver?.(lng, lat);
+  if (!country) return { local: [...layers], foreign: [], resolved: false };
+
+  const local: OrthoGeaLayer[] = [];
+  const foreign: OrthoGeaLayer[] = [];
+  for (const layer of layers) {
+    if (layer.country === country || layer.country === EU_WIDE_CODE) local.push(layer);
+    else foreign.push(layer);
+  }
+  return { local, foreign, resolved: true };
+}
+
 export interface BestImageryOptions {
   zoom?: number;
   /**
@@ -167,6 +237,11 @@ export interface BestImageryOptions {
    * return `undefined` instead. Defaults to {@link DEFAULT_SATELLITE_FALLBACK_ID}.
    */
   fallback?: string | false;
+  /**
+   * Overrides the resolver registered with {@link setCountryResolver} for this
+   * call. Pass `false` to rank on extent alone.
+   */
+  countryAt?: CountryResolver | false;
 }
 
 /**
@@ -184,10 +259,16 @@ export function bestOrthophotoFor(
   lat: number,
   options: BestImageryOptions = {}
 ): OrthoGeaLayer | undefined {
-  const local = layersForPoint(lng, lat, {
+  const ranked = layersForPoint(lng, lat, {
     category: "orthophoto",
     ...(options.zoom === undefined ? {} : { zoom: options.zoom })
   }).filter((layer) => options.includeAlternatives || !layer.tags.includes("alternative"));
+
+  // With a resolver in place, a neighbour reaching over the border is dropped
+  // rather than demoted. There is no fallback chain inside a single record, so
+  // returning it would hand the caller 20 cm of the wrong country; the
+  // European base is 2 m of the right one, and that is the better answer.
+  const { local } = partitionByCountry(ranked, lng, lat, resolverFor(options));
   if (local[0]) return local[0];
 
   if (options.fallback === false) return undefined;
@@ -203,22 +284,31 @@ export function imageryStackFor(
   lat: number,
   options: BestImageryOptions = {}
 ): OrthoGeaLayer[] {
-  const stack = layersForPoint(lng, lat, {
+  const ranked = layersForPoint(lng, lat, {
     category: ["orthophoto", "satellite"],
     ...(options.zoom === undefined ? {} : { zoom: options.zoom })
   }).filter((layer) => options.includeAlternatives || !layer.tags.includes("alternative"));
+
+  // A stack is a list of things to try, so neighbours are kept rather than
+  // dropped - but behind everything else.
+  const { local, foreign } = partitionByCountry(ranked, lng, lat, resolverFor(options));
 
   const fallback =
     options.fallback === false
       ? undefined
       : byId.get(options.fallback ?? DEFAULT_SATELLITE_FALLBACK_ID);
 
-  // The fallback closes the stack, wherever it ranked by extent.
-  if (fallback) {
-    const withoutFallback = stack.filter((layer) => layer.id !== fallback.id);
-    return [...withoutFallback, fallback];
-  }
-  return stack;
+  if (!fallback) return [...local, ...foreign];
+
+  // Local sources, then the European base, then anything reaching in from
+  // another country. The base has to come before the neighbour rather than
+  // simply closing the stack: where a country has no catalogued source of its
+  // own, closing with it would put a neighbour's imagery at the head and
+  // disagree with `bestOrthophotoFor`, which drops it.
+  const withoutFallback = (layers: OrthoGeaLayer[]) =>
+    layers.filter((layer) => layer.id !== fallback.id);
+
+  return [...withoutFallback(local), fallback, ...withoutFallback(foreign)];
 }
 
 /** Groups the catalogue by ISO 3166-1 alpha-2 country code. */

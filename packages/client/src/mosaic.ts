@@ -136,6 +136,16 @@ export interface MosaicOptions extends TileUrlBuilderOptions {
    * when the mosaic has no fallback.
    */
   transparentWhenUncovered?: boolean;
+  /**
+   * Resolves the ISO 3166-1 alpha-2 country of a coordinate.
+   *
+   * Without it the mosaic treats the smallest covering extent as the local
+   * authority, which is wrong wherever a neighbouring country's bounding
+   * rectangle overhangs the border. Pass `countryAt` from
+   * `@orthogea/core/boundaries` to settle it from real outlines; they weigh
+   * about 230 kB, which is why this is opt-in rather than built in.
+   */
+  countryAt?: (lng: number, lat: number) => string | undefined;
   /** Called whenever a tile is served, so a UI can show the live source. */
   onTile?: (info: { layer: OrthoGeaLayer; x: number; y: number; z: number }) => void;
 }
@@ -224,6 +234,8 @@ export class Mosaic {
   readonly id: string;
   readonly orthophotoFromZoom: number;
   readonly fallback?: OrthoGeaLayer;
+  /** Resolves the country of a coordinate; see {@link MosaicOptions.countryAt}. */
+  readonly countryAt?: (lng: number, lat: number) => string | undefined;
   /**
    * Pixel size of the tiles the mosaic asks services for.
    *
@@ -292,6 +304,8 @@ export class Mosaic {
       .filter((layer) => !layer.tags.some((tag) => excluded.has(tag)))
       .sort(compareImagery);
 
+    this.countryAt = options.countryAt;
+
     this.fallback =
       typeof options.fallback === "string"
         ? options.layers.find((layer) => layer.id === options.fallback)
@@ -325,7 +339,14 @@ export class Mosaic {
     // front of the authority that actually surveys the ground. It stays in the
     // chain, though: dropping it outright would leave a hole wherever the
     // country's own service happens to answer blank.
-    const local = covering.find((layer) => layer.country !== "EU");
+    //
+    // Without a `countryAt`, "the most local source" is whichever hull is
+    // smallest, and that is exactly the guess that puts Sweden over Copenhagen.
+    // With one, the country is known rather than inferred.
+    const resolved = this.countryAt?.(lng, lat);
+    const local = resolved
+      ? covering.find((layer) => layer.country === resolved)
+      : covering.find((layer) => layer.country !== "EU");
     const filtered = local
       ? [
           ...covering.filter((layer) => layer.country === local.country || layer.country === "EU"),

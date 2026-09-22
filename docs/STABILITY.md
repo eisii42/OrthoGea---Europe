@@ -35,8 +35,12 @@ Guaranteed:
 
 Not guaranteed: **which** record wins when several cover the point. The ranking is a heuristic
 over declared extents and it is documented as improvable - see
+[Turn the country resolver on](#turn-the-country-resolver-on) and
 [Known limits](#known-limits-not-defects-you-need-to-report) below. Pin a specific source with
 `getLayer(id)` if you need one exact answer.
+
+`setCountryResolver` and the `countryAt` option are frozen on the same terms as the function
+itself.
 
 ### The layer record
 
@@ -96,6 +100,25 @@ Free to change in a minor release:
   major version;
 - the adapters' option objects, and anything not named on this page.
 
+## Turn the country resolver on
+
+**Do this if you call `bestOrthophotoFor` and store or act on the result.** It is one line, and
+it is the difference between the right source and a neighbour's:
+
+```ts
+import { countryAt } from "@orthogea/core/boundaries";
+import { setCountryResolver } from "@orthogea/catalog";
+
+setCountryResolver(countryAt);   // once, at startup
+```
+
+Why it is not the default: the outlines weigh about 230 kB, which a map that only draws tiles has
+no reason to load. They live behind their own entry point so that importing them is a decision.
+The mosaic takes the same resolver as `createMosaic({ countryAt })`.
+
+Measured against 41 European cities, this moves `bestOrthophotoFor` from 32 correct to 38. Every
+remaining miss is a *region* inside the right country - see below.
+
 ## Known limits, not defects you need to report
 
 **Extents are rectangles and regions are not.** A service publishes the bounding rectangle of the
@@ -103,21 +126,38 @@ area it covers. For anything that is not rectangular - which is every region - t
 ground the service holds no imagery for. Because the ranking prefers the smaller extent, a small
 hull overhanging a large one can win for a point it cannot serve.
 
-Measured against 41 European cities, `bestOrthophotoFor` returns a source from the wrong region
-or country for 10 of them. Florence is served by Emilia-Romagna, Barcelona by France, Vienna by
-Czechia, Copenhagen by Sweden. The current list is in
-[`best-orthophoto.test.ts`](../packages/catalog/src/best-orthophoto.test.ts), which fails if it
-grows.
+The *cross-border* form of this is settled by the country resolver above: Barcelona is no longer
+served by France, Vienna by Czechia, or Copenhagen by Sweden.
+
+The *intra-country* form is not, because no country outline can tell Tuscany from Emilia-Romagna.
+Four of the 41 cities are still affected:
+
+| point | served by | should be |
+| --- | --- | --- |
+| Florence | `it.emilia-romagna.agea-2023` | Toscana |
+| Bari | `it.basilicata.ortofoto-2013` | Puglia |
+| Bolzano | `it.trento.ortofoto-2015` | Bolzano |
+| Genoa | `it.piemonte.agea-2024` | Liguria |
+
+The list lives in [`best-orthophoto.test.ts`](../packages/catalog/src/best-orthophoto.test.ts),
+which fails if it grows.
 
 What this means in practice:
 
 - **On a map, it self-corrects.** The mosaic asks the winning service for the tile, gets a no-data
   fill or an error, and moves to the next candidate. The reader sees the right imagery.
 - **In a single `bestOrthophotoFor` call, it does not.** There is no fallback chain in one record.
-  If you are picking one source per location and storing it, check the result: comparing
-  `layer.country` against the country you expect catches the six cross-border cases outright.
 
-The fix is the `coverage` field: a few boxes on the offending record, narrowing its hull to what
-it really holds. `pnpm audit:coverage` ranks the records worth doing first. Reordering the ranking
-instead was measured and rejected - the best heuristic tried was still wrong once in ten, and it
-would have changed the answer for every caller to buy that.
+The remedy is the `coverage` field: a few boxes on the offending record, narrowing its hull to
+what it really holds. `pnpm audit:coverage` ranks the records worth doing first. Reordering the
+ranking instead was measured and rejected - the best heuristic tried was still wrong once in ten,
+and it would have changed the answer for every caller to buy that.
+
+### What the outlines are not
+
+`countryAt` is Natural Earth 1:50m quantised to about 1.1 km, with 5 km of tolerance so that a
+city on a lagoon or a strait is not read as being at sea. It answers "which country is this
+coordinate in" at the scale that question is asked here, where the nearest wrong border is tens
+of kilometres away. It is **not** accurate enough to decide which side of a border a parcel lies
+on, and it returns `undefined` rather than guessing when it cannot tell - which the catalogue
+treats as a reason to leave the ranking alone.

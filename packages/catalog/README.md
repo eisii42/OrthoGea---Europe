@@ -1,7 +1,7 @@
 # @orthogea/catalog
 
 A validated registry of European open geodata services for
-[OrthoGea - Europe](../../README.md): 54 layers from 19 scopes, indexed from NUTS-0 down to
+[OrthoGea - Europe](../../README.md): 54 layers from 19 scopes, indexed from country level down to
 NUTS-2/3, every endpoint probed live. Italy is covered region by region: 16 of the 21 regions
 and autonomous provinces publish an orthophoto service, all of them the most recent flight the
 provider exposes.
@@ -69,7 +69,7 @@ cannot break a portal.
 
 ## The data
 
-`data/*.json`, one file per NUTS-0 scope plus `it-regions.json`, is the source of truth. Each
+`data/*.json`, one file per country scope plus `it-regions.json`, is the source of truth. Each
 document is a `LayerCollection`:
 
 ```jsonc

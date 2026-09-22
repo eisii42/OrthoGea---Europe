@@ -40,6 +40,20 @@ and the required credit is:
 
 > Copernicus VHR 2021 - European Union, EEA
 
+### Country outlines
+
+`@orthogea/core/boundaries` ships generalised country outlines derived from
+[Natural Earth](https://www.naturalearthdata.com/) 1:50m Admin 0 – Countries. Natural Earth is
+in the **public domain**: no permission, fee or attribution is required, and this note is a
+courtesy rather than an obligation.
+
+> Made with Natural Earth. Free vector and raster map data @ naturalearthdata.com
+
+The outlines are quantised to roughly 1.1 km and exist to answer "which country is this
+coordinate in" when two services' bounding rectangles overlap. They are not a statement about
+any border, and they are not accurate enough to decide which side of one a parcel lies on.
+`packages/core/scripts/build-boundaries.mjs` regenerates the table from the upstream source.
+
 ## Trademarks
 
 Google, Google Satellite, ESRI and ArcGIS are trademarks of their respective owners. They are

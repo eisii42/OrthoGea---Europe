@@ -14,6 +14,7 @@
 export {
   DEFAULT_SATELLITE_FALLBACK_ID,
   bestOrthophotoFor,
+  setCountryResolver,
   catalog,
   catalogStats,
   collections,
@@ -27,7 +28,8 @@ export {
   layersForPoint,
   type BestImageryOptions,
   type CatalogQuery,
-  type CatalogStats
+  type CatalogStats,
+  type CountryResolver
 } from "./registry.js";
 
 export { buildNutsTree, flattenTree, type CatalogTreeNode } from "./tree.js";

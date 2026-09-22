@@ -109,7 +109,8 @@ console.log(`
 Prepared ${version}. Nothing was committed, tagged or published.
 
 Next, once the diff looks right:
-  git commit -am "chore: release ${version}"
+  git add -A                      # -am would miss generated files the build needs
+  git commit -m "chore: release ${version}"
   git tag v${version}
   git push && git push --tags
   pnpm publish -r --access public

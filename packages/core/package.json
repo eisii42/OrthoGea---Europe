@@ -28,6 +28,11 @@
       "import": "./dist/schemas/index.js",
       "require": "./dist/schemas/index.cjs"
     },
+    "./boundaries": {
+      "types": "./dist/boundaries/index.d.ts",
+      "import": "./dist/boundaries/index.js",
+      "require": "./dist/boundaries/index.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -40,7 +45,8 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist .turbo"
+    "clean": "rimraf dist .turbo",
+    "boundaries": "node scripts/build-boundaries.mjs"
   },
   "dependencies": {
     "zod": "^4.6.5"

@@ -16,7 +16,7 @@ harvest (GetCapabilities)  ->  catalogue (validated JSON)  ->  render (MapLibre,
 | **Better than a global mosaic** | 8-30 cm official orthophotos where they exist, Sentinel-2 elsewhere |
 | **MIT code, open data** | no API key, no tile quota, no terms-of-service trap; licence and attribution carried per layer |
 | **Seamless mosaic** | one virtual layer picks the best source per tile, Copernicus imagery when zoomed out |
-| **21.8 kB gzipped** | the whole basemap, catalogue included, with no third-party runtime dependency |
+| **22.8 kB gzipped** | the whole basemap, catalogue included, with no third-party runtime dependency |
 | **Built for slow links** | JPEG tiles, 512 px requests, Cache Storage, directional prefetch, empty areas remembered |
 | **Off the main thread** | tile recombination and collar repair run in a worker, not in your frames |
 | **Never pixelated** | the zoom stops where the imagery does, and lifts again where a sharper flight exists |
@@ -37,11 +37,11 @@ imagery is, so the weight is measured rather than asserted - run `pnpm size` to 
 
 | import | minified | gzipped | what it buys |
 | --- | --- | --- | --- |
-| `@orthogea/core` | 8.6 kB | **2.4 kB** | tile maths, CRS normalisation, bbox helpers |
-| `toRasterSource` | 13.4 kB | **4.4 kB** | one catalogue record as a MapLibre source |
-| the mosaic | 32.8 kB | **11.3 kB** | the seamless imagery layer, worker included |
-| the whole basemap | 85.1 kB | **21.8 kB** | mosaic plus all 54 catalogued services |
-| + the backdrop | 104.5 kB | **36.8 kB** | and a picture of Europe that needs no network |
+| `@orthogea/core` | 9.4 kB | **2.9 kB** | tile maths, CRS normalisation, bbox helpers |
+| `toRasterSource` | 14.2 kB | **5.0 kB** | one catalogue record as a MapLibre source |
+| the mosaic | 33.8 kB | **12.0 kB** | the seamless imagery layer, worker included |
+| the whole basemap | 89.3 kB | **22.8 kB** | mosaic plus all 54 catalogued services |
+| + the backdrop | 108.7 kB | **37.6 kB** | and a picture of Europe that needs no network |
 
 Nothing on that path imports a third-party package. The two dependencies the project does have
 live behind their own entry points, so you only pay for them if you use them:
@@ -52,6 +52,7 @@ live behind their own entry points, so you only pay for them if you use them:
 | `@orthogea/catalog/validate` | Zod | loading collections you did not author |
 | `@orthogea/client/featureinfo` | fast-xml-parser | click-to-query on WMS layers |
 | `@orthogea/client/backdrop` | 15 kB of Europe | so the first frame is a map, not an empty rectangle |
+| `@orthogea/core/boundaries` | 239 kB of country outlines (153 kB gzipped) | telling which country a coordinate is in, where two services' rectangles overlap |
 
 The bundled catalogue is validated against the schema when the package is **built**, so the
 browser gets plain data and never runs a validator.

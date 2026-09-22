@@ -673,6 +673,42 @@ describe("across a border", () => {
     // Blank from both orthophotos, so the chain runs all the way through.
     expect((await bordering.fetchTile(fx, fy, 14)).layer.id).toBe("it.national.ortofoto");
   });
+
+  it("puts the real country first when a resolver says which it is", () => {
+    // Without a resolver the mosaic has to guess, and the smallest rectangle
+    // is the guess - which is how a German service ends up leading over
+    // Florence. Told the country, it stops guessing.
+    const bordering = createMosaic({
+      layers: [neighbour, regional, national, satellite],
+      fallback: satellite,
+      orthophotoFromZoom: 0,
+      cacheName: false,
+      countryAt: () => "IT"
+    });
+
+    const ids = bordering.select(fx, fy, 14).layers.map((layer) => layer.id);
+    expect(ids[0]).toBe("it.toscana.ortofoto");
+    // Still in the chain, just behind: the German service may yet answer
+    // where the Italian one does not.
+    expect(ids).toContain("de.nw.dop");
+    expect(ids[ids.length - 1]).toBe("eu.satellite.fallback");
+  });
+
+  it("leaves the order alone when the resolver cannot say", () => {
+    // "Cannot say" must never be read as "nowhere". A generalised outline is
+    // silent over water and near borders, and that has to be harmless.
+    const bordering = createMosaic({
+      layers: [neighbour, regional, national, satellite],
+      fallback: satellite,
+      orthophotoFromZoom: 0,
+      cacheName: false,
+      countryAt: () => undefined
+    });
+
+    const ids = bordering.select(fx, fy, 14).layers.map((layer) => layer.id);
+    expect(ids[0]).toBe("de.nw.dop");
+    expect(ids).toContain("it.toscana.ortofoto");
+  });
 });
 
 describe("detail zoom", () => {

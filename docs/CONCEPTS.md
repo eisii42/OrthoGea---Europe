@@ -23,7 +23,7 @@ Everything the framework does revolves around one validated record:
   "title": "Ortofoto 2024/2025 - Toscana (Geoscopio)",
   "category": "orthophoto",             // orthophoto | satellite | cadastre | elevation | land_use | custom
   "provider": { "name": "Regione Toscana - Geoscopio", "url": "https://..." },
-  "country": "IT",                      // NUTS-0, or EU for pan-European datasets
+  "country": "IT",                      // ISO 3166-1 alpha-2, or EU for pan-European datasets
   "nuts": "ITI1",                        // most specific NUTS code covered
   "regionName": "Toscana",
   "bbox": [9.64, 42.168, 12.464, 44.504], // always [minLng, minLat, maxLng, maxLat], WGS84

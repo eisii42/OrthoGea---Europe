@@ -27,6 +27,38 @@ pnpm add @orthogea/harvester                     # plus reading GetCapabilities 
 `@orthogea/core` comes along as a dependency; install it directly if you only want the schemas
 and the spatial helpers.
 
+## Picking the right source: turn the country resolver on
+
+Every service publishes the bounding rectangle of the area it covers, and no country is a
+rectangle. France's rectangle reaches Barcelona, Czechia's reaches Vienna, Sweden's reaches
+Copenhagen - and since the catalogue ranks by extent, the smaller rectangle wins ground it holds
+no imagery for.
+
+One line settles it:
+
+```ts
+import { countryAt } from "@orthogea/core/boundaries";
+import { setCountryResolver } from "@orthogea/catalog";
+
+setCountryResolver(countryAt);   // once, at startup
+```
+
+and for the mosaic:
+
+```ts
+createMosaic({ layers: [...catalog], countryAt, /* ... */ });
+```
+
+It is opt-in rather than automatic because the outlines are about 230 kB - a separate entry
+point, so a map that only draws tiles never loads them. Measured over 41 European cities this
+takes `bestOrthophotoFor` from 32 correct to 38; the four that remain are regional overlaps
+inside Italy, which country outlines cannot resolve. See
+[docs/STABILITY.md](STABILITY.md#known-limits-not-defects-you-need-to-report).
+
+The outlines are generalised to about a kilometre. They are for choosing between national
+services, not for deciding which side of a border a field is on, and they answer `undefined`
+rather than guessing - which the catalogue takes as a reason to change nothing.
+
 ## A note on MapLibre GL JS 6
 
 OrthoGea works on MapLibre 4, 5 and 6; the mosaic protocol is verified against 6.10.0 and the

@@ -8,9 +8,15 @@
  * the wrong region wins.
  */
 
-import { describe, expect, it } from "vitest";
-import { bestOrthophotoFor, DEFAULT_SATELLITE_FALLBACK_ID } from "./registry.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import {
+  bestOrthophotoFor,
+  imageryStackFor,
+  setCountryResolver,
+  DEFAULT_SATELLITE_FALLBACK_ID
+} from "./registry.js";
 import { countryToNuts } from "@orthogea/core";
+import { countryAt } from "@orthogea/core/boundaries";
 
 /** `[name, lng, lat, ISO 3166-1 country, NUTS region or null]`. */
 type City = readonly [string, number, number, string, string | null];
@@ -60,36 +66,55 @@ const CITIES: readonly City[] = [
 ];
 
 /**
- * Points served by the wrong source, and the source they currently return.
+ * Points still served by a source from the wrong *region* of the right
+ * country, and what they return.
  *
- * Every one of these is the same defect: a service extent is the bounding
- * rectangle of a region that is not rectangular, so the hull overhangs into a
- * neighbour and - being the smaller of the two - wins "most local first".
- * Emilia-Romagna's hull reaches past Florence, Sweden's reaches Copenhagen.
+ * All four are the same defect: a service extent is the bounding rectangle of
+ * a region that is not rectangular, so the hull overhangs into a neighbour
+ * and, being the smaller of the two, wins "most local first". Emilia-Romagna's
+ * hull reaches past Florence, Piemonte's past Genoa.
  *
- * They are listed rather than skipped so that the count cannot grow unnoticed
- * and so that authoring a `coverage` for one of these records makes this test
- * fail, which is the reminder to strike it off the list.
+ * The cross-border version of this - Barcelona served by France, Copenhagen by
+ * Sweden - is settled by the country resolver. These are inside one country,
+ * so no country outline can help; they need a `coverage` on the offending
+ * record. `pnpm audit:coverage` ranks the candidates.
+ *
+ * Listed rather than skipped, so the count cannot grow unnoticed and so that
+ * narrowing one of these records makes this test fail - the reminder to strike
+ * it off.
  */
-const KNOWN_HULL_OVERHANGS: ReadonlyMap<string, string> = new Map([
+const KNOWN_REGION_OVERHANGS: ReadonlyMap<string, string> = new Map([
   ["Firenze", "it.emilia-romagna.agea-2023"],
   ["Bari", "it.basilicata.ortofoto-2013"],
   ["Bolzano", "it.trento.ortofoto-2015"],
-  ["Genova", "it.piemonte.agea-2024"],
-  ["Briancon", "it.piemonte.agea-2024"],
-  ["Barcelona", "fr.ign.bdortho"],
-  ["Wien", "cz.cuzk.ortofoto"],
-  ["Innsbruck", "de.bayern.dop"],
-  ["Zagreb", "si.gurs.dof025"],
-  ["Kobenhavn", "se.lantmateriet.ortofoto-025"]
+  ["Genova", "it.piemonte.agea-2024"]
 ]);
 
-const sound = CITIES.filter(([name]) => !KNOWN_HULL_OVERHANGS.has(name));
+/** Points a neighbouring country's extent used to win before the resolver. */
+const CROSS_BORDER_CASES: readonly (readonly [string, number, number, string])[] = [
+  ["Briancon", 6.645, 44.899, "FR"],
+  ["Barcelona", 2.1734, 41.3851, "ES"],
+  ["Wien", 16.3738, 48.2082, "AT"],
+  ["Innsbruck", 11.4041, 47.2692, "AT"],
+  ["Zagreb", 15.9819, 45.815, "HR"],
+  ["Kobenhavn", 12.5683, 55.6761, "DK"]
+];
+
+const sound = CITIES.filter(([name]) => !KNOWN_REGION_OVERHANGS.has(name));
+
+// The catalogue ships without a resolver so that a map which only draws tiles
+// never loads the outlines. Every test here runs with it on, which is how a
+// consumer that cares about the answer is expected to configure it.
+beforeAll(() => setCountryResolver(countryAt));
+afterAll(() => setCountryResolver(undefined));
 
 describe("bestOrthophotoFor", () => {
   it.each(sound)("serves %s from its own country", (name, lng, lat, iso) => {
     const layer = bestOrthophotoFor(lng, lat);
     expect(layer, `${name} has no imagery at all`).toBeDefined();
+    // The pan-European base is a legitimate answer where no national source is
+    // catalogued, or where the only one needs an API key.
+    if (layer?.country === "EU") return;
     expect(layer?.country, `${name} -> ${layer?.id}`).toBe(iso);
   });
 
@@ -108,12 +133,53 @@ describe("bestOrthophotoFor", () => {
     const observed = new Map<string, string>();
     for (const [name, lng, lat, iso, nuts] of CITIES) {
       const layer = bestOrthophotoFor(lng, lat);
-      if (!layer) continue;
+      if (!layer || layer.country === "EU") continue;
       const countryOk = layer.country === iso;
       const regionOk = nuts === null || !layer.nuts || layer.nuts === nuts;
       if (!countryOk || !regionOk) observed.set(name, layer.id);
     }
-    expect(Object.fromEntries(observed)).toEqual(Object.fromEntries(KNOWN_HULL_OVERHANGS));
+    expect(Object.fromEntries(observed)).toEqual(Object.fromEntries(KNOWN_REGION_OVERHANGS));
+  });
+
+  it.each(CROSS_BORDER_CASES)(
+    "no longer serves %s from across the border",
+    (name, lng, lat, iso) => {
+      const layer = bestOrthophotoFor(lng, lat);
+      expect(layer, `${name} lost its imagery`).toBeDefined();
+      // Either a source from the right country, or the European base. What
+      // must not happen is a neighbour's hull winning ground it cannot serve.
+      const answer = layer?.country;
+      expect(answer === iso || answer === "EU", `${name} -> ${layer?.id} (${answer})`).toBe(true);
+    }
+  );
+
+  it("leaves the ranking alone when the resolver is switched off", () => {
+    // The resolver is opt-in, so the old behaviour has to remain reachable -
+    // and be exactly the old behaviour.
+    expect(bestOrthophotoFor(2.1734, 41.3851, { countryAt: false })?.id).toBe("fr.ign.bdortho");
+    expect(bestOrthophotoFor(2.1734, 41.3851)?.id).toBe("es.ign.pnoa-ma");
+  });
+
+  it("keeps a neighbour in the stack, but behind everything local", () => {
+    // `bestOrthophotoFor` drops a foreign source because it can only return
+    // one record. A stack is a list of things to try, so the neighbour stays -
+    // just never first.
+    const stack = imageryStackFor(16.3738, 48.2082); // Wien
+    expect(stack.length).toBeGreaterThan(1);
+    expect(stack[0]?.country).toBe("AT");
+    expect(stack.some((layer) => layer.country === "CZ")).toBe(true);
+  });
+
+  it("agrees with the head of the stack", () => {
+    for (const [name, lng, lat] of CITIES) {
+      const best = bestOrthophotoFor(lng, lat);
+      const head = imageryStackFor(lng, lat)[0];
+      if (!best || !head) continue;
+      // `imageryStackFor` includes satellite sources, so the two can differ
+      // when a satellite record outranks every orthophoto; what they must
+      // never do is disagree about the country.
+      expect(head.country, `${name}: ${best.id} vs ${head.id}`).toBe(best.country);
+    }
   });
 
   it("falls back to the European base where nothing is catalogued", () => {

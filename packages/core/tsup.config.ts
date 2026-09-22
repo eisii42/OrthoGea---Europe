@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/schemas/index.ts"],
+  entry: ["src/index.ts", "src/schemas/index.ts", "src/boundaries/index.ts"],
   // Two entries, one shared chunk: the schemas import the NUTS tables and the
   // constants, and duplicating them would be both bytes and two sources of
   // truth.
