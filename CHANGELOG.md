@@ -122,9 +122,28 @@ number.
   known work.
 
 - **Continuous integration.** `ci.yml` runs typecheck, test and build on every push and pull
-  request. `verify-endpoints.yml` runs the live endpoint check weekly and opens an issue when a
-  catalogued source stops answering - a published catalogue that ages in silence shows the reader
-  an empty map with no explanation.
+  request, and fails if the generated JSON Schema is stale.
+
+  Checking the catalogued endpoints is **not** automated: it is run by hand with
+  `pnpm --filter @orthogea/catalog verify`, and otherwise relies on users reporting a source that
+  has stopped answering. A scheduled job was written and then removed - see below for why it is
+  harder than it looks to make one trustworthy.
+
+- **`verify-endpoints.mjs` no longer reports slow services as dead.** Node's `fetch` abandons a
+  connection after 10 seconds and counts the TLS handshake as part of it, and `--timeout` cannot
+  lift that: it drives an `AbortController`, which only applies once connected. The Portuguese
+  DGT service resolves in 20 ms, connects in 170 ms, then spends 27-28 seconds negotiating TLS -
+  so it failed every run while answering perfectly well to anything patient enough.
+
+  Both clocks are now set, and to the same figure: `--connect-timeout` (new, via an `undici`
+  dispatcher, because `setGlobalDispatcher` does not reach the copy of undici inside Node) and
+  `--timeout`, both defaulting to 45 s rather than 25 s. Raising only the first moved the failure
+  from one clock to the other.
+
+  This is also why the scheduled workflow was dropped rather than shipped: across three full runs
+  the set of failures was not stable - a 503 from Lazio, a timeout from Poland - and a job that
+  cries wolf about a working endpoint teaches everyone to ignore it. The probe is worth running;
+  it is not yet worth alerting on unattended.
 
 - **`scripts/release.mjs`** moves all six manifests to one version and opens the changelog entry.
   It does not commit, tag or publish; it prints what to run once the diff has been read. Chosen

@@ -10,8 +10,10 @@
  *   node scripts/verify-endpoints.mjs --strict        exit 1 when an active layer fails
  *   node scripts/verify-endpoints.mjs --id it.ade     only layers whose id contains "it.ade"
  *   node scripts/verify-endpoints.mjs --json out.json write a machine readable report
+ *   node scripts/verify-endpoints.mjs --connect-timeout 60000  for a slow handshake
  */
 import { writeFileSync } from "node:fs";
+import { Agent, fetch as undiciFetch, setGlobalDispatcher } from "undici";
 import { catalog } from "@orthogea/catalog";
 import {
   bboxCenter,
@@ -39,8 +41,43 @@ const value = (name) => {
 const idFilter = value("--id");
 const jsonOut = value("--json");
 const strict = flag("--strict");
-const timeoutMs = Number(value("--timeout") ?? 25000);
+/**
+ * 45 s, not the 25 s this used to default to.
+ *
+ * Raising the connect timeout alone only moved the Portuguese service's
+ * failure from one clock to the other: its handshake takes 27-28 s, so the
+ * request budget has to clear it too. Both are set to the same figure so there
+ * is one number to reason about, and a genuinely dead endpoint still fails -
+ * it just takes 45 s to say so, which a run you are watching can afford.
+ */
+const timeoutMs = Number(value("--timeout") ?? 45000);
 const concurrency = Number(value("--concurrency") ?? 4);
+const connectTimeoutMs = Number(value("--connect-timeout") ?? 45000);
+
+/**
+ * Node's built-in `fetch` gives up on a connection after 10 seconds and counts
+ * the TLS handshake as part of it. `--timeout` cannot lift that: it drives an
+ * `AbortController`, which only governs the request once connected.
+ *
+ * Some public services are simply slow to negotiate. The Portuguese DGT
+ * orthophoto service completes DNS in 20 ms and TCP in 170 ms, then spends
+ * 27 seconds on the handshake - so it reported as dead every single run while
+ * answering perfectly well to anything patient enough, which is why both
+ * timeouts are configured rather than left at their defaults.
+ *
+ * The dispatcher has to come from the `undici` package and be used with its
+ * own `fetch`: `setGlobalDispatcher` here does not reach the copy of undici
+ * built into Node, so the global `fetch` would keep the 10 second cap.
+ */
+const dispatcher = new Agent({
+  connect: { timeout: connectTimeoutMs },
+  headersTimeout: timeoutMs,
+  bodyTimeout: timeoutMs
+});
+setGlobalDispatcher(dispatcher);
+
+/** Patient `fetch`, used for every probe in this script. */
+const patientFetch = (input, init = {}) => undiciFetch(input, { ...init, dispatcher });
 
 const layers = catalog.filter((layer) => !idFilter || layer.id.includes(idFilter));
 
@@ -92,7 +129,7 @@ async function fetchTile(url) {
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const startedAt = Date.now();
   try {
-    const response = await fetch(url, { signal: controller.signal });
+    const response = await patientFetch(url, { signal: controller.signal });
     const buffer = Buffer.from(await response.arrayBuffer());
     const contentType = response.headers.get("content-type") ?? "";
     const elapsedMs = Date.now() - startedAt;
@@ -119,7 +156,8 @@ async function verify(layer) {
     const health = await checkEndpoint(layer.service.url, {
       service: layer.service.type,
       timeoutMs,
-      parse: true
+      parse: true,
+      fetchImpl: patientFetch
     });
     report.capabilities = {
       ok: health.ok,

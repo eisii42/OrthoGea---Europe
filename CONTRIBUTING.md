@@ -94,8 +94,29 @@ pnpm --filter @orthogea/catalog docs                     # regenerates docs/CATA
 
 `verify` prints `OK` with the byte count and content type when the layer really renders. If it
 prints `TILE`, the layer name, CRS or format is wrong - fix the record rather than the script.
-Some national services throttle bursts, so re-run a failure on its own with `--concurrency 1`
-before changing anything.
+
+**Re-run a failure on its own before believing it.** Public services throttle bursts, restart,
+and occasionally answer a `503` to one request and a tile to the next; across three consecutive
+full runs the set of failures was not the same twice. Use `--concurrency 1`, and `--id` to narrow
+to the one record:
+
+```bash
+pnpm --filter @orthogea/catalog verify -- --id pt.dgt --concurrency 1
+```
+
+A service can also be slow rather than broken - one catalogued endpoint spends 28 seconds on its
+TLS handshake alone. Both `--timeout` and `--connect-timeout` default to 45 s; raise them before
+concluding an endpoint is dead.
+
+## Reporting a layer that has stopped working
+
+There is no scheduled job watching the endpoints, so a report is how a dead source gets noticed.
+Please [open an issue](https://github.com/eisii42/OrthoGea---Europe/issues) with the layer `id`
+and, if you can, the output of:
+
+```bash
+pnpm --filter @orthogea/catalog verify -- --id <the.layer.id> --concurrency 1
+```
 
 ### Regions still missing
 

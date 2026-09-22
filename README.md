@@ -218,15 +218,17 @@ Everything below is on by default:
 | Rest of Europe | Spain (PNOA), France (BD ORTHO WMS and WMTS), Germany (13 state orthophoto services), Netherlands, Belgium (Flanders, Wallonia), Luxembourg, Portugal, Switzerland, Austria, Poland, Czechia, Slovakia, Slovenia, Croatia, Estonia, Denmark, Sweden |
 
 The full table lives in [docs/CATALOG.md](docs/CATALOG.md). Every record is checked end to end -
-capabilities **and** one real tile per layer - with:
+capabilities **and** one real tile per layer - so a silent rename of a layer or a dropped CRS is
+caught as well as an endpoint going offline.
 
-```bash
-pnpm --filter @orthogea/catalog verify
-```
+**The check is run by hand, not on a schedule.** Public services go slow or answer oddly often
+enough that an unattended job raises more false alarms than real ones; a run that someone reads
+tells you which is which. If a layer has stopped working, please
+[open an issue](https://github.com/eisii42/OrthoGea---Europe/issues) - user reports are the other
+half of how the catalogue stays honest.
 
-Every record is checked end to end - capabilities **and** one real tile per layer. The mosaic has
-its own live check, which walks a set of places and zoom levels and prints the source picked for
-each:
+The mosaic has its own live check, which walks a set of places and zoom levels and prints the
+source picked for each:
 
 ```bash
 pnpm --filter @orthogea/catalog verify         # one tile per catalogued layer

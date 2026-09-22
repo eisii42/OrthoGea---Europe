@@ -56,11 +56,12 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@orthogea/client": "workspace:*",
     "@orthogea/harvester": "workspace:*",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3",
-    "vitest": "^2.1.8",
-    "@orthogea/client": "workspace:*"
+    "undici": "^8.11.0",
+    "vitest": "^2.1.8"
   },
   "publishConfig": {
     "access": "public"
